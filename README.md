@@ -99,23 +99,4 @@ This project is licensed under the Apache-2.0 License - see the LICENSE file for
 
 ## 📞 Support
 If you encounter any issues during startup or use, please check the terminal error logs first, or contact the project maintainer.
-```
-
-### 纯MD格式验证说明
-| 内容类型               | MD语法规范                | 示例                          |
-|------------------------|---------------------------|-------------------------------|
-| 标题                   | `#`/`##`/`###` 分级       | `# 标题`、`## 二级标题`       |
-| 列表                   | `-` 无序列表              | `- Python 3.8+`               |
-| 代码块                 | ```语言 包裹              | ```bash + 命令 + ```          |
-| 文本强调               | 无多余格式（纯文本）      | 所有说明文字均为纯MD文本      |
-| 特殊符号               | 仅使用MD兼容的emoji（可选）| 🚀/⚠️等（不影响MD解析）        |
-
-### 使用步骤
-1. 复制上述全部内容，覆盖你仓库中现有的`README.md`；
-2. 执行以下命令提交更新：
-   ```bash
-   git add README.md
-   git commit -m "docs: update README to standard markdown format"
-   git pull origin main --allow-unrelated-histories
-   git push origin main
-   ```
+[Feishu Institute](mailto:research@feishu.ca)
