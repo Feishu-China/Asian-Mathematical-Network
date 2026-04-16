@@ -1,102 +1,42 @@
-
 # Asian-Mathematical-Network
-A comprehensive network platform for mathematical research, education, and collaboration across Asia.
 
-## 🚀 Quick Start (快速启动)
-### 1. Environment Preparation (环境准备)
-Ensure you have the following installed on your system:
-- Python 3.8 or higher
-- Git (for cloning the repository)
+This repository currently serves as the planning and specification workspace for Asiamath.
 
-### 2. Clone Repository (克隆仓库)
-```bash
-# Clone the remote repository to local
-git clone https://github.com/Feishu-China/Asian-Mathematical-Network.git
+## Current Focus
 
-# Enter the project directory
-cd Asian-Mathematical-Network
+- Product documents live in `docs/product/`
+- External reference artifacts such as the stakeholder system map live in `docs/reference/`
+- Design and technical specs live in `docs/specs/`
+- Planning artifacts such as structured breakdown files belong in `docs/planning/`
+- The earlier Flask + SQLite prototype has been archived under `archive/legacy-flask/`
 
-### 3. Install Dependencies (安装依赖)
-It is recommended to use a virtual environment to avoid dependency conflicts:
-```bash
-# Create virtual environment (Windows)
-python -m venv venv
-venv\Scripts\activate
+## Repository Structure
 
-# Create virtual environment (Mac/Linux)
-python3 -m venv venv
-source venv/bin/activate
-
-# Install core dependency (Flask)
-pip install flask
-
-# If there is a requirements.txt file, install all dependencies
-# pip install -r requirements.txt
+```text
+Asian-Mathematical-Network/
+├── archive/
+│   └── legacy-flask/     # Archived Flask prototype and SQLite schema
+├── docs/
+│   ├── archive/          # Older documentation versions
+│   ├── planning/         # Structured planning assets
+│   ├── product/          # PRDs and product-level scope docs
+│   ├── reference/        # External inputs and baseline reference artifacts
+│   └── specs/            # Design, technical, API, and schema specs
+├── LICENSE
+└── README.md
 ```
 
-### 4. Run the Application (启动应用)
-#### Method 1: Directly run app.py (推荐)
+## Legacy Prototype
+
+The archived Flask prototype is no longer the active product direction. It is kept only for reference.
+
+If you need to inspect or run it:
+
 ```bash
+cd archive/legacy-flask
 python app.py
 ```
 
-#### Method 2: Use Flask command
-```bash
-# Set environment variable (Windows)
-set FLASK_APP=app.py
+## License
 
-# Set environment variable (Mac/Linux)
-# export FLASK_APP=app.py
-
-# Start the application
-flask run
-```
-
-### 5. Access the Application (访问应用)
-Open your browser and visit the following address:
-```
-http://127.0.0.1:5000/
-```
-
-## ⚠️ Common Issues (常见问题)
-### 1. Port 5000 is occupied (端口5000被占用)
-```bash
-# Specify a new port to start
-flask run --port 5001
-
-# Or modify the port in app.py:
-# app.run(host='0.0.0.0', port=5001, debug=True)
-```
-
-### 2. Stop the application (停止应用)
-- Normal stop: Press `Ctrl + C` in the terminal where the application is running (Windows/Mac/Linux universal)
-- Force stop (if stuck):
-  - Windows: Open Task Manager → End the `python.exe`/`python3.exe` process
-  - Mac/Linux:
-    ```bash
-    # Find the process ID (PID)
-    ps -ef | grep app.py
-
-    # Kill the process
-    kill <PID>
-    # Force kill if necessary
-    kill -9 <PID>
-    ```
-
-## 📁 Project Structure (项目结构)
-```
-Asian-Mathematical-Network/
-├── app.py                # Main application entry file (Flask core)
-├── asiamath.db           # Database file
-├── schema.sql            # Database schema definition
-├── templates/
-│   └── index.html        # Landing page (core UI)
-└── README.md             # Project documentation
-```
-
-## 📜 License
-This project is licensed under the Apache-2.0 License - see the LICENSE file for details.
-
-## 📞 Support
-If you encounter any issues during startup or use, please check the terminal error logs first, or contact the project maintainer.
-[Feishu Institute](mailto:research@feishu.ca)
+This project is licensed under the Apache-2.0 License. See `LICENSE` for details.

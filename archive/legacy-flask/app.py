@@ -4,7 +4,9 @@ import os
 
 # Initialize Flask app
 app = Flask(__name__)
-DATABASE = 'asiamath.db'
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATABASE = os.path.join(BASE_DIR, 'asiamath.db')
+SCHEMA_PATH = os.path.join(BASE_DIR, 'schema.sql')
 
 # --------------------------
 # Database Helpers
@@ -25,7 +27,7 @@ def close_connection(exception):
 def init_db():
     with app.app_context():
         db = get_db()
-        with app.open_resource('schema.sql', mode='r') as f:
+        with open(SCHEMA_PATH, mode='r', encoding='utf-8') as f:
             db.cursor().executescript(f.read())
         db.commit()
 
