@@ -228,8 +228,8 @@
         "Integrate with mock endpoints",
         "Verify UI state changes on success/failure"
       ],
-      "status": "not_started",
-      "passes": false
+      "status": "completed",
+      "passes": true
     },
     {
       "id": "BE-AUTH-001",

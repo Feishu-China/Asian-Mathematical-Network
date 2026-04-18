@@ -4,11 +4,23 @@
 
 ## 当前项目状态
 *   **最新版本**: V4.0-Optimized
-*   **总览**: 项目已完成 Mock 服务搭建阶段 (MOCK-001)，API 契约和 Mock 基础设施准备就绪，可以进行前端和后端的解耦开发。
+*   **总览**: 项目前端 Mock 开发已启动。完成了 `FE-AUTH-001`，通过 Vite 代理对接 OpenAPI mock 服务。后端开发 (`BE-AUTH-001`) 随时可以并行启动。
 
 ---
 
 ## 📅 Handoff 历史记录
+
+### 2026-04-18 (Session 6)
+*   **Agent 角色**: Coding Agent (Frontend)
+*   **完成 Feature**: `FE-AUTH-001` ([前端] 认证系统 UI 基于 Mock)
+*   **变更记录**: 
+    *   在 `frontend/` 目录下初始化了基于 Vite + React + TypeScript 的前端项目。
+    *   配置了 `vite.config.ts` 以将 `/api/v1` 请求代理到 `http://localhost:4010` (Mock 服务)。
+    *   创建了使用 Axios 的 `src/api/auth.ts` 接口调用，并实现了包含样式 (CSS) 的 `Login`、`Register` 和 `Dashboard` 页面。
+    *   在 `App.tsx` 和 `main.tsx` 中配置了 React Router 路由。
+    *   成功运行了 `npm run build`，确认代码结构与类型检查无误。
+    *   更新了 `v4.0` 计划中 `FE-AUTH-001` 的状态为 `completed` 且 `passes: true`。
+*   **下一步**: 可以开始后端并行开发 `BE-AUTH-001`，或者继续开发前端的 `FE-PROFILE-001` 等业务模块。
 
 ### 2026-04-18 (Session 5)
 *   **Agent 角色**: Initializer Agent
