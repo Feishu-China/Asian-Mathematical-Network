@@ -266,6 +266,279 @@
       ],
       "status": "completed",
       "passes": true
+    },
+    {
+      "id": "FE-PROFILE-001",
+      "epic": "PROFILE",
+      "title": "[前端] 学者档案 UI (基于 Mock)",
+      "category": "implementation",
+      "description": "实现个人档案信息的查看与编辑界面，支持上传简历与 ORCID 绑定展示。",
+      "priority": "P1",
+      "delivery_track": "frontend",
+      "depends_on": ["MOCK-001"],
+      "parallel_ready": true,
+      "steps": [
+        "Build profile edit form (name, affiliation, keywords, etc.)",
+        "Build public profile view",
+        "Integrate with mock endpoints"
+      ],
+      "status": "not_started",
+      "passes": false
+    },
+    {
+      "id": "BE-PROFILE-001",
+      "epic": "PROFILE",
+      "title": "[后端] 学者档案 API 实现",
+      "category": "implementation",
+      "description": "实现 Profile 的 CRUD 接口，更新数据库并确保字段符合 MVP 规范。",
+      "priority": "P1",
+      "delivery_track": "backend",
+      "depends_on": ["CONTRACT-002"],
+      "parallel_ready": true,
+      "steps": [
+        "Implement GET /profiles/me and GET /profiles/:slug",
+        "Implement PUT /profiles/me logic with Prisma",
+        "Write backend unit tests"
+      ],
+      "status": "not_started",
+      "passes": false
+    },
+    {
+      "id": "INT-PROFILE-001",
+      "epic": "PROFILE",
+      "title": "[集成] 学者档案真实联调 (E2E)",
+      "category": "integration",
+      "description": "前端 Profile 组件对接真实后端 API，进行数据存储联调。",
+      "priority": "P1",
+      "delivery_track": "integration",
+      "depends_on": ["FE-PROFILE-001", "BE-PROFILE-001"],
+      "parallel_ready": false,
+      "steps": [
+        "Switch FE adapter to Real API for profiles",
+        "Test profile update persistence",
+        "Mark feature passes=true"
+      ],
+      "status": "not_started",
+      "passes": false
+    },
+    {
+      "id": "FE-CONF-001",
+      "epic": "CONF",
+      "title": "[前端] 会议发布与申请 UI (基于 Mock)",
+      "category": "implementation",
+      "description": "实现 Organizer 发布会议，以及 Applicant 查看会议列表与填表申请的流程。",
+      "priority": "P1",
+      "delivery_track": "frontend",
+      "depends_on": ["MOCK-001"],
+      "parallel_ready": true,
+      "steps": [
+        "Build conference creation/edit form (Organizer)",
+        "Build public conference list & detail pages",
+        "Build conference application form & draft save",
+        "Integrate with mock endpoints"
+      ],
+      "status": "not_started",
+      "passes": false
+    },
+    {
+      "id": "BE-CONF-001",
+      "epic": "CONF",
+      "title": "[后端] 会议管理与申请 API 实现",
+      "category": "implementation",
+      "description": "实现会议发布与申请提交流程的接口，区分 `draft` 和 `published` 状态。",
+      "priority": "P1",
+      "delivery_track": "backend",
+      "depends_on": ["CONTRACT-002"],
+      "parallel_ready": true,
+      "steps": [
+        "Implement CRUD for Conference opportunity",
+        "Implement POST/PUT for Conference Applications",
+        "Write backend unit tests"
+      ],
+      "status": "not_started",
+      "passes": false
+    },
+    {
+      "id": "INT-CONF-001",
+      "epic": "CONF",
+      "title": "[集成] 会议申请全链路联调 (E2E)",
+      "category": "integration",
+      "description": "验证从 Organizer 创建会议到 Applicant 提交申请的完整闭环。",
+      "priority": "P1",
+      "delivery_track": "integration",
+      "depends_on": ["FE-CONF-001", "BE-CONF-001"],
+      "parallel_ready": false,
+      "steps": [
+        "Switch FE adapter to Real API for conferences/applications",
+        "Run E2E test for complete application submission",
+        "Mark feature passes=true"
+      ],
+      "status": "not_started",
+      "passes": false
+    },
+    {
+      "id": "FE-GRANT-001",
+      "epic": "GRANT",
+      "title": "[前端] 差旅资助申请 UI (基于 Mock)",
+      "category": "implementation",
+      "description": "实现 M7 独立入口，展示资助详情，并提交与特定会议关联的资助申请。",
+      "priority": "P1",
+      "delivery_track": "frontend",
+      "depends_on": ["MOCK-001"],
+      "parallel_ready": true,
+      "steps": [
+        "Build grant opportunity detail page",
+        "Build grant application form",
+        "Build post-visit report form",
+        "Integrate with mock endpoints"
+      ],
+      "status": "not_started",
+      "passes": false
+    },
+    {
+      "id": "BE-GRANT-001",
+      "epic": "GRANT",
+      "title": "[后端] 差旅资助 API 实现",
+      "category": "implementation",
+      "description": "处理独立的 Grant Application 数据模型，验证会议关联规则。",
+      "priority": "P1",
+      "delivery_track": "backend",
+      "depends_on": ["CONTRACT-002"],
+      "parallel_ready": true,
+      "steps": [
+        "Implement POST/PUT for Grant Applications",
+        "Implement POST for Post-visit report",
+        "Enforce conference linkage validation"
+      ],
+      "status": "not_started",
+      "passes": false
+    },
+    {
+      "id": "INT-GRANT-001",
+      "epic": "GRANT",
+      "title": "[集成] 差旅资助联调 (E2E)",
+      "category": "integration",
+      "description": "验证会议申请通过后，能够成功关联并提交资助申请。",
+      "priority": "P1",
+      "delivery_track": "integration",
+      "depends_on": ["FE-GRANT-001", "BE-GRANT-001", "INT-CONF-001"],
+      "parallel_ready": false,
+      "steps": [
+        "Switch FE adapter to Real API for grants",
+        "Test dependency rule between conference & grant",
+        "Mark feature passes=true"
+      ],
+      "status": "not_started",
+      "passes": false
+    },
+    {
+      "id": "FE-REVIEW-001",
+      "epic": "REVIEW",
+      "title": "[前端] 评审与决策面板 UI (基于 Mock)",
+      "category": "implementation",
+      "description": "构建 Organizer 分配任务界面，及 Reviewer 提交评审意见界面。",
+      "priority": "P1",
+      "delivery_track": "frontend",
+      "depends_on": ["MOCK-001"],
+      "parallel_ready": true,
+      "steps": [
+        "Build assignment UI for Organizer (COI flags)",
+        "Build Reviewer task queue and review form",
+        "Build Decision release UI for Organizer",
+        "Integrate with mock endpoints"
+      ],
+      "status": "not_started",
+      "passes": false
+    },
+    {
+      "id": "BE-REVIEW-001",
+      "epic": "REVIEW",
+      "title": "[后端] 评审决策 API 实现",
+      "category": "implementation",
+      "description": "实现评审任务分配、利益冲突 (COI) 标记、及最终结果的发布逻辑。",
+      "priority": "P1",
+      "delivery_track": "backend",
+      "depends_on": ["CONTRACT-002"],
+      "parallel_ready": true,
+      "steps": [
+        "Implement reviewer assignment endpoints",
+        "Implement review submission endpoints",
+        "Implement decision issue & release endpoints"
+      ],
+      "status": "not_started",
+      "passes": false
+    },
+    {
+      "id": "INT-REVIEW-001",
+      "epic": "REVIEW",
+      "title": "[集成] 评审工作流联调 (E2E)",
+      "category": "integration",
+      "description": "全链路测试：分配评审 -> 提交意见 -> Organizer 决策 -> 结果发布。",
+      "priority": "P1",
+      "delivery_track": "integration",
+      "depends_on": ["FE-REVIEW-001", "BE-REVIEW-001", "INT-CONF-001"],
+      "parallel_ready": false,
+      "steps": [
+        "Switch FE adapter to Real API for reviews/decisions",
+        "Run full lifecycle test from submission to decision",
+        "Mark feature passes=true"
+      ],
+      "status": "not_started",
+      "passes": false
+    },
+    {
+      "id": "FE-PORTAL-001",
+      "epic": "PORTAL",
+      "title": "[前端] 门户入口与 Applicant 仪表板 UI",
+      "category": "implementation",
+      "description": "构建首页导流、M1 公众展示层，以及 Applicant 的 My Applications 控制台。",
+      "priority": "P2",
+      "delivery_track": "frontend",
+      "depends_on": ["MOCK-001"],
+      "parallel_ready": true,
+      "steps": [
+        "Build public portal homepage",
+        "Build Applicant Dashboard (My Applications)",
+        "Show separate records for Conference vs Grant",
+        "Integrate with mock endpoints"
+      ],
+      "status": "not_started",
+      "passes": false
+    },
+    {
+      "id": "BE-PORTAL-001",
+      "epic": "PORTAL",
+      "title": "[后端] 仪表板聚合 API",
+      "category": "implementation",
+      "description": "提供 Applicant 仪表板所需的聚合数据查询（当前所有申请状态）。",
+      "priority": "P2",
+      "delivery_track": "backend",
+      "depends_on": ["CONTRACT-002"],
+      "parallel_ready": true,
+      "steps": [
+        "Implement GET /applications/my endpoints",
+        "Ensure data returns released vs unreleased status correctly"
+      ],
+      "status": "not_started",
+      "passes": false
+    },
+    {
+      "id": "INT-PORTAL-001",
+      "epic": "PORTAL",
+      "title": "[集成] 门户与仪表板联调 (E2E)",
+      "category": "integration",
+      "description": "确保申请者能够在其仪表板上准确看到通过全生命周期流转的结果。",
+      "priority": "P2",
+      "delivery_track": "integration",
+      "depends_on": ["FE-PORTAL-001", "BE-PORTAL-001", "INT-REVIEW-001"],
+      "parallel_ready": false,
+      "steps": [
+        "Switch FE adapter to Real API for dashboard",
+        "Verify dashboard reflects final issued decisions",
+        "Mark feature passes=true"
+      ],
+      "status": "not_started",
+      "passes": false
     }
   ]
 }
