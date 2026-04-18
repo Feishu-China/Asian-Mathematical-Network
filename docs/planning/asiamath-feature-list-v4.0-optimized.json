@@ -246,8 +246,8 @@
         "Implement JWT/session login logic",
         "Write backend unit tests"
       ],
-      "status": "not_started",
-      "passes": false
+      "status": "completed",
+      "passes": true
     },
     {
       "id": "INT-AUTH-001",

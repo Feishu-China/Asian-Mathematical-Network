@@ -4,11 +4,24 @@
 
 ## 当前项目状态
 *   **最新版本**: V4.0-Optimized
-*   **总览**: 项目前端 Mock 开发已启动。完成了 `FE-AUTH-001`，通过 Vite 代理对接 OpenAPI mock 服务。后端开发 (`BE-AUTH-001`) 随时可以并行启动。
+*   **总览**: 前后端解耦的第一条垂直切片（认证系统）的基础已建立。`FE-AUTH-001` (前端 Mock UI) 和 `BE-AUTH-001` (后端 API 及测试) 均已完成。准备进入 E2E 集成阶段 `INT-AUTH-001`。
 
 ---
 
 ## 📅 Handoff 历史记录
+
+### 2026-04-18 (Session 7)
+*   **Agent 角色**: Coding Agent (Backend)
+*   **完成 Feature**: `BE-AUTH-001` ([后端] 认证系统 API 实现)
+*   **变更记录**: 
+    *   在 `backend/` 目录下初始化了 Node.js + TypeScript 后端项目。
+    *   安装了 `express`, `cors`, `jsonwebtoken`, `bcryptjs`, `uuid` 等核心依赖。
+    *   实现了认证系统的 Controller (`register`, `login`, `getMe`)，并临时使用内存数组（模拟 DB）作为存储。
+    *   根据 OpenAPI 契约配置了 `/api/v1/auth/*` 路由。
+    *   使用 `jest` 和 `supertest` 编写了完整的后端单元/集成测试。
+    *   运行 `npm run test`，所有用例通过。
+    *   更新了 `v4.0` 计划中 `BE-AUTH-001` 的状态为 `completed` 且 `passes: true`。
+*   **下一步**: 可以开始前后端真实的集成联调 `INT-AUTH-001`，或者继续独立开发前端/后端的其他模块（如 Profile 模块）。
 
 ### 2026-04-18 (Session 6)
 *   **Agent 角色**: Coding Agent (Frontend)
