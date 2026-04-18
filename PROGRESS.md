@@ -4,11 +4,22 @@
 
 ## 当前项目状态
 *   **最新版本**: V4.0-Optimized
-*   **总览**: 前后端解耦的第一条垂直切片（认证系统）的基础已建立。`FE-AUTH-001` (前端 Mock UI) 和 `BE-AUTH-001` (后端 API 及测试) 均已完成。准备进入 E2E 集成阶段 `INT-AUTH-001`。
+*   **总览**: 项目第一阶段的“核心认证系统” (AUTH Epic) 已经从需求分析、契约定义、Mock 开发、后端实现，走完了最后的 E2E 集成联调 (`INT-AUTH-001`)。现在项目准备启动下一个模块（如 PROFILE 系统）的并行开发。
 
 ---
 
 ## 📅 Handoff 历史记录
+
+### 2026-04-18 (Session 9)
+*   **Agent 角色**: Coding Agent (Integration)
+*   **完成 Feature**: `INT-AUTH-001` ([集成] 认证系统真实联调 (E2E))
+*   **变更记录**: 
+    *   在 `frontend/vite.config.ts` 中，将代理转发配置的 `target` 从 Mock 服务器的 `4010` 端口更改为真实的后端 API 端口 `3000`。
+    *   本地并发启动了前端 Vite 服务器和后端 Node.js 服务。
+    *   使用 E2E 测试脚本发送真实的 `/api/v1/auth/register` 请求，成功创建用户并获取了 JWT Token 以及用户信息。
+    *   确认前端调用和后端处理的全链路数据流集成无误。
+    *   更新了 `v4.0` 计划中 `INT-AUTH-001` 的状态为 `completed` 且 `passes: true`。
+*   **下一步**: `AUTH` Epic 已经全链路完成。建议选择下一个 Epic 开始，比如开始进行 `FE-PROFILE-001` 和 `BE-PROFILE-001`。
 
 ### 2026-04-18 (Session 8)
 *   **Agent 角色**: Initializer Agent

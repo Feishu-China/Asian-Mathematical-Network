@@ -264,8 +264,8 @@
         "Run E2E tests for login/register",
         "Mark feature passes=true"
       ],
-      "status": "not_started",
-      "passes": false
+      "status": "completed",
+      "passes": true
     }
   ]
 }
