@@ -4,11 +4,24 @@
 
 ## 当前项目状态
 *   **最新版本**: V4.0-Optimized
-*   **总览**: 项目第一阶段的“核心认证系统” (AUTH Epic) 已经从需求分析、契约定义、Mock 开发、后端实现，走完了最后的 E2E 集成联调 (`INT-AUTH-001`)。现在项目准备启动下一个模块（如 PROFILE 系统）的并行开发。
+*   **总览**: `AUTH` 与 `PROFILE` 两个 Epic 已完成。`CONF` Epic 的后端实现 `BE-CONF-001` 已完成并通过 smoke 验证，下一步应继续推进 `FE-CONF-001`，随后再做 `INT-CONF-001`。
 
 ---
 
 ## 📅 Handoff 历史记录
+
+### 2026-04-20 (Session 16)
+*   **Agent 角色**: Coding Agent (Backend)
+*   **完成 Feature**: `BE-CONF-001`
+*   **变更记录**:
+    *   为会议工作流补齐了 Prisma 持久层与迁移，新增 `Conference`、`ConferenceStaff`、`Application`、`ApplicationStatusHistory` 模型，并将会议申请收敛到共享 `applications` 骨架下的 `conference_application` 子类型。
+    *   实现了公开会议读取接口：`GET /api/v1/conferences`、`GET /api/v1/conferences/:slug`、`GET /api/v1/conferences/:id/application-form`，只暴露已发布会议，并通过 serializer 统一输出 `snake_case` transport payload。
+    *   实现了 Organizer 会议生命周期接口：`POST /api/v1/organizer/conferences`、`GET/PUT /api/v1/organizer/conferences/:id`、`POST /publish`、`POST /close`，采用当前仓库可落地的最小 organizer 权限模型：创建者自动成为 conference owner，后续通过 `conference_staff` 授权。
+    *   实现了 Applicant 会议申请草稿/提交接口：`POST /api/v1/conferences/:id/applications`、`PUT /api/v1/me/applications/:id/draft`、`POST /api/v1/me/applications/:id/submit`，提交时会冻结申请人的 profile snapshot，并写入一条 `application_status_history` 状态流转记录。
+    *   明确记录了本轮边界：`file_ids` / 附件上传仍未实现，当前若传入非空附件会返回 `422`，等待后续文件子系统或相关 Epic 支撑。
+    *   执行并通过了 `backend/tests/conferences.test.ts` 的 public / organizer / applicant 三组端到端风格测试，以及仓库级 `npm run test:smoke`。
+    *   更新了 `v4.0` 计划中 `BE-CONF-001` 的状态为 `completed`，`passes` 维持 `false`，等待 `INT-CONF-001` 完成后再改为集成通过。
+*   **下一步**: `FE-CONF-001`
 
 ### 2026-04-20 (Session 15)
 *   **Agent 角色**: Coding Agent (Integration)

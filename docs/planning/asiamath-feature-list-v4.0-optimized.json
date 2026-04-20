@@ -355,7 +355,7 @@
         "Implement POST/PUT for Conference Applications",
         "Write backend unit tests"
       ],
-      "status": "not_started",
+      "status": "completed",
       "passes": false
     },
     {
