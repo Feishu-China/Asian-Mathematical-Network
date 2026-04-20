@@ -20,6 +20,21 @@ describe('Profile API', () => {
     email: 'legacy.user@example.com',
     password: 'password123',
   };
+  const replacementUser = {
+    email: 'be.profile.replace@example.com',
+    password: 'password123',
+    fullName: 'Replacement User',
+  };
+  const strictValidationUser = {
+    email: 'be.profile.strict@example.com',
+    password: 'password123',
+    fullName: 'Strict Validation User',
+  };
+  const unknownMscUser = {
+    email: 'be.profile.unknown-msc@example.com',
+    password: 'password123',
+    fullName: 'Unknown Msc User',
+  };
   const validationUser = {
     email: 'be.profile.validation@example.com',
     password: 'password123',
@@ -39,6 +54,9 @@ describe('Profile API', () => {
             registeredUser.email,
             updatingUser.email,
             legacyUser.email,
+            replacementUser.email,
+            strictValidationUser.email,
+            unknownMscUser.email,
             validationUser.email,
             unicodeUser.email,
           ],
@@ -62,6 +80,9 @@ describe('Profile API', () => {
             registeredUser.email,
             updatingUser.email,
             legacyUser.email,
+            replacementUser.email,
+            strictValidationUser.email,
+            unknownMscUser.email,
             validationUser.email,
             unicodeUser.email,
           ],
@@ -328,5 +349,166 @@ describe('Profile API', () => {
       where: { userId: registerRes.body.user.id },
     });
     expect(persistedCodes).toEqual([]);
+  });
+
+  it('rejects optional fields with invalid types', async () => {
+    const registerRes = await request(app)
+      .post('/api/v1/auth/register')
+      .send(strictValidationUser);
+
+    expect(registerRes.status).toBe(201);
+
+    const invalidTitleRes = await request(app)
+      .put('/api/v1/profile/me')
+      .set('Authorization', `Bearer ${registerRes.body.accessToken}`)
+      .send({
+        full_name: 'Strict Validation User',
+        institution_name_raw: 'Example University',
+        country_code: 'CN',
+        career_stage: 'phd',
+        title: 123,
+      });
+
+    expect(invalidTitleRes.status).toBe(400);
+    expect(invalidTitleRes.body).toEqual({
+      message: 'title must be a string',
+    });
+
+    const invalidBooleanRes = await request(app)
+      .put('/api/v1/profile/me')
+      .set('Authorization', `Bearer ${registerRes.body.accessToken}`)
+      .send({
+        full_name: 'Strict Validation User',
+        institution_name_raw: 'Example University',
+        country_code: 'CN',
+        career_stage: 'phd',
+        is_profile_public: 'yes',
+      });
+
+    expect(invalidBooleanRes.status).toBe(400);
+    expect(invalidBooleanRes.body).toEqual({
+      message: 'is_profile_public must be a boolean',
+    });
+
+    const invalidKeywordsRes = await request(app)
+      .put('/api/v1/profile/me')
+      .set('Authorization', `Bearer ${registerRes.body.accessToken}`)
+      .send({
+        full_name: 'Strict Validation User',
+        institution_name_raw: 'Example University',
+        country_code: 'CN',
+        career_stage: 'phd',
+        research_keywords: ['algebra', 42],
+      });
+
+    expect(invalidKeywordsRes.status).toBe(400);
+    expect(invalidKeywordsRes.body).toEqual({
+      message: 'research_keywords must be an array of strings',
+    });
+
+    const invalidMscShapeRes = await request(app)
+      .put('/api/v1/profile/me')
+      .set('Authorization', `Bearer ${registerRes.body.accessToken}`)
+      .send({
+        full_name: 'Strict Validation User',
+        institution_name_raw: 'Example University',
+        country_code: 'CN',
+        career_stage: 'phd',
+        msc_codes: [{ code: '11B05' }],
+      });
+
+    expect(invalidMscShapeRes.status).toBe(400);
+    expect(invalidMscShapeRes.body).toEqual({
+      message: 'msc_codes items must include code and is_primary',
+    });
+  });
+
+  it('replaces stale MSC associations on a second update and returns deterministic ordering', async () => {
+    await prisma.mscCode.upsert({
+      where: { code: '11B05' },
+      update: {},
+      create: { code: '11B05' },
+    });
+    await prisma.mscCode.upsert({
+      where: { code: '35Q55' },
+      update: {},
+      create: { code: '35Q55' },
+    });
+
+    const registerRes = await request(app)
+      .post('/api/v1/auth/register')
+      .send(replacementUser);
+
+    expect(registerRes.status).toBe(201);
+
+    const firstUpdateRes = await request(app)
+      .put('/api/v1/profile/me')
+      .set('Authorization', `Bearer ${registerRes.body.accessToken}`)
+      .send({
+        full_name: 'Replacement User',
+        institution_name_raw: 'Example University',
+        country_code: 'CN',
+        career_stage: 'phd',
+        msc_codes: [
+          { code: '11B05', is_primary: true },
+          { code: '35Q55', is_primary: false },
+        ],
+      });
+
+    expect(firstUpdateRes.status).toBe(200);
+
+    const secondUpdateRes = await request(app)
+      .put('/api/v1/profile/me')
+      .set('Authorization', `Bearer ${registerRes.body.accessToken}`)
+      .send({
+        full_name: 'Replacement User',
+        institution_name_raw: 'Example University',
+        country_code: 'CN',
+        career_stage: 'phd',
+        msc_codes: [
+          { code: '11B05', is_primary: false },
+          { code: '35Q55', is_primary: true },
+        ],
+      });
+
+    expect(secondUpdateRes.status).toBe(200);
+    expect(secondUpdateRes.body.data.profile.msc_codes).toEqual([
+      { code: '35Q55', is_primary: true },
+      { code: '11B05', is_primary: false },
+    ]);
+
+    const persistedCodes = await prisma.profileMscCode.findMany({
+      where: { userId: registerRes.body.user.id },
+      orderBy: { mscCode: 'asc' },
+    });
+
+    expect(persistedCodes).toEqual([
+      expect.objectContaining({ mscCode: '11B05', isPrimary: false }),
+      expect.objectContaining({ mscCode: '35Q55', isPrimary: true }),
+    ]);
+  });
+
+  it('rejects unknown MSC codes with a client error status', async () => {
+    const registerRes = await request(app)
+      .post('/api/v1/auth/register')
+      .send(unknownMscUser);
+
+    expect(registerRes.status).toBe(201);
+
+    const updateRes = await request(app)
+      .put('/api/v1/profile/me')
+      .set('Authorization', `Bearer ${registerRes.body.accessToken}`)
+      .send({
+        full_name: 'Unknown Msc User',
+        institution_name_raw: 'Example University',
+        country_code: 'CN',
+        career_stage: 'phd',
+        msc_codes: [{ code: '99Z99', is_primary: true }],
+      });
+
+    expect(updateRes.status).toBe(400);
+    expect(updateRes.body).toEqual({
+      message: 'msc_codes contains unknown codes',
+    });
   });
 });
