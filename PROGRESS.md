@@ -10,6 +10,16 @@
 
 ## 📅 Handoff 历史记录
 
+### 2026-04-20 (Session 15)
+*   **Agent 角色**: Coding Agent (Integration)
+*   **完成 Feature**: `INT-PROFILE-001`
+*   **变更记录**:
+    *   将 profile provider 从本地 fake 实现切换为真实 API，并新增 transport mapper 将 `snake_case` 响应映射到前端 `camelCase` domain model。
+    *   通过真实 backend API 验证了 `/me/profile` 的保存后回读一致性，包括 `country_code`、`personal_website`、`msc_codes` 的持久化。
+    *   验证了 `/scholars/:slug` 的公开可见性和字段脱敏：公开态返回 `200` 且不包含 `coi_declaration_text`，隐藏态返回 `404`。
+    *   验证了 frontend dev server 可提供 `/me/profile` 与 `/scholars/:slug` 路由，并执行通过仓库级 `npm run test:smoke`。
+*   **下一步**: `PROFILE` Epic 可视为完成，可转入下一个 Epic。
+
 ### 2026-04-20 (Session 14)
 *   **Agent 角色**: Coding Agent (Frontend)
 *   **完成 Feature**: `FE-PROFILE-001`

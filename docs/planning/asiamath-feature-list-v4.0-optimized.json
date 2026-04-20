@@ -318,8 +318,8 @@
         "Test profile update persistence",
         "Mark feature passes=true"
       ],
-      "status": "not_started",
-      "passes": false
+      "status": "completed",
+      "passes": true
     },
     {
       "id": "FE-CONF-001",
