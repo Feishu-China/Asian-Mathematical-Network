@@ -10,6 +10,16 @@
 
 ## 📅 Handoff 历史记录
 
+### 2026-04-20 (Session 14)
+*   **Agent 角色**: Coding Agent (Frontend)
+*   **完成 Feature**: `FE-PROFILE-001`
+*   **变更记录**:
+    *   新增 `/me/profile` 私有编辑页与 `/scholars/:slug` 公开页。
+    *   增加了 routePath-aware 路由注册与 profile provider 边界，前端页面不再直接绑定 raw HTTP response。
+    *   使用本地 fake provider 覆盖了 loading / saving / saved / not-public 状态，并把字段映射收敛到 profile feature 层。
+    *   执行并通过前端 build 与仓库级 `npm run test:smoke`。
+*   **下一步**: `INT-PROFILE-001`
+
 ### 2026-04-20 (Session 13)
 *   **Agent 角色**: Coding Agent (Backend)
 *   **完成 Feature**: `BE-PROFILE-001` follow-up review fixes

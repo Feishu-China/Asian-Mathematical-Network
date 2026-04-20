@@ -282,7 +282,7 @@
         "Build public profile view",
         "Integrate with mock endpoints"
       ],
-      "status": "not_started",
+      "status": "completed",
       "passes": false
     },
     {
