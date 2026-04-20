@@ -86,3 +86,46 @@ export const serializeOrganizerConference = (
     staff_role: member.staffRole,
   })),
 });
+
+type ApplicationRecord = {
+  id: string;
+  applicationType: string;
+  sourceModule: string;
+  conferenceId: string | null;
+  applicantUserId: string;
+  status: string;
+  participationType: string | null;
+  statement: string | null;
+  abstractTitle: string | null;
+  abstractText: string | null;
+  interestedInTravelSupport: boolean;
+  extraAnswersJson: string;
+  submittedAt: Date | null;
+  decidedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export const serializeConferenceApplication = (
+  application: ApplicationRecord & { conferenceTitle: string }
+) => ({
+  id: application.id,
+  application_type: application.applicationType,
+  source_module: application.sourceModule,
+  conference_id: application.conferenceId,
+  conference_title: application.conferenceTitle,
+  applicant_user_id: application.applicantUserId,
+  status: application.status,
+  participation_type: application.participationType,
+  statement: application.statement,
+  abstract_title: application.abstractTitle,
+  abstract_text: application.abstractText,
+  interested_in_travel_support: application.interestedInTravelSupport,
+  extra_answers: parseJson(application.extraAnswersJson, {}),
+  files: [],
+  submitted_at: application.submittedAt?.toISOString() ?? null,
+  decided_at: application.decidedAt?.toISOString() ?? null,
+  decision: null,
+  created_at: application.createdAt.toISOString(),
+  updated_at: application.updatedAt.toISOString(),
+});

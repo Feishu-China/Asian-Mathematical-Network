@@ -261,4 +261,171 @@ describe('Conference API', () => {
     expect(closeRes.status).toBe(200);
     expect(closeRes.body.data.conference.status).toBe('closed');
   });
+
+  it('creates one draft conference application, allows draft edits, freezes a profile snapshot on submit, and rejects post-submit edits', async () => {
+    const organizer = {
+      email: 'conf.apply.organizer@example.com',
+      password: 'password123',
+      fullName: 'Apply Organizer',
+    };
+    const applicant = {
+      email: 'conf.apply.applicant@example.com',
+      password: 'password123',
+      fullName: 'Apply Applicant',
+    };
+
+    await prisma.user.deleteMany({
+      where: { email: { in: [organizer.email, applicant.email] } },
+    });
+
+    const organizerRes = await request(app).post('/api/v1/auth/register').send(organizer);
+    const applicantRes = await request(app).post('/api/v1/auth/register').send(applicant);
+
+    const createConferenceRes = await request(app)
+      .post('/api/v1/organizer/conferences')
+      .set('Authorization', `Bearer ${organizerRes.body.accessToken}`)
+      .send({
+        slug: 'apply-conf-2026',
+        title: 'Apply Conference 2026',
+        short_name: 'AC2026',
+        location_text: 'Singapore',
+        start_date: '2026-11-01',
+        end_date: '2026-11-05',
+        description: 'Conference open for applications',
+        application_deadline: '2026-10-01T23:59:59Z',
+        application_form_schema: {
+          fields: [
+            { key: 'participation_type', type: 'select', required: true },
+            { key: 'statement', type: 'textarea', required: true },
+          ],
+        },
+        settings: {},
+      });
+
+    const conferenceId = createConferenceRes.body.data.conference.id;
+
+    await request(app)
+      .post(`/api/v1/organizer/conferences/${conferenceId}/publish`)
+      .set('Authorization', `Bearer ${organizerRes.body.accessToken}`)
+      .send({});
+
+    await request(app)
+      .put('/api/v1/profile/me')
+      .set('Authorization', `Bearer ${applicantRes.body.accessToken}`)
+      .send({
+        full_name: 'Apply Applicant',
+        title: null,
+        institution_id: null,
+        institution_name_raw: 'National University of Singapore',
+        country_code: 'SG',
+        career_stage: 'phd',
+        bio: 'Working on representation theory.',
+        personal_website: 'https://example.com/apply-applicant',
+        research_keywords: ['representation theory'],
+        msc_codes: [],
+        orcid_id: null,
+        coi_declaration_text: '',
+        is_profile_public: false,
+      });
+
+    const createDraftRes = await request(app)
+      .post(`/api/v1/conferences/${conferenceId}/applications`)
+      .set('Authorization', `Bearer ${applicantRes.body.accessToken}`)
+      .send({
+        participation_type: 'talk',
+        statement: 'I would like to present.',
+        abstract_title: 'Arithmetic Dynamics',
+        abstract_text: 'A short abstract.',
+        interested_in_travel_support: true,
+        extra_answers: {},
+        file_ids: [],
+      });
+
+    expect(createDraftRes.status).toBe(201);
+    expect(createDraftRes.body.data.application).toMatchObject({
+      application_type: 'conference_application',
+      source_module: 'M2',
+      conference_id: conferenceId,
+      status: 'draft',
+    });
+
+    const applicationId = createDraftRes.body.data.application.id;
+
+    const duplicateDraftRes = await request(app)
+      .post(`/api/v1/conferences/${conferenceId}/applications`)
+      .set('Authorization', `Bearer ${applicantRes.body.accessToken}`)
+      .send({
+        participation_type: 'talk',
+        statement: 'A duplicate draft should be rejected.',
+        abstract_title: 'Duplicate',
+        abstract_text: 'Duplicate',
+        interested_in_travel_support: false,
+        extra_answers: {},
+        file_ids: [],
+      });
+
+    expect(duplicateDraftRes.status).toBe(409);
+
+    const updateDraftRes = await request(app)
+      .put(`/api/v1/me/applications/${applicationId}/draft`)
+      .set('Authorization', `Bearer ${applicantRes.body.accessToken}`)
+      .send({
+        participation_type: 'talk',
+        statement: 'Updated draft statement.',
+        abstract_title: 'Arithmetic Dynamics Revised',
+        abstract_text: 'Revised abstract.',
+        interested_in_travel_support: false,
+        extra_answers: { audience: 'graduate students' },
+        file_ids: [],
+      });
+
+    expect(updateDraftRes.status).toBe(200);
+    expect(updateDraftRes.body.data.application.statement).toBe('Updated draft statement.');
+
+    const submitRes = await request(app)
+      .post(`/api/v1/me/applications/${applicationId}/submit`)
+      .set('Authorization', `Bearer ${applicantRes.body.accessToken}`)
+      .send({});
+
+    expect(submitRes.status).toBe(200);
+    expect(submitRes.body.data.application.status).toBe('submitted');
+
+    const storedApplication = await prisma.application.findUnique({
+      where: { id: applicationId },
+    });
+
+    expect(storedApplication?.status).toBe('submitted');
+    expect(JSON.parse(storedApplication?.applicantProfileSnapshotJson ?? '{}')).toMatchObject({
+      full_name: 'Apply Applicant',
+      institution_name_raw: 'National University of Singapore',
+      country_code: 'SG',
+      career_stage: 'phd',
+      research_keywords: ['representation theory'],
+    });
+
+    const historyRows = await prisma.applicationStatusHistory.findMany({
+      where: { applicationId },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    expect(historyRows.at(-1)).toMatchObject({
+      fromStatus: 'draft',
+      toStatus: 'submitted',
+    });
+
+    const rejectedUpdateRes = await request(app)
+      .put(`/api/v1/me/applications/${applicationId}/draft`)
+      .set('Authorization', `Bearer ${applicantRes.body.accessToken}`)
+      .send({
+        participation_type: 'talk',
+        statement: 'This edit must be rejected.',
+        abstract_title: 'Nope',
+        abstract_text: 'Nope',
+        interested_in_travel_support: false,
+        extra_answers: {},
+        file_ids: [],
+      });
+
+    expect(rejectedUpdateRes.status).toBe(409);
+  });
 });

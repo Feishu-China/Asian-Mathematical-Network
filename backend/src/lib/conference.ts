@@ -11,6 +11,15 @@ type ParsedConferenceInput = {
   settingsJson: string;
 };
 
+type ParsedConferenceApplicationInput = {
+  participationType: string;
+  statement: string;
+  abstractTitle: string | null;
+  abstractText: string | null;
+  interestedInTravelSupport: boolean;
+  extraAnswersJson: string;
+};
+
 const parseNullableString = (value: unknown) => {
   if (value === undefined || value === null) {
     return null;
@@ -79,3 +88,62 @@ export const canPublishConference = (conference: {
       conference.description &&
       conference.applicationDeadline
   );
+
+const parseBoolean = (value: unknown, defaultValue: boolean) => {
+  if (value === undefined) {
+    return defaultValue;
+  }
+
+  if (typeof value !== 'boolean') {
+    throw new Error('INVALID_BOOLEAN');
+  }
+
+  return value;
+};
+
+export const parseConferenceApplicationInput = (
+  body: Record<string, unknown>
+): ParsedConferenceApplicationInput => {
+  const fileIds = body.file_ids;
+  if (Array.isArray(fileIds) && fileIds.length > 0) {
+    throw new Error('FILES_NOT_SUPPORTED_YET');
+  }
+
+  if (fileIds !== undefined && !Array.isArray(fileIds)) {
+    throw new Error('INVALID_FILE_IDS');
+  }
+
+  const extraAnswers =
+    body.extra_answers === undefined
+      ? {}
+      : typeof body.extra_answers === 'object' &&
+          body.extra_answers !== null &&
+          !Array.isArray(body.extra_answers)
+        ? body.extra_answers
+        : (() => {
+            throw new Error('INVALID_EXTRA_ANSWERS');
+          })();
+
+  return {
+    participationType: parseRequiredString(body.participation_type, 'participation_type'),
+    statement: parseRequiredString(body.statement, 'statement'),
+    abstractTitle: parseNullableString(body.abstract_title),
+    abstractText: parseNullableString(body.abstract_text),
+    interestedInTravelSupport: parseBoolean(body.interested_in_travel_support, false),
+    extraAnswersJson: JSON.stringify(extraAnswers),
+  };
+};
+
+export const buildApplicantProfileSnapshot = (profile: {
+  fullName: string;
+  institutionNameRaw: string | null;
+  countryCode: string | null;
+  careerStage: string | null;
+  researchKeywords: string[];
+}) => ({
+  full_name: profile.fullName,
+  institution_name_raw: profile.institutionNameRaw,
+  country_code: profile.countryCode,
+  career_stage: profile.careerStage,
+  research_keywords: profile.researchKeywords,
+});
