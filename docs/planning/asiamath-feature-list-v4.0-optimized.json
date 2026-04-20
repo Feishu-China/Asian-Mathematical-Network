@@ -300,7 +300,7 @@
         "Implement PUT /profiles/me logic with Prisma",
         "Write backend unit tests"
       ],
-      "status": "not_started",
+      "status": "completed",
       "passes": false
     },
     {

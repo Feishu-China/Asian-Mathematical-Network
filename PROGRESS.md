@@ -10,6 +10,16 @@
 
 ## 📅 Handoff 历史记录
 
+### 2026-04-20 (Session 12)
+*   **Agent 角色**: Coding Agent (Backend)
+*   **完成 Feature**: `BE-PROFILE-001`
+*   **变更记录**: 
+    *   将学者档案相关数据落到 Prisma 持久层，补充了 scholar-profile 模型以及 MSC 关联表。
+    *   实现了 `GET /api/v1/profile/me`、`PUT /api/v1/profile/me`、`GET /api/v1/scholars/:slug`。
+    *   注册流程现在会自动创建初始 profile。
+    *   运行了后端 Profile 测试与仓库 smoke check；在当前 sandbox 中都受到 `listen EPERM` 限制，未能记录通过结果。
+*   **下一步**: `FE-PROFILE-001`
+
 ### 2026-04-18 (Session 11)
 *   **Agent 角色**: Initializer Agent (Architecture)
 *   **完成 Feature**: 完善全局 Epic 拆解与 Feature 规划
