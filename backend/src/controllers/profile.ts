@@ -300,28 +300,6 @@ const buildProfileWriteData = (profile: ParsedProfileUpdate) => ({
   isProfilePublic: profile.isProfilePublic,
 });
 
-const validateSubmittedMscCodes = async (
-  tx: Prisma.TransactionClient,
-  mscCodes: ParsedMscCode[]
-) => {
-  if (mscCodes.length === 0) {
-    return null;
-  }
-
-  const knownCodes = await tx.mscCode.findMany({
-    where: {
-      code: {
-        in: mscCodes.map((item) => item.code),
-      },
-    },
-    select: { code: true },
-  });
-
-  const knownCodeSet = new Set(knownCodes.map((item) => item.code));
-  const hasUnknownCode = mscCodes.some((item) => !knownCodeSet.has(item.code));
-  return hasUnknownCode ? 'msc_codes contains unknown codes' : null;
-};
-
 const replaceProfileMscCodes = async (
   tx: Prisma.TransactionClient,
   userId: string,
@@ -347,9 +325,16 @@ const persistProfileUpdate = async (
   profile: ParsedProfileUpdate
 ): Promise<PersistProfileUpdateResult> =>
   prisma.$transaction(async (tx) => {
-    const mscCodeValidationMessage = await validateSubmittedMscCodes(tx, profile.mscCodes);
-    if (mscCodeValidationMessage) {
-      return { message: mscCodeValidationMessage };
+    if (profile.mscCodes.length > 0) {
+      await Promise.all(
+        profile.mscCodes.map((item) =>
+          tx.mscCode.upsert({
+            where: { code: item.code },
+            update: {},
+            create: { code: item.code },
+          })
+        )
+      );
     }
 
     const writeData = buildProfileWriteData(profile);

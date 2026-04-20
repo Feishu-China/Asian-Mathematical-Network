@@ -30,6 +30,11 @@ describe('Profile API', () => {
     password: 'password123',
     fullName: 'Public Scholar',
   };
+  const institutionFallbackUser = {
+    email: 'be.profile.institution-fallback@example.com',
+    password: 'password123',
+    fullName: 'Public Scholar',
+  };
   const hiddenScholarUser = {
     email: 'be.profile.hidden-scholar@example.com',
     password: 'password123',
@@ -66,6 +71,7 @@ describe('Profile API', () => {
             legacyUser.email,
             replacementUser.email,
             publicScholarUser.email,
+            institutionFallbackUser.email,
             hiddenScholarUser.email,
             strictValidationUser.email,
             unknownMscUser.email,
@@ -94,6 +100,7 @@ describe('Profile API', () => {
             legacyUser.email,
             replacementUser.email,
             publicScholarUser.email,
+            institutionFallbackUser.email,
             hiddenScholarUser.email,
             strictValidationUser.email,
             unknownMscUser.email,
@@ -560,6 +567,34 @@ describe('Profile API', () => {
     });
   });
 
+  it('exposes a fallback affiliation in the public profile when only institution_id is saved', async () => {
+    const registerRes = await request(app)
+      .post('/api/v1/auth/register')
+      .send(institutionFallbackUser);
+
+    expect(registerRes.status).toBe(201);
+
+    const updateRes = await request(app)
+      .put('/api/v1/profile/me')
+      .set('Authorization', `Bearer ${registerRes.body.accessToken}`)
+      .send({
+        full_name: 'Public Scholar',
+        institution_id: 'inst-123',
+        country_code: 'CN',
+        career_stage: 'faculty',
+        is_profile_public: true,
+      });
+
+    expect(updateRes.status).toBe(200);
+
+    const scholarRes = await request(app).get(
+      `/api/v1/scholars/${updateRes.body.data.profile.slug}`
+    );
+
+    expect(scholarRes.status).toBe(200);
+    expect(scholarRes.body.data.profile.institution_name_raw).toBe('inst-123');
+  });
+
   it('returns 404 for a hidden scholar profile', async () => {
     const registerRes = await request(app)
       .post('/api/v1/auth/register')
@@ -588,7 +623,7 @@ describe('Profile API', () => {
     expect(scholarRes.body).toEqual({ message: 'Profile not found' });
   });
 
-  it('rejects unknown MSC codes with a client error status', async () => {
+  it('creates a registry entry for a previously unseen MSC code when updating a fresh profile', async () => {
     const registerRes = await request(app)
       .post('/api/v1/auth/register')
       .send(unknownMscUser);
@@ -606,9 +641,15 @@ describe('Profile API', () => {
         msc_codes: [{ code: '99Z99', is_primary: true }],
       });
 
-    expect(updateRes.status).toBe(400);
-    expect(updateRes.body).toEqual({
-      message: 'msc_codes contains unknown codes',
+    expect(updateRes.status).toBe(200);
+    expect(updateRes.body.data.profile.msc_codes).toEqual([
+      { code: '99Z99', is_primary: true },
+    ]);
+
+    const registryEntry = await prisma.mscCode.findUnique({
+      where: { code: '99Z99' },
     });
+
+    expect(registryEntry).not.toBeNull();
   });
 });

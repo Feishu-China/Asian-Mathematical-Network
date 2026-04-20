@@ -5,6 +5,7 @@ type PublicProfile = Pick<
   | 'slug'
   | 'fullName'
   | 'title'
+  | 'institutionId'
   | 'institutionNameRaw'
   | 'countryCode'
   | 'careerStage'
@@ -57,7 +58,7 @@ export const serializePublicProfile = (profile: PublicProfile) => ({
   slug: profile.slug,
   full_name: profile.fullName,
   title: profile.title,
-  institution_name_raw: profile.institutionNameRaw,
+  institution_name_raw: profile.institutionNameRaw ?? profile.institutionId,
   country_code: profile.countryCode,
   career_stage: profile.careerStage,
   bio: profile.bio,
