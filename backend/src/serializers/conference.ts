@@ -59,3 +59,30 @@ export const serializeConferenceApplicationForm = (conference: ConferenceRecord)
   conference_id: conference.id,
   schema: parseJson(conference.applicationFormSchemaJson, { fields: [] }),
 });
+
+export const serializeOrganizerConference = (
+  conference: ConferenceRecord & {
+    settingsJson: string;
+    closedAt: Date | null;
+    staff: Array<{ userId: string; staffRole: string }>;
+  }
+) => ({
+  id: conference.id,
+  slug: conference.slug,
+  title: conference.title,
+  short_name: conference.shortName,
+  location_text: conference.locationText,
+  start_date: conference.startDate,
+  end_date: conference.endDate,
+  description: conference.description,
+  application_deadline: conference.applicationDeadline?.toISOString() ?? null,
+  status: conference.status,
+  application_form_schema: parseJson(conference.applicationFormSchemaJson, { fields: [] }),
+  settings: parseJson(conference.settingsJson, {}),
+  published_at: conference.publishedAt?.toISOString() ?? null,
+  closed_at: conference.closedAt?.toISOString() ?? null,
+  staff: conference.staff.map((member) => ({
+    user_id: member.userId,
+    staff_role: member.staffRole,
+  })),
+});

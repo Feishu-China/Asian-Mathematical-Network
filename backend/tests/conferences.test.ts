@@ -139,4 +139,126 @@ describe('Conference API', () => {
     const missingRes = await request(app).get('/api/v1/conferences/draft-conf-2026');
     expect(missingRes.status).toBe(404);
   });
+
+  it('creates, updates, publishes, and closes an organizer-owned conference', async () => {
+    const organizer = {
+      email: 'conf.organizer.owner@example.com',
+      password: 'password123',
+      fullName: 'Conference Owner',
+    };
+    const outsider = {
+      email: 'conf.organizer.outsider@example.com',
+      password: 'password123',
+      fullName: 'Conference Outsider',
+    };
+
+    await prisma.user.deleteMany({
+      where: { email: { in: [organizer.email, outsider.email] } },
+    });
+
+    const organizerRes = await request(app).post('/api/v1/auth/register').send(organizer);
+    const outsiderRes = await request(app).post('/api/v1/auth/register').send(outsider);
+
+    const createRes = await request(app)
+      .post('/api/v1/organizer/conferences')
+      .set('Authorization', `Bearer ${organizerRes.body.accessToken}`)
+      .send({
+        slug: 'organizer-conf-2026',
+        title: 'Organizer Conference 2026',
+        short_name: 'OC2026',
+        location_text: null,
+        start_date: null,
+        end_date: null,
+        description: null,
+        application_deadline: null,
+        application_form_schema: {
+          fields: [
+            { key: 'participation_type', type: 'select', required: true },
+            { key: 'statement', type: 'textarea', required: true },
+          ],
+        },
+        settings: {},
+      });
+
+    expect(createRes.status).toBe(201);
+    expect(createRes.body.data.conference).toMatchObject({
+      slug: 'organizer-conf-2026',
+      title: 'Organizer Conference 2026',
+      status: 'draft',
+    });
+
+    const conferenceId = createRes.body.data.conference.id;
+
+    const staffRow = await prisma.conferenceStaff.findUnique({
+      where: {
+        conferenceId_userId: {
+          conferenceId,
+          userId: organizerRes.body.user.id,
+        },
+      },
+    });
+
+    expect(staffRow?.staffRole).toBe('owner');
+
+    const updateRes = await request(app)
+      .put(`/api/v1/organizer/conferences/${conferenceId}`)
+      .set('Authorization', `Bearer ${organizerRes.body.accessToken}`)
+      .send({
+        slug: 'organizer-conf-2026',
+        title: 'Organizer Conference 2026',
+        short_name: 'OC2026',
+        location_text: 'Seoul',
+        start_date: '2026-10-11',
+        end_date: '2026-10-15',
+        description: 'Updated organizer conference',
+        application_deadline: '2026-09-15T23:59:59Z',
+        application_form_schema: {
+          fields: [
+            { key: 'participation_type', type: 'select', required: true },
+            { key: 'statement', type: 'textarea', required: true },
+          ],
+        },
+        settings: {},
+      });
+
+    expect(updateRes.status).toBe(200);
+    expect(updateRes.body.data.conference.location_text).toBe('Seoul');
+
+    const publishRes = await request(app)
+      .post(`/api/v1/organizer/conferences/${conferenceId}/publish`)
+      .set('Authorization', `Bearer ${organizerRes.body.accessToken}`)
+      .send({});
+
+    expect(publishRes.status).toBe(200);
+    expect(publishRes.body.data.conference.status).toBe('published');
+
+    const publicRes = await request(app).get('/api/v1/conferences/organizer-conf-2026');
+    expect(publicRes.status).toBe(200);
+
+    const forbiddenRes = await request(app)
+      .put(`/api/v1/organizer/conferences/${conferenceId}`)
+      .set('Authorization', `Bearer ${outsiderRes.body.accessToken}`)
+      .send({
+        slug: 'organizer-conf-2026',
+        title: 'Hijacked Conference',
+        short_name: 'HC2026',
+        location_text: 'Shanghai',
+        start_date: '2026-10-20',
+        end_date: '2026-10-22',
+        description: 'This update should be rejected',
+        application_deadline: '2026-09-20T23:59:59Z',
+        application_form_schema: { fields: [] },
+        settings: {},
+      });
+
+    expect(forbiddenRes.status).toBe(403);
+
+    const closeRes = await request(app)
+      .post(`/api/v1/organizer/conferences/${conferenceId}/close`)
+      .set('Authorization', `Bearer ${organizerRes.body.accessToken}`)
+      .send({});
+
+    expect(closeRes.status).toBe(200);
+    expect(closeRes.body.data.conference.status).toBe('closed');
+  });
 });
