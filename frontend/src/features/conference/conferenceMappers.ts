@@ -68,6 +68,11 @@ type TransportConferenceApplication = {
   updated_at: string;
 };
 
+type TransportConferenceApplicationForm = {
+  conference_id: string;
+  schema: ConferenceFormSchema;
+};
+
 const isApplicationOpen = (status: OrganizerConference['status'], applicationDeadline: string | null) =>
   status === 'published' &&
   (!applicationDeadline || new Date(applicationDeadline).getTime() >= Date.now());
@@ -162,6 +167,10 @@ export const fromTransportConferenceApplication = (
   createdAt: application.created_at,
   updatedAt: application.updated_at,
 });
+
+export const fromTransportConferenceApplicationForm = (
+  form: TransportConferenceApplicationForm
+): ConferenceFormSchema => form.schema;
 
 export const toTransportConferencePayload = (values: ConferenceEditorValues) => ({
   slug: values.slug.trim(),
