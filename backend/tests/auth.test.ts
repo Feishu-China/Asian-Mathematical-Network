@@ -53,6 +53,11 @@ describe('Auth API', () => {
     expect(res.body).toHaveProperty('user');
     expect(res.body).toHaveProperty('profile');
     expect(res.body.user.email).toBe(testUser.email);
+    expect(res.body.profile.fullName).toBe(testUser.fullName);
+    expect(res.body.profile.slug).toMatch(/^test-user-/);
+    expect(res.body.profile.slug).not.toBe('mock-slug');
+    expect(res.body.profile.fullName).not.toBe('Mock User');
+    expect(Array.isArray(res.body.profile.mscCodes)).toBe(true);
   });
 
   it('should reject unauthorized access to /me', async () => {

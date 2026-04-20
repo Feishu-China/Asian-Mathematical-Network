@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../lib/prisma';
-import { buildStarterProfile } from '../lib/profile';
+import { buildStarterProfile, getStarterFullName, mapProfileRecord } from '../lib/profile';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_key_for_development';
 
@@ -116,6 +116,13 @@ export const getMe = async (req: Request, res: Response) => {
       return;
     }
 
+    const profile = await prisma.profile.upsert({
+      where: { userId: user.id },
+      update: {},
+      create: buildStarterProfile(user.id, getStarterFullName(user.email)),
+      include: { mscCodes: true },
+    });
+
     res.status(200).json({
       user: {
         id: user.id,
@@ -124,26 +131,7 @@ export const getMe = async (req: Request, res: Response) => {
         createdAt: user.createdAt,
         updatedAt: user.updatedAt
       },
-      profile: {
-        userId: user.id,
-        slug: 'mock-slug',
-        fullName: 'Mock User',
-        title: null,
-        institutionId: null,
-        institutionNameRaw: null,
-        countryCode: null,
-        careerStage: 'other',
-        bio: null,
-        personalWebsite: null,
-        researchKeywords: [],
-        orcidId: null,
-        coiDeclarationText: '',
-        isProfilePublic: false,
-        verificationStatus: 'unverified',
-        verifiedAt: null,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt
-      }
+      profile: mapProfileRecord(profile)
     });
   } catch (error) {
     res.status(401).json({ message: 'Unauthorized' });
