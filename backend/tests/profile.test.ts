@@ -581,6 +581,13 @@ describe('Profile API', () => {
     expect(scholarRes.body).toEqual({ message: 'Profile not found' });
   });
 
+  it('returns 404 for a nonexistent scholar profile slug', async () => {
+    const scholarRes = await request(app).get('/api/v1/scholars/does-not-exist');
+
+    expect(scholarRes.status).toBe(404);
+    expect(scholarRes.body).toEqual({ message: 'Profile not found' });
+  });
+
   it('rejects unknown MSC codes with a client error status', async () => {
     const registerRes = await request(app)
       .post('/api/v1/auth/register')
