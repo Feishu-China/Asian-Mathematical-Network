@@ -68,7 +68,7 @@ Here is the layout and what each folder is used for:
 │   └── vite.config.ts          # 🔌 Vite config (handles proxying to mock/backend servers)
 │
 └── 📁 backend/                 # ⚙️ Node.js + Express + Prisma (Backend API)
-    ├── prisma/                 # 🗃️ Prisma ORM schema & SQLite database file
+    ├── prisma/                 # 🗃️ Prisma schema and migrations (local dev DB is generated, not versioned)
     ├── src/routes/             # 🛣️ Zero-Conflict Routing: Add a `.ts` here, it auto-mounts
     ├── src/controllers/        # 🧠 Business logic (called by routes)
     └── tests/                  # 🧪 Jest E2E and Unit Tests
