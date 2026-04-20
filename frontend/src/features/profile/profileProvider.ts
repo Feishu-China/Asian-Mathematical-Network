@@ -1,3 +1,3 @@
-import { fakeProfileProvider } from './fakeProfileProvider';
+import { httpProfileProvider } from './httpProfileProvider';
 
-export const profileProvider = fakeProfileProvider;
+export const profileProvider = httpProfileProvider;
