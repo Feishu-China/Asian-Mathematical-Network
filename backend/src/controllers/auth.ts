@@ -1,10 +1,9 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { PrismaClient } from '@prisma/client';
-import { UserStatus } from '../../../src/types/models';
+import { prisma } from '../lib/prisma';
+import { buildStarterProfile } from './profile';
 
-const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_key_for_development';
 
 export const register = async (req: Request, res: Response) => {
@@ -30,6 +29,10 @@ export const register = async (req: Request, res: Response) => {
         passwordHash: hashedPassword,
         status: 'active'
       }
+    });
+
+    await prisma.profile.create({
+      data: buildStarterProfile(newUser.id, fullName)
     });
 
     const token = jwt.sign({ userId: newUser.id }, JWT_SECRET, { expiresIn: '1d' });

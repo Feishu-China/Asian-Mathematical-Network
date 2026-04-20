@@ -16,4 +16,44 @@ model User {
   lastLoginAt     DateTime?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
+  profile         Profile?
+}
+
+model Profile {
+  userId               String           @id
+  user                 User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  slug                 String           @unique
+  fullName             String
+  title                String?
+  institutionId        String?
+  institutionNameRaw   String?
+  countryCode          String?
+  careerStage          String?
+  bio                  String?
+  personalWebsite      String?
+  researchKeywordsJson String           @default("[]")
+  orcidId              String?
+  coiDeclarationText   String           @default("")
+  isProfilePublic      Boolean          @default(false)
+  verificationStatus   String           @default("unverified")
+  verifiedAt           DateTime?
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+  mscCodes             ProfileMscCode[]
+}
+
+model MscCode {
+  code     String           @id
+  profiles ProfileMscCode[]
+}
+
+model ProfileMscCode {
+  userId    String
+  mscCode   String
+  isPrimary Boolean          @default(false)
+  createdAt DateTime         @default(now())
+  profile   Profile          @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  codeRef   MscCode          @relation(fields: [mscCode], references: [code], onDelete: Restrict)
+
+  @@id([userId, mscCode])
 }

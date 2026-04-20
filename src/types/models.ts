@@ -45,6 +45,11 @@ export interface Institution {
   updatedAt: string;
 }
 
+export interface ProfileMscCode {
+  code: string;
+  isPrimary: boolean;
+}
+
 export interface Profile {
   userId: string; // UUID references User
   slug: string;
@@ -57,6 +62,7 @@ export interface Profile {
   bio: string | null;
   personalWebsite: string | null;
   researchKeywords: string[];
+  mscCodes: ProfileMscCode[];
   orcidId: string | null;
   coiDeclarationText: string;
   isProfilePublic: boolean;
