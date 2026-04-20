@@ -25,6 +25,16 @@ describe('Profile API', () => {
     password: 'password123',
     fullName: 'Replacement User',
   };
+  const publicScholarUser = {
+    email: 'be.profile.public-scholar@example.com',
+    password: 'password123',
+    fullName: 'Public Scholar',
+  };
+  const hiddenScholarUser = {
+    email: 'be.profile.hidden-scholar@example.com',
+    password: 'password123',
+    fullName: 'Hidden Scholar',
+  };
   const strictValidationUser = {
     email: 'be.profile.strict@example.com',
     password: 'password123',
@@ -55,6 +65,8 @@ describe('Profile API', () => {
             updatingUser.email,
             legacyUser.email,
             replacementUser.email,
+            publicScholarUser.email,
+            hiddenScholarUser.email,
             strictValidationUser.email,
             unknownMscUser.email,
             validationUser.email,
@@ -81,6 +93,8 @@ describe('Profile API', () => {
             updatingUser.email,
             legacyUser.email,
             replacementUser.email,
+            publicScholarUser.email,
+            hiddenScholarUser.email,
             strictValidationUser.email,
             unknownMscUser.email,
             validationUser.email,
@@ -486,6 +500,85 @@ describe('Profile API', () => {
       expect.objectContaining({ mscCode: '11B05', isPrimary: false }),
       expect.objectContaining({ mscCode: '35Q55', isPrimary: true }),
     ]);
+  });
+
+  it('returns the public scholar profile when visibility is enabled', async () => {
+    await prisma.mscCode.upsert({
+      where: { code: '11B05' },
+      update: {},
+      create: { code: '11B05' },
+    });
+
+    const registerRes = await request(app)
+      .post('/api/v1/auth/register')
+      .send(publicScholarUser);
+
+    expect(registerRes.status).toBe(201);
+
+    const updateRes = await request(app)
+      .put('/api/v1/profile/me')
+      .set('Authorization', `Bearer ${registerRes.body.accessToken}`)
+      .send({
+        full_name: 'Public Scholar',
+        title: 'Professor',
+        institution_name_raw: 'Example University',
+        country_code: 'CN',
+        career_stage: 'faculty',
+        bio: 'Studies number theory.',
+        personal_website: 'https://example.com/public-scholar',
+        research_keywords: ['number theory', 'combinatorics'],
+        msc_codes: [{ code: '11B05', is_primary: true }],
+        orcid_id: '0000-0002-1111-2222',
+        coi_declaration_text: 'Internal only text',
+        is_profile_public: true,
+      });
+
+    expect(updateRes.status).toBe(200);
+
+    const scholarRes = await request(app).get(
+      `/api/v1/scholars/${updateRes.body.data.profile.slug}`
+    );
+
+    expect(scholarRes.status).toBe(200);
+    expect(scholarRes.body).toEqual({
+      data: {
+        profile: {
+          slug: updateRes.body.data.profile.slug,
+          full_name: 'Public Scholar',
+          title: 'Professor',
+          institution_name_raw: 'Example University',
+          country_code: 'CN',
+          career_stage: 'faculty',
+          bio: 'Studies number theory.',
+          personal_website: 'https://example.com/public-scholar',
+          research_keywords: ['number theory', 'combinatorics'],
+          msc_codes: [{ code: '11B05', is_primary: true }],
+          orcid_id: '0000-0002-1111-2222',
+          updated_at: expect.any(String),
+        },
+      },
+    });
+  });
+
+  it('returns 404 for a hidden scholar profile', async () => {
+    const registerRes = await request(app)
+      .post('/api/v1/auth/register')
+      .send(hiddenScholarUser);
+
+    expect(registerRes.status).toBe(201);
+
+    const myProfileRes = await request(app)
+      .get('/api/v1/profile/me')
+      .set('Authorization', `Bearer ${registerRes.body.accessToken}`);
+
+    expect(myProfileRes.status).toBe(200);
+
+    const scholarRes = await request(app).get(
+      `/api/v1/scholars/${myProfileRes.body.data.profile.slug}`
+    );
+
+    expect(scholarRes.status).toBe(404);
+    expect(scholarRes.body).toEqual({ message: 'Profile not found' });
   });
 
   it('rejects unknown MSC codes with a client error status', async () => {

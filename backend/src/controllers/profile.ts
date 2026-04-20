@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import { Prisma } from '@prisma/client';
 import { prisma } from '../lib/prisma';
 import { buildStarterProfile, getStarterFullName, mapProfileRecord } from '../lib/profile';
-import { serializeProfile } from '../serializers/profile';
+import { serializeProfile, serializePublicProfile } from '../serializers/profile';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_key_for_development';
 const CAREER_STAGES = new Set(['undergraduate', 'masters', 'phd', 'postdoc', 'faculty', 'other']);
@@ -381,6 +381,14 @@ const sendProfileResponse = (res: Response, record: ProfileRecord) => {
   });
 };
 
+const sendPublicProfileResponse = (res: Response, record: ProfileRecord) => {
+  res.status(200).json({
+    data: {
+      profile: serializePublicProfile(mapProfileRecord(record)),
+    },
+  });
+};
+
 export const getMyProfile = async (req: Request, res: Response) => {
   let userId: string;
   try {
@@ -451,6 +459,30 @@ export const updateMyProfile = async (req: Request, res: Response) => {
     }
 
     sendProfileResponse(res, updateResult.record);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const getPublicScholarProfile = async (req: Request, res: Response) => {
+  try {
+    const slug = Array.isArray(req.params.slug) ? req.params.slug[0] : req.params.slug;
+    if (!slug) {
+      res.status(404).json({ message: 'Profile not found' });
+      return;
+    }
+
+    const record = await prisma.profile.findUnique({
+      where: { slug },
+      include: { mscCodes: true },
+    });
+
+    if (!record || !record.isProfilePublic) {
+      res.status(404).json({ message: 'Profile not found' });
+      return;
+    }
+
+    sendPublicProfileResponse(res, record);
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }
