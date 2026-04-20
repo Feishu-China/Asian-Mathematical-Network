@@ -10,6 +10,47 @@
 
 ## 📅 Handoff 历史记录
 
+### 2026-04-20 (Session 15)
+*   **Agent 角色**: Coding Agent (Integration)
+*   **完成 Feature**: `INT-PROFILE-001`
+*   **变更记录**:
+    *   将 profile provider 从本地 fake 实现切换为真实 API，并新增 transport mapper 将 `snake_case` 响应映射到前端 `camelCase` domain model。
+    *   通过真实 backend API 验证了 `/me/profile` 的保存后回读一致性，包括 `country_code`、`personal_website`、`msc_codes` 的持久化。
+    *   验证了 `/scholars/:slug` 的公开可见性和字段脱敏：公开态返回 `200` 且不包含 `coi_declaration_text`，隐藏态返回 `404`。
+    *   验证了 frontend dev server 可提供 `/me/profile` 与 `/scholars/:slug` 路由，并执行通过仓库级 `npm run test:smoke`。
+*   **下一步**: `PROFILE` Epic 可视为完成，可转入下一个 Epic。
+
+### 2026-04-20 (Session 14)
+*   **Agent 角色**: Coding Agent (Frontend)
+*   **完成 Feature**: `FE-PROFILE-001`
+*   **变更记录**:
+    *   新增 `/me/profile` 私有编辑页与 `/scholars/:slug` 公开页。
+    *   增加了 routePath-aware 路由注册与 profile provider 边界，前端页面不再直接绑定 raw HTTP response。
+    *   使用本地 fake provider 覆盖了 loading / saving / saved / not-public 状态，并把字段映射收敛到 profile feature 层。
+    *   执行并通过前端 build 与仓库级 `npm run test:smoke`。
+*   **下一步**: `INT-PROFILE-001`
+
+### 2026-04-20 (Session 13)
+*   **Agent 角色**: Coding Agent (Backend)
+*   **完成 Feature**: `BE-PROFILE-001` follow-up review fixes
+*   **变更记录**:
+    *   将 `/api/v1/auth/me` 从硬编码 mock profile 切换为真实持久化 profile 返回，并为缺失 profile 的 legacy 用户复用 starter bootstrap。
+    *   调整 Profile 更新规则：提交的 MSC code 会先规范化并做格式校验，再注册到本地字典；fresh DB 不再因为空 `MscCode` 表而拒绝非空 `msc_codes`。
+    *   修复 legacy 用户的 email 派生 slug 泄漏风险：当用户首次以真实姓名更新并公开 profile 时，会将 slug 旋转为基于 `full_name` 的公开路径。
+    *   收紧 public profile 发布条件：`is_profile_public=true` 时必须提供 `institution_name_raw`，避免公开接口泄露内部 `institution_id` 或输出空 affiliation。
+    *   执行并通过 `backend` auth/profile 测试、TypeScript typecheck，以及仓库级 `npm run test:smoke`。
+*   **下一步**: `FE-PROFILE-001`
+
+### 2026-04-20 (Session 12)
+*   **Agent 角色**: Coding Agent (Backend)
+*   **完成 Feature**: `BE-PROFILE-001`
+*   **变更记录**: 
+    *   将学者档案相关数据落到 Prisma 持久层，补充了 scholar-profile 模型以及 MSC 关联表。
+    *   实现了 `GET /api/v1/profile/me`、`PUT /api/v1/profile/me`、`GET /api/v1/scholars/:slug`。
+    *   注册流程现在会自动创建初始 profile。
+    *   运行了后端 Profile 测试与仓库 smoke check，验证通过。
+*   **下一步**: `FE-PROFILE-001`
+
 ### 2026-04-18 (Session 11)
 *   **Agent 角色**: Initializer Agent (Architecture)
 *   **完成 Feature**: 完善全局 Epic 拆解与 Feature 规划

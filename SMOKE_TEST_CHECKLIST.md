@@ -24,7 +24,7 @@
 - [ ] **Mock 服务启动** (仅纯前端开发时适用):
   - 运行 `npm run mock` 能够成功挂载 OpenAPI 契约，不抛出 schema 校验错误。
 - [ ] **接口健康检查**:
-  - `curl -s http://localhost:3000/api/v1/auth/me` 或相关业务接口，确认能够接收响应。
+  - `curl -i http://localhost:3000/api/v1/auth/me` 或相关业务接口，确认能够收到 HTTP 响应（例如未登录时返回 `401`，而不是连接失败）。
 
 ## 3. 日志记录
 - [ ] 在 `PROGRESS.md` 的当次会话记录中，必须显式声明：“Smoke Test 执行通过”。

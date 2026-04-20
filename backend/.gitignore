@@ -1,4 +1,7 @@
 node_modules
+dist
+dev.db
+prisma/dev.db
 # Keep environment variables out of version control
 .env
 

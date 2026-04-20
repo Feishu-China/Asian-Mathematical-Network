@@ -2,6 +2,11 @@
 
 .next/
 node_modules/
+.superpowers/
+
+backend/dist/
+backend/dev.db
+backend/prisma/dev.db
 
 *.pyc
 __pycache__/
