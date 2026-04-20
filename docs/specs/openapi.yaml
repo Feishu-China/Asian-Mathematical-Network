@@ -1,0 +1,329 @@
+openapi: 3.0.3
+info:
+  title: Asiamath API
+  description: OpenAPI Specification for Asiamath v4.0-Optimized based on models.ts.
+  version: 1.0.0
+
+servers:
+  - url: /api/v1
+    description: Current API version (V1)
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # --- Enums ---
+    UserStatus:
+      type: string
+      enum: [active, inactive, suspended]
+    UserRole:
+      type: string
+      enum: [applicant, reviewer, organizer, admin]
+    ProfileVerificationStatus:
+      type: string
+      enum: [unverified, pending_review, verified, rejected]
+    CareerStage:
+      type: string
+      enum: [undergraduate, masters, phd, postdoc, faculty, other]
+    ConferenceStatus:
+      type: string
+      enum: [draft, published, closed]
+    GrantOpportunityStatus:
+      type: string
+      enum: [draft, published, closed]
+    GrantType:
+      type: string
+      enum: [conference_travel_grant]
+    ApplicationType:
+      type: string
+      enum: [conference_application, grant_application]
+    ApplicationStatus:
+      type: string
+      enum: [draft, submitted, under_review, decided]
+    DecisionFinalStatus:
+      type: string
+      enum: [accepted, rejected, waitlisted]
+    DecisionReleaseStatus:
+      type: string
+      enum: [unreleased, released]
+
+    # --- Models ---
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        status:
+          $ref: '#/components/schemas/UserStatus'
+        emailVerifiedAt:
+          type: string
+          format: date-time
+          nullable: true
+        lastLoginAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required: [id, email, status, createdAt, updatedAt]
+
+    Profile:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+        slug:
+          type: string
+        fullName:
+          type: string
+        title:
+          type: string
+          nullable: true
+        institutionId:
+          type: string
+          format: uuid
+          nullable: true
+        institutionNameRaw:
+          type: string
+          nullable: true
+        countryCode:
+          type: string
+          nullable: true
+        careerStage:
+          $ref: '#/components/schemas/CareerStage'
+        bio:
+          type: string
+          nullable: true
+        personalWebsite:
+          type: string
+          nullable: true
+        researchKeywords:
+          type: array
+          items:
+            type: string
+        orcidId:
+          type: string
+          nullable: true
+        coiDeclarationText:
+          type: string
+        isProfilePublic:
+          type: boolean
+        verificationStatus:
+          $ref: '#/components/schemas/ProfileVerificationStatus'
+        verifiedAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Conference:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        slug:
+          type: string
+        title:
+          type: string
+        shortName:
+          type: string
+          nullable: true
+        locationText:
+          type: string
+          nullable: true
+        startDate:
+          type: string
+          format: date
+          nullable: true
+        endDate:
+          type: string
+          format: date
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        applicationDeadline:
+          type: string
+          format: date-time
+          nullable: true
+        status:
+          $ref: '#/components/schemas/ConferenceStatus'
+        applicationFormSchemaJson:
+          type: object
+        settingsJson:
+          type: object
+        publishedAt:
+          type: string
+          format: date-time
+          nullable: true
+        closedAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdByUserId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    # --- Payloads ---
+    LoginPayload:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+
+    RegisterPayload:
+      type: object
+      required: [email, password, fullName]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+        fullName:
+          type: string
+
+    AuthResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        user:
+          $ref: '#/components/schemas/User'
+
+security:
+  - bearerAuth: []
+
+paths:
+  # --- Auth Endpoints ---
+  /auth/login:
+    post:
+      summary: User Login
+      security: []
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginPayload'
+      responses:
+        '200':
+          description: Successful login
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Unauthorized
+  
+  /auth/register:
+    post:
+      summary: User Registration
+      security: []
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterPayload'
+      responses:
+        '201':
+          description: Successfully registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Bad request (e.g. email already in use)
+
+  /auth/me:
+    get:
+      summary: Get current logged-in user details
+      tags: [Auth]
+      responses:
+        '200':
+          description: User profile and user object
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+                  profile:
+                    $ref: '#/components/schemas/Profile'
+
+  # --- Profile Endpoints ---
+  /profiles/me:
+    put:
+      summary: Update my profile
+      tags: [Profile]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fullName:
+                  type: string
+                bio:
+                  type: string
+                careerStage:
+                  $ref: '#/components/schemas/CareerStage'
+      responses:
+        '200':
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+
+  # --- Conference Endpoints ---
+  /conferences:
+    get:
+      summary: List all published conferences
+      security: []
+      tags: [Conference]
+      responses:
+        '200':
+          description: A list of conferences
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Conference'

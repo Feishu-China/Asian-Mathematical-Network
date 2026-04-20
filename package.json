@@ -1,0 +1,16 @@
+{
+  "name": "asiamath",
+  "version": "1.0.0",
+  "description": "Asian-Mathematical-Network",
+  "scripts": {
+    "test:smoke": "echo 'Running smoke tests...' && npm run test:frontend && npm run test:backend && echo 'Smoke test passed! Clean state verified.'",
+    "test:frontend": "cd frontend && npm run dev -- --version && npm run build",
+    "test:backend": "cd backend && npm run dev -- --version && npm run test",
+    "test:types": "tsc --noEmit",
+    "mock": "npx -y mockoon-cli start --data docs/specs/openapi.yaml --port 4010"
+  },
+  "devDependencies": {
+    "@stoplight/prism-cli": "^5.15.9",
+    "typescript": "^6.0.3"
+  }
+}
