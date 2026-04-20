@@ -10,6 +10,17 @@
 
 ## 📅 Handoff 历史记录
 
+### 2026-04-20 (Session 13)
+*   **Agent 角色**: Coding Agent (Backend)
+*   **完成 Feature**: `BE-PROFILE-001` follow-up review fixes
+*   **变更记录**:
+    *   将 `/api/v1/auth/me` 从硬编码 mock profile 切换为真实持久化 profile 返回，并为缺失 profile 的 legacy 用户复用 starter bootstrap。
+    *   调整 Profile 更新规则：提交的 MSC code 会先规范化并做格式校验，再注册到本地字典；fresh DB 不再因为空 `MscCode` 表而拒绝非空 `msc_codes`。
+    *   修复 legacy 用户的 email 派生 slug 泄漏风险：当用户首次以真实姓名更新并公开 profile 时，会将 slug 旋转为基于 `full_name` 的公开路径。
+    *   收紧 public profile 发布条件：`is_profile_public=true` 时必须提供 `institution_name_raw`，避免公开接口泄露内部 `institution_id` 或输出空 affiliation。
+    *   执行并通过 `backend` auth/profile 测试、TypeScript typecheck，以及仓库级 `npm run test:smoke`。
+*   **下一步**: `FE-PROFILE-001`
+
 ### 2026-04-20 (Session 12)
 *   **Agent 角色**: Coding Agent (Backend)
 *   **完成 Feature**: `BE-PROFILE-001`

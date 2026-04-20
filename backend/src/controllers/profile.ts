@@ -7,6 +7,7 @@ import { serializeProfile, serializePublicProfile } from '../serializers/profile
 
 const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_key_for_development';
 const CAREER_STAGES = new Set(['undergraduate', 'masters', 'phd', 'postdoc', 'faculty', 'other']);
+const MSC_CODE_PATTERN = /^\d{2}[A-Z]\d{2}$/;
 
 type ProfileRecord = Prisma.ProfileGetPayload<{
   include: { mscCodes: true };
@@ -16,6 +17,7 @@ type ValidationResult<T> = { value: T } | { message: string };
 type ParsedMscCodesResult = { mscCodes: ParsedMscCode[] } | { message: string };
 type ParsedProfileUpdateResult = { profile: ParsedProfileUpdate } | { message: string };
 type PersistProfileUpdateResult = { record: ProfileRecord } | { message: string };
+type ExistingProfileIdentity = Pick<Prisma.ProfileGetPayload<object>, 'userId' | 'fullName' | 'slug'>;
 
 type ParsedMscCode = {
   code: string;
@@ -162,8 +164,13 @@ const parseMscCodes = (value: unknown): ParsedMscCodesResult => {
       return { message: 'msc_codes items must include code and is_primary' };
     }
 
+    const normalizedCode = parsedCode.value.toUpperCase();
+    if (!MSC_CODE_PATTERN.test(normalizedCode)) {
+      return { message: 'msc_codes code must be a valid MSC code' };
+    }
+
     mscCodes.push({
-      code: parsedCode.value,
+      code: normalizedCode,
       isPrimary: candidate.is_primary,
     });
   }
@@ -256,6 +263,10 @@ const parseProfileUpdate = (body: Record<string, unknown>): ParsedProfileUpdateR
     return isProfilePublic;
   }
 
+  if (isProfilePublic.value && !institutionNameRaw.value) {
+    return { message: 'institution_name_raw is required when is_profile_public is true' };
+  }
+
   const researchKeywords = parseResearchKeywords(body.research_keywords);
   if ('message' in researchKeywords) {
     return researchKeywords;
@@ -300,6 +311,25 @@ const buildProfileWriteData = (profile: ParsedProfileUpdate) => ({
   isProfilePublic: profile.isProfilePublic,
 });
 
+const shouldRefreshLegacyStarterSlug = (
+  existingProfile: ExistingProfileIdentity | null,
+  userEmail: string,
+  nextFullName: string
+) => {
+  if (!existingProfile) {
+    return false;
+  }
+
+  const legacyStarterFullName = getStarterFullName(userEmail);
+  const legacyStarterSlug = buildStarterProfile(existingProfile.userId, legacyStarterFullName).slug;
+
+  return (
+    existingProfile.fullName === legacyStarterFullName &&
+    existingProfile.slug === legacyStarterSlug &&
+    nextFullName !== legacyStarterFullName
+  );
+};
+
 const replaceProfileMscCodes = async (
   tx: Prisma.TransactionClient,
   userId: string,
@@ -322,9 +352,15 @@ const replaceProfileMscCodes = async (
 
 const persistProfileUpdate = async (
   userId: string,
+  userEmail: string,
   profile: ParsedProfileUpdate
 ): Promise<PersistProfileUpdateResult> =>
   prisma.$transaction(async (tx) => {
+    const existingProfile = await tx.profile.findUnique({
+      where: { userId },
+      select: { userId: true, fullName: true, slug: true },
+    });
+
     if (profile.mscCodes.length > 0) {
       await Promise.all(
         profile.mscCodes.map((item) =>
@@ -337,7 +373,12 @@ const persistProfileUpdate = async (
       );
     }
 
-    const writeData = buildProfileWriteData(profile);
+    const writeData = {
+      ...buildProfileWriteData(profile),
+      ...(shouldRefreshLegacyStarterSlug(existingProfile, userEmail, profile.fullName)
+        ? { slug: buildStarterProfile(userId, profile.fullName).slug }
+        : {}),
+    };
 
     await tx.profile.upsert({
       where: { userId },
@@ -437,7 +478,7 @@ export const updateMyProfile = async (req: Request, res: Response) => {
       return;
     }
 
-    const updateResult = await persistProfileUpdate(user.id, parsedPayload.profile);
+    const updateResult = await persistProfileUpdate(user.id, user.email, parsedPayload.profile);
     if ('message' in updateResult) {
       res.status(400).json({ message: updateResult.message });
       return;

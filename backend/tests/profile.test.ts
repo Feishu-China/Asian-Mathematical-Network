@@ -20,6 +20,10 @@ describe('Profile API', () => {
     email: 'legacy.user@example.com',
     password: 'password123',
   };
+  const legacyPublishedUser = {
+    email: 'public-legacy.user@example.com',
+    password: 'password123',
+  };
   const replacementUser = {
     email: 'be.profile.replace@example.com',
     password: 'password123',
@@ -50,6 +54,11 @@ describe('Profile API', () => {
     password: 'password123',
     fullName: 'Unknown Msc User',
   };
+  const badMscUser = {
+    email: 'be.profile.bad-msc@example.com',
+    password: 'password123',
+    fullName: 'Bad Msc User',
+  };
   const validationUser = {
     email: 'be.profile.validation@example.com',
     password: 'password123',
@@ -69,12 +78,14 @@ describe('Profile API', () => {
             registeredUser.email,
             updatingUser.email,
             legacyUser.email,
+            legacyPublishedUser.email,
             replacementUser.email,
             publicScholarUser.email,
             institutionFallbackUser.email,
             hiddenScholarUser.email,
             strictValidationUser.email,
             unknownMscUser.email,
+            badMscUser.email,
             validationUser.email,
             unicodeUser.email,
           ],
@@ -84,7 +95,7 @@ describe('Profile API', () => {
     await prisma.mscCode.deleteMany({
       where: {
         code: {
-          in: ['11B05', '35Q55'],
+          in: ['11B05', '14J60', '35Q55'],
         },
       },
     });
@@ -98,12 +109,14 @@ describe('Profile API', () => {
             registeredUser.email,
             updatingUser.email,
             legacyUser.email,
+            legacyPublishedUser.email,
             replacementUser.email,
             publicScholarUser.email,
             institutionFallbackUser.email,
             hiddenScholarUser.email,
             strictValidationUser.email,
             unknownMscUser.email,
+            badMscUser.email,
             validationUser.email,
             unicodeUser.email,
           ],
@@ -113,7 +126,7 @@ describe('Profile API', () => {
     await prisma.mscCode.deleteMany({
       where: {
         code: {
-          in: ['11B05', '35Q55'],
+          in: ['11B05', '14J60', '35Q55'],
         },
       },
     });
@@ -195,6 +208,55 @@ describe('Profile API', () => {
     const persistedProfile = await prisma.profile.findUnique({ where: { userId: user.id } });
     expect(persistedProfile).not.toBeNull();
     expect(persistedProfile?.fullName).toBe('legacy.user');
+  });
+
+  it('replaces an email-derived legacy slug when the profile is later published', async () => {
+    const passwordHash = await bcrypt.hash(legacyPublishedUser.password, 10);
+    const user = await prisma.user.create({
+      data: {
+        email: legacyPublishedUser.email,
+        passwordHash,
+        status: 'active',
+      },
+    });
+
+    const loginRes = await request(app)
+      .post('/api/v1/auth/login')
+      .send({ email: legacyPublishedUser.email, password: legacyPublishedUser.password });
+
+    expect(loginRes.status).toBe(200);
+
+    const starterProfileRes = await request(app)
+      .get('/api/v1/profile/me')
+      .set('Authorization', `Bearer ${loginRes.body.accessToken}`);
+
+    expect(starterProfileRes.status).toBe(200);
+
+    const legacySlug = starterProfileRes.body.data.profile.slug;
+    expect(legacySlug).toContain('public-legacy-user');
+
+    const updateRes = await request(app)
+      .put('/api/v1/profile/me')
+      .set('Authorization', `Bearer ${loginRes.body.accessToken}`)
+      .send({
+        full_name: 'Legacy Public User',
+        institution_name_raw: 'Example University',
+        country_code: 'CN',
+        career_stage: 'faculty',
+        is_profile_public: true,
+      });
+
+    expect(updateRes.status).toBe(200);
+    expect(updateRes.body.data.profile.slug).toBe(`legacy-public-user-${user.id.slice(0, 8)}`);
+    expect(updateRes.body.data.profile.slug).not.toBe(legacySlug);
+
+    const oldScholarRes = await request(app).get(`/api/v1/scholars/${legacySlug}`);
+    expect(oldScholarRes.status).toBe(404);
+
+    const newScholarRes = await request(app).get(
+      `/api/v1/scholars/${updateRes.body.data.profile.slug}`
+    );
+    expect(newScholarRes.status).toBe(200);
   });
 
   it('creates a Unicode-safe starter slug for Asian names', async () => {
@@ -567,7 +629,7 @@ describe('Profile API', () => {
     });
   });
 
-  it('exposes a fallback affiliation in the public profile when only institution_id is saved', async () => {
+  it('rejects publishing a profile when only institution_id is provided without public-facing affiliation text', async () => {
     const registerRes = await request(app)
       .post('/api/v1/auth/register')
       .send(institutionFallbackUser);
@@ -585,14 +647,10 @@ describe('Profile API', () => {
         is_profile_public: true,
       });
 
-    expect(updateRes.status).toBe(200);
-
-    const scholarRes = await request(app).get(
-      `/api/v1/scholars/${updateRes.body.data.profile.slug}`
-    );
-
-    expect(scholarRes.status).toBe(200);
-    expect(scholarRes.body.data.profile.institution_name_raw).toBe('inst-123');
+    expect(updateRes.status).toBe(400);
+    expect(updateRes.body).toEqual({
+      message: 'institution_name_raw is required when is_profile_public is true',
+    });
   });
 
   it('returns 404 for a hidden scholar profile', async () => {
@@ -623,7 +681,7 @@ describe('Profile API', () => {
     expect(scholarRes.body).toEqual({ message: 'Profile not found' });
   });
 
-  it('creates a registry entry for a previously unseen MSC code when updating a fresh profile', async () => {
+  it('creates a registry entry for a canonicalized MSC code when updating a fresh profile', async () => {
     const registerRes = await request(app)
       .post('/api/v1/auth/register')
       .send(unknownMscUser);
@@ -638,18 +696,40 @@ describe('Profile API', () => {
         institution_name_raw: 'Example University',
         country_code: 'CN',
         career_stage: 'phd',
-        msc_codes: [{ code: '99Z99', is_primary: true }],
+        msc_codes: [{ code: '14j60', is_primary: true }],
       });
 
     expect(updateRes.status).toBe(200);
     expect(updateRes.body.data.profile.msc_codes).toEqual([
-      { code: '99Z99', is_primary: true },
+      { code: '14J60', is_primary: true },
     ]);
 
     const registryEntry = await prisma.mscCode.findUnique({
-      where: { code: '99Z99' },
+      where: { code: '14J60' },
     });
 
     expect(registryEntry).not.toBeNull();
+  });
+
+  it('rejects malformed MSC codes with a client error status', async () => {
+    const registerRes = await request(app)
+      .post('/api/v1/auth/register')
+      .send(badMscUser);
+
+    expect(registerRes.status).toBe(201);
+
+    const updateRes = await request(app)
+      .put('/api/v1/profile/me')
+      .set('Authorization', `Bearer ${registerRes.body.accessToken}`)
+      .send({
+        full_name: badMscUser.fullName,
+        institution_name_raw: 'Example University',
+        country_code: 'CN',
+        career_stage: 'phd',
+        msc_codes: [{ code: 'bad-code', is_primary: true }],
+      });
+
+    expect(updateRes.status).toBe(400);
+    expect(updateRes.body).toEqual({ message: 'msc_codes code must be a valid MSC code' });
   });
 });
