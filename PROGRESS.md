@@ -4,11 +4,21 @@
 
 ## 当前项目状态
 *   **最新版本**: V4.0-Optimized
-*   **总览**: `AUTH` 与 `PROFILE` 两个 Epic 已完成。`CONF` Epic 的前后端实现 `BE-CONF-001` 与 `FE-CONF-001` 已完成并通过 smoke 验证，下一步应推进 `INT-CONF-001` 做真实联调。
+*   **总览**: `AUTH`、`PROFILE` 与 `CONF` 三个 Epic 已完成。下一步应转入 `GRANT` Epic，从 `FE-GRANT-001` 或 `BE-GRANT-001` 开始。
 
 ---
 
 ## 📅 Handoff 历史记录
+
+### 2026-04-20 (Session 18)
+*   **Agent 角色**: Coding Agent (Integration)
+*   **完成 Feature**: `INT-CONF-001`
+*   **变更记录**:
+    *   将 conference provider 从本地 fake 实现切换为真实 conference/application API，并在测试环境继续保留 fake provider，保持会议页面单元测试稳定。
+    *   新增 conference HTTP adapter，将 `snake_case` transport payload 映射到 conference domain model，并把 duplicate draft 的 `409` 响应转换为前端可识别的 `CONFLICT` 错误。
+    *   通过真实 backend API 验证了 Organizer 创建并发布会议、Applicant 更新 profile、公开会议 list/detail/application-form、会议申请 draft 更新与 submit 的完整闭环。
+    *   验证了 frontend dev server 可提供 `/conferences`、`/conferences/:slug`、`/conferences/:slug/apply`、`/organizer/conferences/:id` 路由，并执行通过仓库级 `npm run test:smoke`。
+*   **下一步**: `CONF` Epic 可视为完成，可转入 `GRANT` Epic。
 
 ### 2026-04-20 (Session 17)
 *   **Agent 角色**: Coding Agent (Frontend)
