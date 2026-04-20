@@ -4,11 +4,24 @@
 
 ## 当前项目状态
 *   **最新版本**: V4.0-Optimized
-*   **总览**: `AUTH` 与 `PROFILE` 两个 Epic 已完成。`CONF` Epic 的后端实现 `BE-CONF-001` 已完成并通过 smoke 验证，下一步应继续推进 `FE-CONF-001`，随后再做 `INT-CONF-001`。
+*   **总览**: `AUTH` 与 `PROFILE` 两个 Epic 已完成。`CONF` Epic 的前后端实现 `BE-CONF-001` 与 `FE-CONF-001` 已完成并通过 smoke 验证，下一步应推进 `INT-CONF-001` 做真实联调。
 
 ---
 
 ## 📅 Handoff 历史记录
+
+### 2026-04-20 (Session 17)
+*   **Agent 角色**: Coding Agent (Frontend)
+*   **完成 Feature**: `FE-CONF-001`
+*   **变更记录**:
+    *   为 conference feature 建立了独立的 frontend provider / mapper / schema-field 边界，并补齐了 Vitest + Testing Library 测试基线，避免页面直接耦合 raw transport payload。
+    *   实现了公开会议列表页 `/conferences` 与会议详情页 `/conferences/:slug`，只展示已发布会议，并在详情页提供申请入口。
+    *   实现了 Organizer 会议新建页 `/organizer/conferences/new` 与编辑页 `/organizer/conferences/:id`，覆盖草稿保存、发布前校验、发布与关闭动作。
+    *   实现了 Applicant 会议申请页 `/conferences/:slug/apply`，覆盖登录前提示、草稿保存、重复草稿冲突提示，以及草稿提交闭环。
+    *   使用 fake conference provider 对齐当前 backend contract 和 M2 字段子集，明确本轮不提前引入通用 form builder 或文件上传子系统。
+    *   执行并通过 `conferenceMappers`、`Conferences`、`OrganizerConferenceEditor`、`ConferenceApply` 四组前端测试，执行并通过 `frontend npm run build`，并通过仓库级 `npm run test:smoke`。
+    *   更新了 `v4.0` 计划中 `FE-CONF-001` 的状态为 `completed`，`passes` 维持 `false`，等待 `INT-CONF-001` 完成后再改为集成通过。
+*   **下一步**: `INT-CONF-001`
 
 ### 2026-04-20 (Session 16)
 *   **Agent 角色**: Coding Agent (Backend)

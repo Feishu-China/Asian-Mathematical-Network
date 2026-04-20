@@ -7,7 +7,6 @@ import {
 } from './conferenceMappers';
 import type {
   ConferenceApplication,
-  ConferenceApplicationValues,
   ConferenceEditorValues,
   ConferenceProvider,
   OrganizerConference,
@@ -45,7 +44,10 @@ const isPublishReady = (values: ConferenceEditorValues) =>
       values.applicationDeadline
   );
 
-const publishedSeed = {
+type PublicConferenceRecord = Parameters<typeof fromTransportConferenceDetail>[0];
+type OrganizerConferenceRecord = Parameters<typeof fromTransportOrganizerConference>[0];
+
+const publishedSeed: PublicConferenceRecord = {
   id: 'conf-published-001',
   slug: 'asiamath-2026-workshop',
   title: 'Asiamath 2026 Workshop',
@@ -62,7 +64,7 @@ const publishedSeed = {
   related_grants: [],
 };
 
-const organizerSeed = {
+const organizerSeed: OrganizerConferenceRecord = {
   id: 'conf-draft-001',
   slug: 'organizer-draft-2026',
   title: 'Organizer Draft 2026',
@@ -83,8 +85,8 @@ const organizerSeed = {
   staff: [{ user_id: 'organizer-1', staff_role: 'owner' }],
 };
 
-let publicConferenceState = [publishedSeed];
-let organizerConferenceState = [organizerSeed];
+let publicConferenceState: PublicConferenceRecord[] = [publishedSeed];
+let organizerConferenceState: OrganizerConferenceRecord[] = [organizerSeed];
 let applicationState: ConferenceApplication[] = [];
 
 export const resetConferenceFakeState = () => {

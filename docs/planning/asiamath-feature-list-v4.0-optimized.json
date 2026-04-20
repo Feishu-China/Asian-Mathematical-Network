@@ -337,7 +337,7 @@
         "Build conference application form & draft save",
         "Integrate with mock endpoints"
       ],
-      "status": "not_started",
+      "status": "completed",
       "passes": false
     },
     {

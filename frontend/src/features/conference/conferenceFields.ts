@@ -17,25 +17,35 @@ const orderedFieldKeys: SupportedConferenceFieldKey[] = [
 export const buildConferenceFormSchema = (
   values: Pick<ConferenceEditorValues, 'includeAbstractFields' | 'includeTravelSupportQuestion'>
 ): ConferenceFormSchema => ({
-  fields: orderedFieldKeys.flatMap((key) => {
+  fields: orderedFieldKeys.reduce<ConferenceFormSchema['fields']>((fields, key) => {
     if (key === 'abstract_title' || key === 'abstract_text') {
-      return values.includeAbstractFields
-        ? [{ key, type: key === 'abstract_title' ? 'text' : 'textarea', required: false }]
-        : [];
+      if (values.includeAbstractFields) {
+        fields.push({
+          key,
+          type: key === 'abstract_title' ? 'text' : 'textarea',
+          required: false,
+        });
+      }
+
+      return fields;
     }
 
     if (key === 'interested_in_travel_support') {
-      return values.includeTravelSupportQuestion
-        ? [{ key, type: 'checkbox', required: false }]
-        : [];
+      if (values.includeTravelSupportQuestion) {
+        fields.push({ key, type: 'checkbox', required: false });
+      }
+
+      return fields;
     }
 
     if (key === 'participation_type') {
-      return [{ key, type: 'select', required: true, options: participationTypeOptions }];
+      fields.push({ key, type: 'select', required: true, options: participationTypeOptions });
+      return fields;
     }
 
-    return [{ key, type: 'textarea', required: true }];
-  }),
+    fields.push({ key, type: 'textarea', required: true });
+    return fields;
+  }, []),
 });
 
 export const readConferenceFormToggles = (schema: ConferenceFormSchema) => ({
