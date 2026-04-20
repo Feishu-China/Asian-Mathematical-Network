@@ -11,9 +11,19 @@ describe('Profile API', () => {
     password: 'password123',
     fullName: 'Ada Lovelace',
   };
+  const updatingUser = {
+    email: 'be.profile.update@example.com',
+    password: 'password123',
+    fullName: 'Kurt Godel',
+  };
   const legacyUser = {
     email: 'legacy.user@example.com',
     password: 'password123',
+  };
+  const validationUser = {
+    email: 'be.profile.validation@example.com',
+    password: 'password123',
+    fullName: 'Validation User',
   };
   const unicodeUser = {
     email: 'be.profile.unicode@example.com',
@@ -25,7 +35,20 @@ describe('Profile API', () => {
     await prisma.user.deleteMany({
       where: {
         email: {
-          in: [registeredUser.email, legacyUser.email, unicodeUser.email],
+          in: [
+            registeredUser.email,
+            updatingUser.email,
+            legacyUser.email,
+            validationUser.email,
+            unicodeUser.email,
+          ],
+        },
+      },
+    });
+    await prisma.mscCode.deleteMany({
+      where: {
+        code: {
+          in: ['11B05', '35Q55'],
         },
       },
     });
@@ -35,7 +58,20 @@ describe('Profile API', () => {
     await prisma.user.deleteMany({
       where: {
         email: {
-          in: [registeredUser.email, legacyUser.email, unicodeUser.email],
+          in: [
+            registeredUser.email,
+            updatingUser.email,
+            legacyUser.email,
+            validationUser.email,
+            unicodeUser.email,
+          ],
+        },
+      },
+    });
+    await prisma.mscCode.deleteMany({
+      where: {
+        code: {
+          in: ['11B05', '35Q55'],
         },
       },
     });
@@ -135,5 +171,162 @@ describe('Profile API', () => {
     expect(profileRes.body.data.profile.slug).toBe(
       `${unicodeUser.fullName}-${registerRes.body.user.id.slice(0, 8)}`
     );
+  });
+
+  it('updates the current profile and persists MSC codes', async () => {
+    await prisma.mscCode.upsert({
+      where: { code: '11B05' },
+      update: {},
+      create: { code: '11B05' },
+    });
+    await prisma.mscCode.upsert({
+      where: { code: '35Q55' },
+      update: {},
+      create: { code: '35Q55' },
+    });
+
+    const registerRes = await request(app)
+      .post('/api/v1/auth/register')
+      .send(updatingUser);
+
+    expect(registerRes.status).toBe(201);
+
+    const updateRes = await request(app)
+      .put('/api/v1/profile/me')
+      .set('Authorization', `Bearer ${registerRes.body.accessToken}`)
+      .send({
+        full_name: 'Kurt Godel',
+        title: 'Professor',
+        institution_name_raw: 'Institute for Advanced Study',
+        country_code: 'US',
+        career_stage: 'faculty',
+        bio: 'Works on logic and foundations.',
+        personal_website: 'https://example.com/kurt',
+        research_keywords: ['logic', 'set theory'],
+        msc_codes: [
+          { code: '11B05', is_primary: true },
+          { code: '35Q55', is_primary: false },
+        ],
+        orcid_id: '0000-0001-2345-6789',
+        coi_declaration_text: 'No conflicts.',
+        is_profile_public: true,
+      });
+
+    expect(updateRes.status).toBe(200);
+    expect(updateRes.body.data.profile).toMatchObject({
+      user_id: registerRes.body.user.id,
+      slug: `kurt-godel-${registerRes.body.user.id.slice(0, 8)}`,
+      full_name: 'Kurt Godel',
+      title: 'Professor',
+      institution_id: null,
+      institution_name_raw: 'Institute for Advanced Study',
+      country_code: 'US',
+      career_stage: 'faculty',
+      bio: 'Works on logic and foundations.',
+      personal_website: 'https://example.com/kurt',
+      research_keywords: ['logic', 'set theory'],
+      msc_codes: [
+        { code: '11B05', is_primary: true },
+        { code: '35Q55', is_primary: false },
+      ],
+      orcid_id: '0000-0001-2345-6789',
+      coi_declaration_text: 'No conflicts.',
+      is_profile_public: true,
+      verification_status: 'unverified',
+      verified_at: null,
+    });
+    expect(updateRes.body.data.profile.created_at).toEqual(expect.any(String));
+    expect(updateRes.body.data.profile.updated_at).toEqual(expect.any(String));
+
+    const persistedProfile = await prisma.profile.findUnique({
+      where: { userId: registerRes.body.user.id },
+      include: {
+        mscCodes: {
+          orderBy: { mscCode: 'asc' },
+        },
+      },
+    });
+
+    expect(persistedProfile).not.toBeNull();
+    expect(persistedProfile).toMatchObject({
+      fullName: 'Kurt Godel',
+      title: 'Professor',
+      institutionId: null,
+      institutionNameRaw: 'Institute for Advanced Study',
+      countryCode: 'US',
+      careerStage: 'faculty',
+      bio: 'Works on logic and foundations.',
+      personalWebsite: 'https://example.com/kurt',
+      researchKeywordsJson: JSON.stringify(['logic', 'set theory']),
+      orcidId: '0000-0001-2345-6789',
+      coiDeclarationText: 'No conflicts.',
+      isProfilePublic: true,
+    });
+    expect(persistedProfile?.mscCodes).toEqual([
+      expect.objectContaining({ mscCode: '11B05', isPrimary: true }),
+      expect.objectContaining({ mscCode: '35Q55', isPrimary: false }),
+    ]);
+  });
+
+  it('rejects duplicate primary MSC codes and duplicate MSC codes', async () => {
+    await prisma.mscCode.upsert({
+      where: { code: '11B05' },
+      update: {},
+      create: { code: '11B05' },
+    });
+    await prisma.mscCode.upsert({
+      where: { code: '35Q55' },
+      update: {},
+      create: { code: '35Q55' },
+    });
+
+    const registerRes = await request(app)
+      .post('/api/v1/auth/register')
+      .send(validationUser);
+
+    expect(registerRes.status).toBe(201);
+
+    const duplicatePrimaryRes = await request(app)
+      .put('/api/v1/profile/me')
+      .set('Authorization', `Bearer ${registerRes.body.accessToken}`)
+      .send({
+        full_name: 'Validation User',
+        institution_name_raw: 'Example University',
+        country_code: 'CN',
+        career_stage: 'phd',
+        msc_codes: [
+          { code: '11B05', is_primary: true },
+          { code: '35Q55', is_primary: true },
+        ],
+      });
+
+    expect(duplicatePrimaryRes.status).toBe(400);
+    expect(duplicatePrimaryRes.body).toEqual({
+      message: 'msc_codes must not contain more than one primary code',
+    });
+
+    const duplicateCodeRes = await request(app)
+      .put('/api/v1/profile/me')
+      .set('Authorization', `Bearer ${registerRes.body.accessToken}`)
+      .send({
+        full_name: 'Validation User',
+        institution_name_raw: 'Example University',
+        country_code: 'CN',
+        career_stage: 'phd',
+        msc_codes: [
+          { code: '11B05', is_primary: true },
+          { code: '11B05', is_primary: false },
+        ],
+      });
+
+    expect(duplicateCodeRes.status).toBe(400);
+    expect(duplicateCodeRes.body).toEqual({
+      message: 'msc_codes must not contain duplicate codes',
+    });
+
+    const persistedCodes = await prisma.profileMscCode.findMany({
+      where: { userId: registerRes.body.user.id },
+    });
+    expect(persistedCodes).toEqual([]);
   });
 });

@@ -12,10 +12,19 @@ export const serializeProfile = (profile: Profile) => ({
   bio: profile.bio,
   personal_website: profile.personalWebsite,
   research_keywords: profile.researchKeywords,
-  msc_codes: profile.mscCodes.map((item) => ({
-    code: item.code,
-    is_primary: item.isPrimary,
-  })),
+  msc_codes: profile.mscCodes
+    .slice()
+    .sort((left, right) => {
+      if (left.isPrimary !== right.isPrimary) {
+        return Number(right.isPrimary) - Number(left.isPrimary);
+      }
+
+      return left.code.localeCompare(right.code);
+    })
+    .map((item) => ({
+      code: item.code,
+      is_primary: item.isPrimary,
+    })),
   orcid_id: profile.orcidId,
   coi_declaration_text: profile.coiDeclarationText,
   is_profile_public: profile.isProfilePublic,
