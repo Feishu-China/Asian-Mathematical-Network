@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../lib/prisma';
-import { buildStarterProfile } from './profile';
+import { buildStarterProfile } from '../lib/profile';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_key_for_development';
 
@@ -23,16 +23,20 @@ export const register = async (req: Request, res: Response) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
     
-    const newUser = await prisma.user.create({
-      data: {
-        email,
-        passwordHash: hashedPassword,
-        status: 'active'
-      }
-    });
+    const newUser = await prisma.$transaction(async (tx) => {
+      const createdUser = await tx.user.create({
+        data: {
+          email,
+          passwordHash: hashedPassword,
+          status: 'active'
+        }
+      });
 
-    await prisma.profile.create({
-      data: buildStarterProfile(newUser.id, fullName)
+      await tx.profile.create({
+        data: buildStarterProfile(createdUser.id, fullName)
+      });
+
+      return createdUser;
     });
 
     const token = jwt.sign({ userId: newUser.id }, JWT_SECRET, { expiresIn: '1d' });
