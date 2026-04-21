@@ -20,8 +20,8 @@ describe('grant integration fixture helper', () => {
     const first = await ensureGrantIntegrationFixture(prisma);
     const second = await ensureGrantIntegrationFixture(prisma);
 
-    expect(first.conference.slug).toBe('asiamath-2026-workshop');
-    expect(first.grant.slug).toBe('asiamath-2026-travel-grant');
+    expect(first.conference.slug).toBe('integration-grant-conf-2026');
+    expect(first.grant.slug).toBe('integration-grant-2026-travel-support');
     expect(first.grant.linkedConferenceId).toBe(first.conference.id);
     expect(first.grant.status).toBe('published');
     expect(first.grant.reportRequired).toBe(true);
@@ -30,7 +30,7 @@ describe('grant integration fixture helper', () => {
     expect(second.grant.id).toBe(first.grant.id);
 
     const storedGrants = await prisma.grantOpportunity.findMany({
-      where: { slug: { in: ['asiamath-2026-travel-grant'] } },
+      where: { slug: { in: ['integration-grant-2026-travel-support'] } },
     });
 
     expect(storedGrants).toHaveLength(1);

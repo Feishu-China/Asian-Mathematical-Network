@@ -2,10 +2,10 @@ import type { PrismaClient } from '@prisma/client';
 
 export const GRANT_INTEGRATION_FIXTURE = {
   creatorEmail: 'grant.integration.creator@example.com',
-  conferenceSlug: 'asiamath-2026-workshop',
-  grantSlug: 'asiamath-2026-travel-grant',
-  conferenceTitle: 'Asiamath 2026 Workshop',
-  grantTitle: 'Asiamath 2026 Travel Grant',
+  conferenceSlug: 'integration-grant-conf-2026',
+  grantSlug: 'integration-grant-2026-travel-support',
+  conferenceTitle: 'Integration Grant Conference 2026',
+  grantTitle: 'Integration Grant 2026 Travel Support',
   conferenceFormFields: [
     { key: 'participation_type', type: 'select', required: true },
     { key: 'statement', type: 'textarea', required: true },
@@ -141,6 +141,26 @@ export const ensureGrantIntegrationFixture = async (prisma: PrismaClient) => {
 };
 
 export const cleanupGrantIntegrationFixture = async (prisma: PrismaClient) => {
+  await prisma.applicationStatusHistory.deleteMany({
+    where: {
+      application: {
+        OR: [
+          { conference: { slug: GRANT_INTEGRATION_FIXTURE.conferenceSlug } },
+          { grant: { slug: GRANT_INTEGRATION_FIXTURE.grantSlug } },
+        ],
+      },
+    },
+  });
+
+  await prisma.application.deleteMany({
+    where: {
+      OR: [
+        { conference: { slug: GRANT_INTEGRATION_FIXTURE.conferenceSlug } },
+        { grant: { slug: GRANT_INTEGRATION_FIXTURE.grantSlug } },
+      ],
+    },
+  });
+
   await prisma.grantOpportunity.deleteMany({
     where: { slug: GRANT_INTEGRATION_FIXTURE.grantSlug },
   });

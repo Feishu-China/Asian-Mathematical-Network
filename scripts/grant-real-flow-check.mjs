@@ -16,6 +16,7 @@ const { PrismaClient } = require('../backend/node_modules/@prisma/client');
 const {
   ensureGrantIntegrationFixture,
   GRANT_INTEGRATION_FIXTURE,
+  cleanupGrantIntegrationFixture,
 } = require('../backend/tests/helpers/grantIntegrationFixture.ts');
 
 const prisma = new PrismaClient();
@@ -28,6 +29,48 @@ const applicant = {
   email: `grant.int.${uniqueRunId}@example.com`,
   password: 'password123',
   fullName: `Grant Int ${uniqueRunId}`,
+};
+
+const cleanupVerifierArtifacts = async () => {
+  await prisma.applicationStatusHistory.deleteMany({
+    where: {
+      application: {
+        applicant: {
+          email: {
+            startsWith: 'grant.int.',
+          },
+        },
+      },
+    },
+  });
+
+  await prisma.application.deleteMany({
+    where: {
+      applicant: {
+        email: {
+          startsWith: 'grant.int.',
+        },
+      },
+    },
+  });
+
+  await prisma.profile.deleteMany({
+    where: {
+      user: {
+        email: {
+          startsWith: 'grant.int.',
+        },
+      },
+    },
+  });
+
+  await prisma.user.deleteMany({
+    where: {
+      email: {
+        startsWith: 'grant.int.',
+      },
+    },
+  });
 };
 
 const expectStatus = async (response, expectedStatus, context) => {
@@ -126,6 +169,7 @@ const registerApplicant = async () => {
 };
 
 const main = async () => {
+  await cleanupVerifierArtifacts();
   console.log('Seeding deterministic grant integration fixture...');
   const fixture = await ensureGrantIntegrationFixture(prisma);
 
@@ -347,5 +391,7 @@ const main = async () => {
 try {
   await main();
 } finally {
+  await cleanupVerifierArtifacts();
+  await cleanupGrantIntegrationFixture(prisma);
   await prisma.$disconnect();
 }
