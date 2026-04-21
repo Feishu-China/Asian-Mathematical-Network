@@ -23,6 +23,8 @@ export default function ConferenceApply() {
 
   useEffect(() => {
     let active = true;
+    setApplication(null);
+    setSchema({ fields: [] });
 
     conferenceProvider.getConferenceBySlug(slug).then(async (value) => {
       if (!active) {
@@ -35,10 +37,16 @@ export default function ConferenceApply() {
         return;
       }
 
-      const nextSchema = await conferenceProvider.getConferenceApplicationForm(value.id);
+      const [nextSchema, nextApplication] = await Promise.all([
+        conferenceProvider.getConferenceApplicationForm(value.id),
+        localStorage.getItem('token')
+          ? conferenceProvider.getMyConferenceApplication(value.id)
+          : Promise.resolve(null),
+      ]);
 
       if (active) {
         setSchema(nextSchema);
+        setApplication(nextApplication);
       }
     });
 

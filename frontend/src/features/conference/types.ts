@@ -92,6 +92,7 @@ export type ConferenceProvider = {
   listPublicConferences(): Promise<ConferenceListItem[]>;
   getConferenceBySlug(slug: string): Promise<ConferenceDetail | null>;
   getConferenceApplicationForm(conferenceId: string): Promise<ConferenceFormSchema>;
+  getMyConferenceApplication(conferenceId: string): Promise<ConferenceApplication | null>;
   createOrganizerConference(values: ConferenceEditorValues): Promise<OrganizerConference>;
   getOrganizerConference(id: string): Promise<OrganizerConference>;
   updateOrganizerConference(id: string, values: ConferenceEditorValues): Promise<OrganizerConference>;

@@ -10,6 +10,18 @@
 
 ## 📅 Handoff 历史记录
 
+### 2026-04-21 (Session 19)
+*   **Agent 角色**: Coding Agent (Integration Stabilization)
+*   **完成 Feature**: `INT-CONF-001` (post-integration bugfix)
+*   **变更记录**:
+    *   修复了 Applicant 在会议申请页 `Save draft` 后刷新无法回显已保存草稿的问题；根因是前端页面只加载 conference detail 和 application form schema，没有读取当前用户在该 conference 下的既有 application。
+    *   后端新增 `GET /api/v1/conferences/:id/applications/me`，用于按 conference 读取当前登录用户的 `conference_application`；前端 provider 与申请页加载逻辑已接入该接口，实现页面刷新后的 draft hydrate。
+    *   补充并通过了前端回归测试（申请页 hydrate / 既有 draft 更新 / provider 404->null 映射）、前端构建验证，以及 backend `conferences.test.ts` 中对“读取我的会议申请草稿”的接口验证。
+*   **当前结论**:
+    *   `CONF` 主流程通过：Organizer 创建/发布会议，Applicant 保存 draft、刷新回读、提交申请均已验证通过。
+    *   已知非阻塞 UI 问题：刷新一个已 `submitted` 的 application 后，页面顶部提示文案仍可能显示 `Draft saved.`，该问题记录为后续处理项，不阻塞 `CONF` 完成判定。
+*   **下一步**: `CONF` 可继续保持完成状态，进入 `GRANT` Epic。
+
 ### 2026-04-20 (Session 18)
 *   **Agent 角色**: Coding Agent (Integration)
 *   **完成 Feature**: `INT-CONF-001`

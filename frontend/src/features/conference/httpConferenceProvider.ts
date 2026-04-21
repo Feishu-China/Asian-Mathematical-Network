@@ -4,6 +4,7 @@ import {
   createConferenceApplicationRequest,
   createOrganizerConferenceRequest,
   fetchConferenceApplicationForm,
+  fetchMyConferenceApplication,
   fetchConferenceDetail,
   fetchConferenceList,
   fetchOrganizerConference,
@@ -68,6 +69,19 @@ export const httpConferenceProvider: ConferenceProvider = {
   async getConferenceApplicationForm(conferenceId) {
     const response = await fetchConferenceApplicationForm(conferenceId);
     return fromTransportConferenceApplicationForm(response.data);
+  },
+
+  async getMyConferenceApplication(conferenceId) {
+    try {
+      const response = await fetchMyConferenceApplication(readToken(), conferenceId);
+      return fromTransportConferenceApplication(response.data.application);
+    } catch (error) {
+      if (hasStatus(error, 404)) {
+        return null;
+      }
+
+      throw error;
+    }
   },
 
   async createOrganizerConference(values) {

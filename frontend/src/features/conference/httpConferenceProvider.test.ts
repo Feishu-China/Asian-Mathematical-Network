@@ -6,6 +6,7 @@ import {
   fetchConferenceApplicationForm,
   fetchConferenceDetail,
   fetchConferenceList,
+  fetchMyConferenceApplication,
 } from '../../api/conference';
 import type { ConferenceEditorValues } from './types';
 import { httpConferenceProvider } from './httpConferenceProvider';
@@ -14,6 +15,7 @@ vi.mock('../../api/conference', () => ({
   fetchConferenceList: vi.fn(),
   fetchConferenceDetail: vi.fn(),
   fetchConferenceApplicationForm: vi.fn(),
+  fetchMyConferenceApplication: vi.fn(),
   createOrganizerConferenceRequest: vi.fn(),
   fetchOrganizerConference: vi.fn(),
   updateOrganizerConferenceRequest: vi.fn(),
@@ -203,5 +205,52 @@ describe('httpConferenceProvider', () => {
       code: 'CONFLICT',
       message: 'Application already exists for this conference',
     });
+  });
+
+  it('returns the existing application for the current user and maps 404 to null', async () => {
+    vi.mocked(fetchMyConferenceApplication).mockResolvedValueOnce({
+      data: {
+        application: {
+          id: 'application-1',
+          application_type: 'conference_application',
+          source_module: 'M2',
+          conference_id: 'conf-1',
+          conference_title: 'Published Conference 2026',
+          applicant_user_id: 'integration-token',
+          status: 'draft',
+          participation_type: 'talk',
+          statement: 'Saved statement',
+          abstract_title: 'Saved abstract title',
+          abstract_text: 'Saved abstract text',
+          interested_in_travel_support: true,
+          extra_answers: {},
+          files: [],
+          submitted_at: null,
+          decided_at: null,
+          created_at: '2026-04-20T10:00:00.000Z',
+          updated_at: '2026-04-20T10:00:00.000Z',
+        },
+      },
+    });
+
+    await expect(httpConferenceProvider.getMyConferenceApplication('conf-1')).resolves.toMatchObject({
+      id: 'application-1',
+      conferenceId: 'conf-1',
+      status: 'draft',
+      statement: 'Saved statement',
+    });
+
+    const notFoundError = {
+      response: {
+        status: 404,
+      },
+    };
+
+    vi.spyOn(axios, 'isAxiosError').mockImplementation(
+      (error): error is typeof notFoundError => error === notFoundError
+    );
+    vi.mocked(fetchMyConferenceApplication).mockRejectedValueOnce(notFoundError);
+
+    await expect(httpConferenceProvider.getMyConferenceApplication('conf-1')).resolves.toBeNull();
   });
 });

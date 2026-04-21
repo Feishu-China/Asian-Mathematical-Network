@@ -23,6 +23,11 @@ export const fetchConferenceApplicationForm = async (conferenceId: string) => {
   return response.data;
 };
 
+export const fetchMyConferenceApplication = async (token: string, conferenceId: string) => {
+  const response = await api.get(`/conferences/${conferenceId}/applications/me`, withAuth(token));
+  return response.data;
+};
+
 export const createOrganizerConferenceRequest = async (token: string, payload: unknown) => {
   const response = await api.post('/organizer/conferences', payload, withAuth(token));
   return response.data;

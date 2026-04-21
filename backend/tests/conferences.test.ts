@@ -98,7 +98,7 @@ describe('Conference API', () => {
   });
 
   it('lists only published conferences and returns detail plus the application form', async () => {
-    const listRes = await request(app).get('/api/v1/conferences');
+    const listRes = await request(app).get('/api/v1/conferences').query({ q: 'Published Conference 2026' });
 
     expect(listRes.status).toBe(200);
     expect(listRes.body.data.items).toHaveLength(1);
@@ -366,6 +366,19 @@ describe('Conference API', () => {
 
     expect(duplicateDraftRes.status).toBe(409);
 
+    const readDraftRes = await request(app)
+      .get(`/api/v1/conferences/${conferenceId}/applications/me`)
+      .set('Authorization', `Bearer ${applicantRes.body.accessToken}`);
+
+    expect(readDraftRes.status).toBe(200);
+    expect(readDraftRes.body.data.application).toMatchObject({
+      id: applicationId,
+      conference_id: conferenceId,
+      status: 'draft',
+      statement: 'I would like to present.',
+      abstract_title: 'Arithmetic Dynamics',
+    });
+
     const updateDraftRes = await request(app)
       .put(`/api/v1/me/applications/${applicationId}/draft`)
       .set('Authorization', `Bearer ${applicantRes.body.accessToken}`)
@@ -381,6 +394,21 @@ describe('Conference API', () => {
 
     expect(updateDraftRes.status).toBe(200);
     expect(updateDraftRes.body.data.application.statement).toBe('Updated draft statement.');
+
+    const readUpdatedDraftRes = await request(app)
+      .get(`/api/v1/conferences/${conferenceId}/applications/me`)
+      .set('Authorization', `Bearer ${applicantRes.body.accessToken}`);
+
+    expect(readUpdatedDraftRes.status).toBe(200);
+    expect(readUpdatedDraftRes.body.data.application).toMatchObject({
+      id: applicationId,
+      conference_id: conferenceId,
+      status: 'draft',
+      statement: 'Updated draft statement.',
+      abstract_title: 'Arithmetic Dynamics Revised',
+      interested_in_travel_support: false,
+      extra_answers: { audience: 'graduate students' },
+    });
 
     const submitRes = await request(app)
       .post(`/api/v1/me/applications/${applicationId}/submit`)

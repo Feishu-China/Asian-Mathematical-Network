@@ -143,6 +143,17 @@ export const fakeConferenceProvider: ConferenceProvider = {
     throw new Error('Conference form not found');
   },
 
+  async getMyConferenceApplication(conferenceId) {
+    const userId = requireToken();
+    await delay();
+
+    return (
+      applicationState.find(
+        (item) => item.conferenceId === conferenceId && item.applicantUserId === userId
+      ) ?? null
+    );
+  },
+
   async createOrganizerConference(values) {
     const userId = requireToken();
     await delay();

@@ -98,6 +98,39 @@ export const getConferenceApplicationForm = async (req: Request, res: Response) 
   });
 };
 
+export const getMyConferenceApplication = async (req: Request, res: Response) => {
+  try {
+    const userId = requireAuthenticatedUserId(req);
+    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const application = await prisma.application.findFirst({
+      where: {
+        conferenceId: id,
+        applicantUserId: userId,
+        applicationType: 'conference_application',
+      },
+      include: {
+        conference: true,
+      },
+    });
+
+    if (!application || !application.conference) {
+      res.status(404).json({ message: 'Application not found' });
+      return;
+    }
+
+    res.status(200).json({
+      data: {
+        application: serializeConferenceApplication({
+          ...application,
+          conferenceTitle: application.conference.title,
+        }),
+      },
+    });
+  } catch {
+    res.status(401).json({ message: 'Unauthorized' });
+  }
+};
+
 export const createConferenceApplicationDraft = async (req: Request, res: Response) => {
   try {
     const userId = requireAuthenticatedUserId(req);

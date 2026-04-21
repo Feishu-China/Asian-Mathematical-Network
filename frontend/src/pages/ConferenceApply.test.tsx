@@ -48,7 +48,33 @@ describe('conference apply page', () => {
     expect(await screen.findByText(/application submitted/i)).toBeInTheDocument();
   });
 
-  it('shows a duplicate conflict message when a draft already exists for the current user', async () => {
+  it('hydrates an existing draft when the page reloads', async () => {
+    localStorage.setItem('token', 'applicant-1');
+
+    await fakeConferenceProvider.createConferenceApplication('conf-published-001', {
+      participationType: 'talk',
+      statement: 'Saved statement',
+      abstractTitle: 'Saved abstract title',
+      abstractText: 'Saved abstract text',
+      interestedInTravelSupport: true,
+      extraAnswers: {},
+    });
+
+    renderWithRouter(
+      <ConferenceApply />,
+      '/conferences/asiamath-2026-workshop/apply',
+      '/conferences/:slug/apply'
+    );
+
+    expect(await screen.findByText(/draft saved/i)).toBeInTheDocument();
+    expect(await screen.findByDisplayValue('talk')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Saved statement')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Saved abstract title')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Saved abstract text')).toBeInTheDocument();
+    expect(screen.getByLabelText(/interested in travel support/i)).toBeChecked();
+  });
+
+  it('updates an existing draft after the page reloads', async () => {
     localStorage.setItem('token', 'applicant-1');
 
     await fakeConferenceProvider.createConferenceApplication('conf-published-001', {
@@ -68,12 +94,11 @@ describe('conference apply page', () => {
     );
 
     await screen.findByRole('heading', { name: /conference application/i });
-    await user.selectOptions(screen.getByLabelText(/participation type/i), 'participant');
-    await user.type(screen.getByLabelText(/statement/i), 'Another draft attempt');
+    await user.clear(screen.getByLabelText(/statement/i));
+    await user.type(screen.getByLabelText(/statement/i), 'Updated after reload');
     await user.click(screen.getByRole('button', { name: /save draft/i }));
 
-    expect(
-      await screen.findByText(/an application draft already exists for this conference/i)
-    ).toBeInTheDocument();
+    expect(await screen.findByText(/draft saved/i)).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Updated after reload')).toBeInTheDocument();
   });
 });
