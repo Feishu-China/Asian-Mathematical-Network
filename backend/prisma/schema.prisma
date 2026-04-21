@@ -18,6 +18,7 @@ model User {
   updatedAt               DateTime                   @updatedAt
   profile                 Profile?
   createdConferences      Conference[]               @relation("ConferenceCreator")
+  createdGrantOpportunities GrantOpportunity[]       @relation("GrantOpportunityCreator")
   conferenceStaff         ConferenceStaff[]
   applications            Application[]              @relation("ApplicationApplicant")
   applicationStatusEvents ApplicationStatusHistory[] @relation("ApplicationStatusChangedBy")
@@ -82,9 +83,37 @@ model Conference {
   updatedAt                 DateTime          @updatedAt
   creator                   User              @relation("ConferenceCreator", fields: [createdByUserId], references: [id], onDelete: Cascade)
   staff                     ConferenceStaff[]
+  linkedGrants              GrantOpportunity[] @relation("GrantOpportunityLinkedConference")
   applications              Application[]
 
   @@index([status, applicationDeadline])
+}
+
+model GrantOpportunity {
+  id                        String        @id @default(uuid())
+  linkedConferenceId        String
+  slug                      String        @unique
+  title                     String
+  grantType                 String
+  description               String?
+  eligibilitySummary        String?
+  coverageSummary           String?
+  applicationDeadline       DateTime?
+  status                    String        @default("draft")
+  reportRequired            Boolean       @default(false)
+  applicationFormSchemaJson String        @default("{\"fields\":[]}")
+  settingsJson              String        @default("{}")
+  publishedAt               DateTime?
+  closedAt                  DateTime?
+  createdByUserId           String
+  createdAt                 DateTime      @default(now())
+  updatedAt                 DateTime      @updatedAt
+  linkedConference          Conference    @relation("GrantOpportunityLinkedConference", fields: [linkedConferenceId], references: [id], onDelete: Cascade)
+  creator                   User          @relation("GrantOpportunityCreator", fields: [createdByUserId], references: [id], onDelete: Cascade)
+  applications              Application[]
+
+  @@index([status, applicationDeadline])
+  @@index([linkedConferenceId, status])
 }
 
 model ConferenceStaff {
@@ -123,11 +152,15 @@ model Application {
   createdAt                    DateTime                   @default(now())
   updatedAt                    DateTime                   @updatedAt
   conference                   Conference?                @relation(fields: [conferenceId], references: [id], onDelete: Cascade)
+  grant                        GrantOpportunity?          @relation(fields: [grantId], references: [id], onDelete: Cascade)
   applicant                    User                       @relation("ApplicationApplicant", fields: [applicantUserId], references: [id], onDelete: Cascade)
   statusHistory                ApplicationStatusHistory[]
 
   @@unique([conferenceId, applicantUserId, applicationType])
+  @@unique([grantId, applicantUserId, applicationType])
   @@index([conferenceId, status])
+  @@index([grantId, status])
+  @@index([linkedConferenceApplicationId])
   @@index([applicantUserId, status])
 }
 

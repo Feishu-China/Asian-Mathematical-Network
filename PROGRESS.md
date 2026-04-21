@@ -4,11 +4,76 @@
 
 ## 当前项目状态
 *   **最新版本**: V4.0-Optimized
-*   **总览**: `AUTH`、`PROFILE` 与 `CONF` 三个 Epic 已完成。下一步应转入 `GRANT` Epic，从 `FE-GRANT-001` 或 `BE-GRANT-001` 开始。
+*   **总览**: `AUTH`、`PROFILE`、`CONF` 与 `GRANT` 四个 Epic 已完成。`GRANT` 现已通过真实前后端联调验证；下一步可进入 `REVIEW` Epic。
 
 ---
 
 ## 📅 Handoff 历史记录
+
+### 2026-04-21 (Session 22)
+*   **Agent 角色**: Coding Agent (Frontend / QA Follow-up)
+*   **完成 Feature**: `GRANT` applicant-flow stabilization (post-INT follow-up)
+*   **变更记录**:
+    *   修复 `/grants` 页在真实 API 请求失败时永久停留在 `Loading grants...` 的问题；页面现在会退出 loading 并显示明确错误态。
+    *   修复 `conference` / `grant` 两侧 real-mode HTTP adapter 的 response 解包错误；真实运行时现在统一从 backend 返回的 `response.data` wrapper 中读取 `items`、`conference`、`grant` 与 `application`。
+    *   将 `GrantApply` 页读取 prerequisite conference application 的路径收敛到共享 `conferenceProvider`，避免 `CONF` / `GRANT` 再次出现 transport 形状漂移。
+    *   修复 prerequisite 未满足时 grant apply 页把三个文本框整体禁用的问题；当前行为调整为“允许先填写文本，但 `Save draft` / `Submit application` 继续禁用直到 linked conference application 可用”。
+    *   为本地手测保留型数据补齐了一条 published grant 与一条 draft grant，用于确认 public list/detail 只展示 published grant，draft grant 继续保持隐藏。
+*   **验证记录**:
+    *   执行通过 `cd /Users/brenda/Projects/Asian-Mathematical-Network/frontend && npm run test:run -- src/pages/Grants.test.tsx src/pages/GrantApply.test.tsx src/pages/ConferenceApply.test.tsx src/features/grant/httpGrantProvider.test.ts src/features/conference/httpConferenceProvider.test.ts`
+    *   执行通过 `cd /Users/brenda/Projects/Asian-Mathematical-Network/frontend && npm run build`
+    *   真实手测通过：
+        *   `/grants` 正常展示 published grant，draft grant 不出现在 public list
+        *   `/grants/:slug` detail 正常打开，draft slug 公共访问返回 `Grant not found`
+        *   conference 未提交前，grant apply 页显示 prerequisite 提示，linked conference application 为 `Not available yet`
+        *   conference 提交后，grant apply 页出现真实 `linked_conference_application_id`，grant draft 可创建、刷新后可回填、最终可 submit
+        *   浏览器 `Network` 证据确认 `conference_application` 与 `grant_application` 为两条独立记录，且 `grant.linked_conference_application_id` 正确指向对应 conference application
+*   **边界与说明**:
+    *   本轮没有扩大到 organizer grant CRUD、review/decision release、dashboard 聚合、post-visit report。
+    *   本地 hand-test 数据是直接 seed 到 `backend/prisma/dev.db` 的保留型数据，不属于仓库提交内容；后续若再次执行 `grant-real-flow-check.mjs`，会清理 integration slug 对应的临时 fixture。
+    *   已知 `CONF` 的 stale `Draft saved.` banner 仍保持原样，没有纳入这轮修复。
+*   **下一步**: `GRANT` Epic 保持完成状态，可进入 `REVIEW` Epic。
+
+### 2026-04-21 (Session 21)
+*   **Agent 角色**: Coding Agent (Integration)
+*   **完成 Feature**: `INT-GRANT-001`
+*   **变更记录**:
+    *   新增 `backend/tests/helpers/grantIntegrationFixture.ts`，通过 Prisma 直接 seed 固定的 published conference + published grant fixture，避免为联调额外扩展 organizer grant CRUD。
+    *   新增 `scripts/grant-real-flow-check.mjs` 与根脚本入口 `test:grant:int`，可复跑地验证真实 `GRANT` 主链路：公开 grant 读取、conference prerequisite 阻断、conference submit 后 grant draft create/update/submit，以及 conference/grant 仍为两条独立 application 记录。
+    *   修正了 `frontend/src/features/conference/httpConferenceProvider.ts` 的真实运行时 adapter 形状；此前它错误地把 `frontend/src/api/conference.ts` 返回的 `response.data` 再当作 AxiosResponse 读取，这会破坏真实 `CONF` / `GRANT` 运行路径。对应前端测试契约已同步到真实 wrapper 形状。
+    *   新增 `backend/tests/grantIntegrationFixture.test.ts`，保证 deterministic fixture helper 可重复创建、不会重复插入同一条 published grant fixture。
+*   **验证记录**:
+    *   执行通过 `cd /Users/brenda/Projects/Asian-Mathematical-Network/frontend && npm run test:run -- src/features/conference/httpConferenceProvider.test.ts`
+    *   执行通过 `cd /Users/brenda/Projects/Asian-Mathematical-Network/backend && npx jest tests/grantIntegrationFixture.test.ts --runInBand`
+    *   执行通过 `node /Users/brenda/Projects/Asian-Mathematical-Network/scripts/grant-real-flow-check.mjs`，真实联调成功验证：
+        *   `/grants`、`/grants/:slug`、`/grants/:slug/apply` 前端路由可由本地 dev server 提供
+        *   未提交 conference application 前，grant draft 创建返回 prerequisite failure
+        *   提交 conference application 后，grant draft create/update/submit 成功
+        *   `conference_application` 与 `grant_application` 保持为独立记录
+*   **边界与说明**:
+    *   本轮未新增 organizer grant CRUD、review/decision release、dashboard 聚合、post-visit report。
+    *   已知 `CONF` 的 stale `Draft saved.` banner 问题仍保持原样，没有扩大修复范围。
+    *   `docs/planning/` 继续保持只读，本轮只更新 `PROGRESS.md`。
+*   **下一步**: `GRANT` Epic 已完成，可进入 `REVIEW` Epic。
+
+### 2026-04-21 (Session 20)
+*   **Agent 角色**: Coding Agent (Backend)
+*   **完成 Feature**: `BE-GRANT-001`
+*   **变更记录**:
+    *   为 `GRANT` Epic 新增真实的 `GrantOpportunity` Prisma 模型、SQLite 迁移，以及 grant 侧索引/唯一约束；`Application` 表现在具备 `grantId` 外键和 grant 申请唯一性约束。
+    *   新增 `GET /api/v1/grants`、`GET /api/v1/grants/:slug`、`GET /api/v1/grants/:id/application-form`、`GET /api/v1/grants/:id/applications/me`、`POST /api/v1/grants/:id/applications`，完成公开 grant 读取和 applicant grant draft 创建/回读闭环。
+    *   新增 grant payload parser / prerequisite helper，后端会强制校验：grant draft 必须关联当前用户本人、同一 linked conference、且已 `submitted` 的 `conference_application`。
+    *   将共享 applicant mutation 路径 `PUT /api/v1/me/applications/:id/draft` 与 `POST /api/v1/me/applications/:id/submit` 泛化到 `grant_application`，同时保持既有 `conference_application` 行为不变。
+    *   新增 `backend/tests/grants.test.ts`，覆盖 grant public reads、draft create/read、shared me update/submit；并补充 `docs/specs/openapi.yaml` 中这次真实实现的 grant 路径留档。
+*   **验证记录**:
+    *   执行通过 `cd backend && npx jest tests/grants.test.ts --runInBand`
+    *   执行通过 `cd backend && npx jest tests/conferences.test.ts --runInBand`
+    *   执行通过 `cd backend && npm test`，结果为 `4` 个 test suites、`24` 个 tests 全部通过
+*   **边界与说明**:
+    *   本轮未实现 organizer grant CRUD、decision release、applicant dashboard grant 聚合、post-visit report。
+    *   按用户要求，`docs/planning/` 视为只读，因此未修改 feature-list JSON 状态文件；本次完成状态仅记录在 `PROGRESS.md` 与 `docs/specs/openapi.yaml`。
+    *   已知 `CONF` 的 stale `Draft saved.` banner 问题未被扩大修复，保持原样。
+*   **下一步**: `FE-GRANT-001`
 
 ### 2026-04-21 (Session 19)
 *   **Agent 角色**: Coding Agent (Integration Stabilization)

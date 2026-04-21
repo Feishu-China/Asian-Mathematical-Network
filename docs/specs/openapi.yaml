@@ -189,6 +189,132 @@ components:
           type: string
           format: date-time
 
+    GrantOpportunity:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        slug:
+          type: string
+        title:
+          type: string
+        grant_type:
+          $ref: '#/components/schemas/GrantType'
+        linked_conference_id:
+          type: string
+          format: uuid
+        description:
+          type: string
+          nullable: true
+        eligibility_summary:
+          type: string
+          nullable: true
+        coverage_summary:
+          type: string
+          nullable: true
+        application_deadline:
+          type: string
+          format: date-time
+          nullable: true
+        status:
+          $ref: '#/components/schemas/GrantOpportunityStatus'
+        report_required:
+          type: boolean
+        published_at:
+          type: string
+          format: date-time
+          nullable: true
+        is_application_open:
+          type: boolean
+
+    GrantApplicationPayload:
+      type: object
+      required:
+        - linked_conference_application_id
+        - statement
+        - travel_plan_summary
+        - funding_need_summary
+      properties:
+        linked_conference_application_id:
+          type: string
+          format: uuid
+        statement:
+          type: string
+        travel_plan_summary:
+          type: string
+        funding_need_summary:
+          type: string
+        extra_answers:
+          type: object
+        file_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+
+    GrantApplication:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        application_type:
+          $ref: '#/components/schemas/ApplicationType'
+        source_module:
+          type: string
+        grant_id:
+          type: string
+          format: uuid
+          nullable: true
+        grant_title:
+          type: string
+        linked_conference_id:
+          type: string
+          format: uuid
+          nullable: true
+        linked_conference_application_id:
+          type: string
+          format: uuid
+          nullable: true
+        applicant_user_id:
+          type: string
+          format: uuid
+        status:
+          $ref: '#/components/schemas/ApplicationStatus'
+        statement:
+          type: string
+          nullable: true
+        travel_plan_summary:
+          type: string
+          nullable: true
+        funding_need_summary:
+          type: string
+          nullable: true
+        extra_answers:
+          type: object
+        files:
+          type: array
+          items:
+            type: object
+        submitted_at:
+          type: string
+          format: date-time
+          nullable: true
+        decided_at:
+          type: string
+          format: date-time
+          nullable: true
+        decision:
+          type: object
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
     # --- Payloads ---
     LoginPayload:
       type: object
@@ -327,3 +453,187 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Conference'
+
+  # --- Grant Endpoints ---
+  /grants:
+    get:
+      summary: List all published grants
+      security: []
+      tags: [Grant]
+      responses:
+        '200':
+          description: A list of grant opportunities
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/GrantOpportunity'
+
+  /grants/{slug}:
+    get:
+      summary: Get one published grant by slug
+      security: []
+      tags: [Grant]
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Grant detail
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      grant:
+                        $ref: '#/components/schemas/GrantOpportunity'
+        '404':
+          description: Grant not found
+
+  /grants/{id}/application-form:
+    get:
+      summary: Get the application form schema for a published grant
+      security: []
+      tags: [Grant]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Grant application form schema
+
+  /grants/{id}/applications/me:
+    get:
+      summary: Get my grant application for a grant
+      tags: [Grant]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: My grant application
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      application:
+                        $ref: '#/components/schemas/GrantApplication'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Application not found
+
+  /grants/{id}/applications:
+    post:
+      summary: Create my draft grant application
+      tags: [Grant]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GrantApplicationPayload'
+      responses:
+        '201':
+          description: Draft grant application created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      application:
+                        $ref: '#/components/schemas/GrantApplication'
+        '401':
+          description: Unauthorized
+        '409':
+          description: Draft already exists
+        '422':
+          description: Submitted linked conference application is required
+
+  /me/applications/{id}/draft:
+    put:
+      summary: Update my draft application for either conference or grant subtype
+      tags: [Applicant]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/GrantApplicationPayload'
+      responses:
+        '200':
+          description: Draft updated
+        '401':
+          description: Unauthorized
+        '404':
+          description: Application not found
+        '409':
+          description: Only draft applications can be edited
+        '422':
+          description: Submitted linked conference application is required
+
+  /me/applications/{id}/submit:
+    post:
+      summary: Submit my draft application for either conference or grant subtype
+      tags: [Applicant]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Draft submitted
+        '401':
+          description: Unauthorized
+        '404':
+          description: Application not found
+        '409':
+          description: Only draft applications can be submitted
+        '422':
+          description: Profile or prerequisite validation failed
