@@ -94,7 +94,6 @@ export function GrantApplyForm({
             rows={5}
             value={values.statement}
             onChange={(event) => setField('statement', event.target.value)}
-            disabled={blocked}
             required
           />
         </label>
@@ -107,7 +106,6 @@ export function GrantApplyForm({
             rows={5}
             value={values.travelPlanSummary}
             onChange={(event) => setField('travelPlanSummary', event.target.value)}
-            disabled={blocked}
             required
           />
         </label>
@@ -120,7 +118,6 @@ export function GrantApplyForm({
             rows={5}
             value={values.fundingNeedSummary}
             onChange={(event) => setField('fundingNeedSummary', event.target.value)}
-            disabled={blocked}
             required
           />
         </label>

@@ -43,6 +43,7 @@ describe('grant apply page', () => {
 
   it('shows a prerequisite warning when no submitted conference application exists', async () => {
     localStorage.setItem('token', 'grant-applicant-missing-prereq');
+    const user = userEvent.setup();
 
     renderWithRouter(
       <GrantApply />,
@@ -54,7 +55,15 @@ describe('grant apply page', () => {
       await screen.findByText(/submit your conference application before requesting travel support/i)
     ).toBeInTheDocument();
 
+    await user.type(screen.getByLabelText(/statement/i), 'Draft grant statement before prerequisite');
+    await user.type(screen.getByLabelText(/travel plan summary/i), 'Draft travel plan before prerequisite');
+    await user.type(screen.getByLabelText(/funding need summary/i), 'Draft funding need before prerequisite');
+
+    expect(screen.getByDisplayValue('Draft grant statement before prerequisite')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Draft travel plan before prerequisite')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Draft funding need before prerequisite')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /save draft/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /submit application/i })).toBeDisabled();
   });
 
   it('creates a draft and submits it for an eligible applicant', async () => {

@@ -1,8 +1,5 @@
-import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { fetchMyConferenceApplication } from '../api/conference';
-import { fromTransportConferenceApplication } from '../features/conference/conferenceMappers';
 import { conferenceProvider } from '../features/conference/conferenceProvider';
 import type { ConferenceApplication } from '../features/conference/types';
 import { GrantApplyForm } from '../features/grant/GrantApplyForm';
@@ -16,30 +13,6 @@ import type {
 import './Conference.css';
 
 export const routePath = '/grants/:slug/apply';
-
-const isTestEnv = import.meta.env.MODE === 'test' || import.meta.env.VITEST;
-
-const readLinkedConferenceApplication = async (conferenceId: string) => {
-  if (isTestEnv) {
-    return conferenceProvider.getMyConferenceApplication(conferenceId);
-  }
-
-  const token = localStorage.getItem('token');
-  if (!token) {
-    return null;
-  }
-
-  try {
-    const response = await fetchMyConferenceApplication(token, conferenceId);
-    return fromTransportConferenceApplication(response.application);
-  } catch (error) {
-    if (axios.isAxiosError(error) && error.response?.status === 404) {
-      return null;
-    }
-
-    throw error;
-  }
-};
 
 export default function GrantApply() {
   const { slug = '' } = useParams();
@@ -76,7 +49,7 @@ export default function GrantApply() {
         const [nextSchema, nextApplication, nextPrerequisite] = await Promise.all([
           grantProvider.getGrantApplicationForm(value.id),
           grantProvider.getMyGrantApplication(value.id),
-          readLinkedConferenceApplication(value.linkedConferenceId),
+          conferenceProvider.getMyConferenceApplication(value.linkedConferenceId),
         ]);
 
         if (active) {

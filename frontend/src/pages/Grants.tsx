@@ -8,12 +8,37 @@ export const routePath = '/grants';
 
 export default function Grants() {
   const [items, setItems] = useState<GrantListItem[] | null>(null);
+  const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
-    grantProvider.listPublicGrants().then(setItems);
+    let active = true;
+
+    setHasError(false);
+    setItems(null);
+
+    grantProvider
+      .listPublicGrants()
+      .then((value) => {
+        if (active) {
+          setItems(value);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setHasError(true);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   if (items === null) {
+    if (hasError) {
+      return <div className="conference-page">We could not load grants right now.</div>;
+    }
+
     return <div className="conference-page">Loading grants...</div>;
   }
 

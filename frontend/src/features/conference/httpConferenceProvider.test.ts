@@ -49,8 +49,28 @@ describe('httpConferenceProvider', () => {
 
   it('maps public list, detail, and application-form payloads from the real API', async () => {
     vi.mocked(fetchConferenceList).mockResolvedValue({
-      items: [
-        {
+      data: {
+        items: [
+          {
+            id: 'conf-1',
+            slug: 'published-conf-2026',
+            title: 'Published Conference 2026',
+            short_name: 'PC2026',
+            location_text: 'Singapore',
+            start_date: '2026-08-10',
+            end_date: '2026-08-14',
+            application_deadline: '2026-07-15T23:59:59.000Z',
+            status: 'published',
+            is_application_open: true,
+            related_grant_count: 0,
+          },
+        ],
+      },
+    });
+
+    vi.mocked(fetchConferenceDetail).mockResolvedValue({
+      data: {
+        conference: {
           id: 'conf-1',
           slug: 'published-conf-2026',
           title: 'Published Conference 2026',
@@ -58,40 +78,26 @@ describe('httpConferenceProvider', () => {
           location_text: 'Singapore',
           start_date: '2026-08-10',
           end_date: '2026-08-14',
+          description: 'Visible conference',
           application_deadline: '2026-07-15T23:59:59.000Z',
           status: 'published',
+          published_at: '2026-04-20T10:00:00.000Z',
           is_application_open: true,
-          related_grant_count: 0,
+          related_grants: [],
         },
-      ],
-    });
-
-    vi.mocked(fetchConferenceDetail).mockResolvedValue({
-      conference: {
-        id: 'conf-1',
-        slug: 'published-conf-2026',
-        title: 'Published Conference 2026',
-        short_name: 'PC2026',
-        location_text: 'Singapore',
-        start_date: '2026-08-10',
-        end_date: '2026-08-14',
-        description: 'Visible conference',
-        application_deadline: '2026-07-15T23:59:59.000Z',
-        status: 'published',
-        published_at: '2026-04-20T10:00:00.000Z',
-        is_application_open: true,
-        related_grants: [],
       },
     });
 
     vi.mocked(fetchConferenceApplicationForm).mockResolvedValue({
-      conference_id: 'conf-1',
-      schema: {
-        fields: [
-          { key: 'participation_type', type: 'select', required: true },
-          { key: 'statement', type: 'textarea', required: true },
-          { key: 'abstract_title', type: 'text', required: false },
-        ],
+      data: {
+        conference_id: 'conf-1',
+        schema: {
+          fields: [
+            { key: 'participation_type', type: 'select', required: true },
+            { key: 'statement', type: 'textarea', required: true },
+            { key: 'abstract_title', type: 'text', required: false },
+          ],
+        },
       },
     });
 
@@ -130,35 +136,37 @@ describe('httpConferenceProvider', () => {
 
   it('maps organizer writes and translates duplicate draft conflicts into a coded error', async () => {
     vi.mocked(createOrganizerConferenceRequest).mockResolvedValue({
-      conference: {
-        id: 'conf-organizer-1',
-        slug: 'organizer-conf-2026',
-        title: 'Organizer Conference 2026',
-        short_name: 'OC2026',
-        location_text: 'Seoul',
-        start_date: '2026-10-11',
-        end_date: '2026-10-15',
-        description: 'Updated organizer conference',
-        application_deadline: '2026-09-15T23:59:59.000Z',
-        status: 'draft',
-        application_form_schema: {
-          fields: [
-            {
-              key: 'participation_type',
-              type: 'select',
-              required: true,
-              options: ['talk', 'poster', 'participant'],
-            },
-            { key: 'statement', type: 'textarea', required: true },
-            { key: 'abstract_title', type: 'text', required: false },
-            { key: 'abstract_text', type: 'textarea', required: false },
-            { key: 'interested_in_travel_support', type: 'checkbox', required: false },
-          ],
+      data: {
+        conference: {
+          id: 'conf-organizer-1',
+          slug: 'organizer-conf-2026',
+          title: 'Organizer Conference 2026',
+          short_name: 'OC2026',
+          location_text: 'Seoul',
+          start_date: '2026-10-11',
+          end_date: '2026-10-15',
+          description: 'Updated organizer conference',
+          application_deadline: '2026-09-15T23:59:59.000Z',
+          status: 'draft',
+          application_form_schema: {
+            fields: [
+              {
+                key: 'participation_type',
+                type: 'select',
+                required: true,
+                options: ['talk', 'poster', 'participant'],
+              },
+              { key: 'statement', type: 'textarea', required: true },
+              { key: 'abstract_title', type: 'text', required: false },
+              { key: 'abstract_text', type: 'textarea', required: false },
+              { key: 'interested_in_travel_support', type: 'checkbox', required: false },
+            ],
+          },
+          settings: {},
+          published_at: null,
+          closed_at: null,
+          staff: [{ user_id: 'integration-token', staff_role: 'owner' }],
         },
-        settings: {},
-        published_at: null,
-        closed_at: null,
-        staff: [{ user_id: 'integration-token', staff_role: 'owner' }],
       },
     });
 
@@ -201,25 +209,27 @@ describe('httpConferenceProvider', () => {
 
   it('returns the existing application for the current user and maps 404 to null', async () => {
     vi.mocked(fetchMyConferenceApplication).mockResolvedValueOnce({
-      application: {
-        id: 'application-1',
-        application_type: 'conference_application',
-        source_module: 'M2',
-        conference_id: 'conf-1',
-        conference_title: 'Published Conference 2026',
-        applicant_user_id: 'integration-token',
-        status: 'draft',
-        participation_type: 'talk',
-        statement: 'Saved statement',
-        abstract_title: 'Saved abstract title',
-        abstract_text: 'Saved abstract text',
-        interested_in_travel_support: true,
-        extra_answers: {},
-        files: [],
-        submitted_at: null,
-        decided_at: null,
-        created_at: '2026-04-20T10:00:00.000Z',
-        updated_at: '2026-04-20T10:00:00.000Z',
+      data: {
+        application: {
+          id: 'application-1',
+          application_type: 'conference_application',
+          source_module: 'M2',
+          conference_id: 'conf-1',
+          conference_title: 'Published Conference 2026',
+          applicant_user_id: 'integration-token',
+          status: 'draft',
+          participation_type: 'talk',
+          statement: 'Saved statement',
+          abstract_title: 'Saved abstract title',
+          abstract_text: 'Saved abstract text',
+          interested_in_travel_support: true,
+          extra_answers: {},
+          files: [],
+          submitted_at: null,
+          decided_at: null,
+          created_at: '2026-04-20T10:00:00.000Z',
+          updated_at: '2026-04-20T10:00:00.000Z',
+        },
       },
     });
 

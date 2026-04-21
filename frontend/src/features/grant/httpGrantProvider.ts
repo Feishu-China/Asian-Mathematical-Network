@@ -43,13 +43,13 @@ const getApiMessage = (error: unknown, fallback: string) => {
 export const httpGrantProvider: GrantProvider = {
   async listPublicGrants() {
     const response = await fetchGrantList();
-    return response.items.map(fromTransportGrantListItem);
+    return response.data.items.map(fromTransportGrantListItem);
   },
 
   async getGrantBySlug(slug) {
     try {
       const response = await fetchGrantDetail(slug);
-      return fromTransportGrantDetail(response.grant);
+      return fromTransportGrantDetail(response.data.grant);
     } catch (error) {
       if (hasStatus(error, 404)) {
         return null;
@@ -61,13 +61,13 @@ export const httpGrantProvider: GrantProvider = {
 
   async getGrantApplicationForm(grantId) {
     const response = await fetchGrantApplicationForm(grantId);
-    return fromTransportGrantApplicationForm(response);
+    return fromTransportGrantApplicationForm(response.data);
   },
 
   async getMyGrantApplication(grantId) {
     try {
       const response = await fetchMyGrantApplication(readToken(), grantId);
-      return fromTransportGrantApplication(response.application);
+      return fromTransportGrantApplication(response.data.application);
     } catch (error) {
       if (hasStatus(error, 404)) {
         return null;
@@ -84,7 +84,7 @@ export const httpGrantProvider: GrantProvider = {
         grantId,
         toTransportGrantApplicationPayload(values)
       );
-      return fromTransportGrantApplication(response.application);
+      return fromTransportGrantApplication(response.data.application);
     } catch (error) {
       if (hasStatus(error, 409)) {
         const conflict = new Error(
@@ -113,7 +113,7 @@ export const httpGrantProvider: GrantProvider = {
         applicationId,
         toTransportGrantApplicationPayload(values)
       );
-      return fromTransportGrantApplication(response.application);
+      return fromTransportGrantApplication(response.data.application);
     } catch (error) {
       if (hasStatus(error, 422)) {
         const prerequisite = new Error(
@@ -130,7 +130,7 @@ export const httpGrantProvider: GrantProvider = {
   async submitGrantApplication(applicationId) {
     try {
       const response = await submitMyGrantApplicationRequest(readToken(), applicationId);
-      return fromTransportGrantApplication(response.application);
+      return fromTransportGrantApplication(response.data.application);
     } catch (error) {
       if (hasStatus(error, 422)) {
         const prerequisite = new Error(
