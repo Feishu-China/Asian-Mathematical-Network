@@ -337,7 +337,7 @@
         "Build conference application form & draft save",
         "Integrate with mock endpoints"
       ],
-      "status": "not_started",
+      "status": "completed",
       "passes": false
     },
     {
@@ -355,7 +355,7 @@
         "Implement POST/PUT for Conference Applications",
         "Write backend unit tests"
       ],
-      "status": "not_started",
+      "status": "completed",
       "passes": false
     },
     {
@@ -373,8 +373,8 @@
         "Run E2E test for complete application submission",
         "Mark feature passes=true"
       ],
-      "status": "not_started",
-      "passes": false
+      "status": "completed",
+      "passes": true
     },
     {
       "id": "FE-GRANT-001",

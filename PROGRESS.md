@@ -4,11 +4,59 @@
 
 ## 当前项目状态
 *   **最新版本**: V4.0-Optimized
-*   **总览**: 项目第一阶段的“核心认证系统” (AUTH Epic) 已经从需求分析、契约定义、Mock 开发、后端实现，走完了最后的 E2E 集成联调 (`INT-AUTH-001`)。现在项目准备启动下一个模块（如 PROFILE 系统）的并行开发。
+*   **总览**: `AUTH`、`PROFILE` 与 `CONF` 三个 Epic 已完成。下一步应转入 `GRANT` Epic，从 `FE-GRANT-001` 或 `BE-GRANT-001` 开始。
 
 ---
 
 ## 📅 Handoff 历史记录
+
+### 2026-04-21 (Session 19)
+*   **Agent 角色**: Coding Agent (Integration Stabilization)
+*   **完成 Feature**: `INT-CONF-001` (post-integration bugfix)
+*   **变更记录**:
+    *   修复了 Applicant 在会议申请页 `Save draft` 后刷新无法回显已保存草稿的问题；根因是前端页面只加载 conference detail 和 application form schema，没有读取当前用户在该 conference 下的既有 application。
+    *   后端新增 `GET /api/v1/conferences/:id/applications/me`，用于按 conference 读取当前登录用户的 `conference_application`；前端 provider 与申请页加载逻辑已接入该接口，实现页面刷新后的 draft hydrate。
+    *   补充并通过了前端回归测试（申请页 hydrate / 既有 draft 更新 / provider 404->null 映射）、前端构建验证，以及 backend `conferences.test.ts` 中对“读取我的会议申请草稿”的接口验证。
+*   **当前结论**:
+    *   `CONF` 主流程通过：Organizer 创建/发布会议，Applicant 保存 draft、刷新回读、提交申请均已验证通过。
+    *   已知非阻塞 UI 问题：刷新一个已 `submitted` 的 application 后，页面顶部提示文案仍可能显示 `Draft saved.`，该问题记录为后续处理项，不阻塞 `CONF` 完成判定。
+*   **下一步**: `CONF` 可继续保持完成状态，进入 `GRANT` Epic。
+
+### 2026-04-20 (Session 18)
+*   **Agent 角色**: Coding Agent (Integration)
+*   **完成 Feature**: `INT-CONF-001`
+*   **变更记录**:
+    *   将 conference provider 从本地 fake 实现切换为真实 conference/application API，并在测试环境继续保留 fake provider，保持会议页面单元测试稳定。
+    *   新增 conference HTTP adapter，将 `snake_case` transport payload 映射到 conference domain model，并把 duplicate draft 的 `409` 响应转换为前端可识别的 `CONFLICT` 错误。
+    *   通过真实 backend API 验证了 Organizer 创建并发布会议、Applicant 更新 profile、公开会议 list/detail/application-form、会议申请 draft 更新与 submit 的完整闭环。
+    *   验证了 frontend dev server 可提供 `/conferences`、`/conferences/:slug`、`/conferences/:slug/apply`、`/organizer/conferences/:id` 路由，并执行通过仓库级 `npm run test:smoke`。
+*   **下一步**: `CONF` Epic 可视为完成，可转入 `GRANT` Epic。
+
+### 2026-04-20 (Session 17)
+*   **Agent 角色**: Coding Agent (Frontend)
+*   **完成 Feature**: `FE-CONF-001`
+*   **变更记录**:
+    *   为 conference feature 建立了独立的 frontend provider / mapper / schema-field 边界，并补齐了 Vitest + Testing Library 测试基线，避免页面直接耦合 raw transport payload。
+    *   实现了公开会议列表页 `/conferences` 与会议详情页 `/conferences/:slug`，只展示已发布会议，并在详情页提供申请入口。
+    *   实现了 Organizer 会议新建页 `/organizer/conferences/new` 与编辑页 `/organizer/conferences/:id`，覆盖草稿保存、发布前校验、发布与关闭动作。
+    *   实现了 Applicant 会议申请页 `/conferences/:slug/apply`，覆盖登录前提示、草稿保存、重复草稿冲突提示，以及草稿提交闭环。
+    *   使用 fake conference provider 对齐当前 backend contract 和 M2 字段子集，明确本轮不提前引入通用 form builder 或文件上传子系统。
+    *   执行并通过 `conferenceMappers`、`Conferences`、`OrganizerConferenceEditor`、`ConferenceApply` 四组前端测试，执行并通过 `frontend npm run build`，并通过仓库级 `npm run test:smoke`。
+    *   更新了 `v4.0` 计划中 `FE-CONF-001` 的状态为 `completed`，`passes` 维持 `false`，等待 `INT-CONF-001` 完成后再改为集成通过。
+*   **下一步**: `INT-CONF-001`
+
+### 2026-04-20 (Session 16)
+*   **Agent 角色**: Coding Agent (Backend)
+*   **完成 Feature**: `BE-CONF-001`
+*   **变更记录**:
+    *   为会议工作流补齐了 Prisma 持久层与迁移，新增 `Conference`、`ConferenceStaff`、`Application`、`ApplicationStatusHistory` 模型，并将会议申请收敛到共享 `applications` 骨架下的 `conference_application` 子类型。
+    *   实现了公开会议读取接口：`GET /api/v1/conferences`、`GET /api/v1/conferences/:slug`、`GET /api/v1/conferences/:id/application-form`，只暴露已发布会议，并通过 serializer 统一输出 `snake_case` transport payload。
+    *   实现了 Organizer 会议生命周期接口：`POST /api/v1/organizer/conferences`、`GET/PUT /api/v1/organizer/conferences/:id`、`POST /publish`、`POST /close`，采用当前仓库可落地的最小 organizer 权限模型：创建者自动成为 conference owner，后续通过 `conference_staff` 授权。
+    *   实现了 Applicant 会议申请草稿/提交接口：`POST /api/v1/conferences/:id/applications`、`PUT /api/v1/me/applications/:id/draft`、`POST /api/v1/me/applications/:id/submit`，提交时会冻结申请人的 profile snapshot，并写入一条 `application_status_history` 状态流转记录。
+    *   明确记录了本轮边界：`file_ids` / 附件上传仍未实现，当前若传入非空附件会返回 `422`，等待后续文件子系统或相关 Epic 支撑。
+    *   执行并通过了 `backend/tests/conferences.test.ts` 的 public / organizer / applicant 三组端到端风格测试，以及仓库级 `npm run test:smoke`。
+    *   更新了 `v4.0` 计划中 `BE-CONF-001` 的状态为 `completed`，`passes` 维持 `false`，等待 `INT-CONF-001` 完成后再改为集成通过。
+*   **下一步**: `FE-CONF-001`
 
 ### 2026-04-20 (Session 15)
 *   **Agent 角色**: Coding Agent (Integration)
