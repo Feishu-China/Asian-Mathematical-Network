@@ -9,15 +9,16 @@ const backendDir = path.resolve(scriptDir, '../backend');
 
 process.env.TS_NODE_PROJECT = path.join(backendDir, 'tsconfig.json');
 process.chdir(backendDir);
+process.env.DATABASE_URL ??= 'file:./dev.db';
 
 require('../backend/node_modules/ts-node/register/transpile-only');
 
 const { PrismaClient } = require('../backend/node_modules/@prisma/client');
 const {
-  ensureGrantIntegrationFixture,
-  GRANT_INTEGRATION_FIXTURE,
-  cleanupGrantIntegrationFixture,
-} = require('../backend/tests/helpers/grantIntegrationFixture.ts');
+  ensureDemoBaseline,
+  DEMO_BASELINE_FIXTURE,
+  cleanupDemoBaseline,
+} = require('../backend/src/lib/demoBaseline.ts');
 
 const prisma = new PrismaClient();
 
@@ -144,11 +145,11 @@ const putJson = async (url, token, payload, expectedStatus, context) =>
 const verifyFrontendRoutes = async () => {
   await readHtml(`${FRONTEND_ORIGIN}/grants`, 'frontend /grants');
   await readHtml(
-    `${FRONTEND_ORIGIN}/grants/${GRANT_INTEGRATION_FIXTURE.grantSlug}`,
+    `${FRONTEND_ORIGIN}/grants/${DEMO_BASELINE_FIXTURE.grantSlug}`,
     'frontend /grants/:slug'
   );
   await readHtml(
-    `${FRONTEND_ORIGIN}/grants/${GRANT_INTEGRATION_FIXTURE.grantSlug}/apply`,
+    `${FRONTEND_ORIGIN}/grants/${DEMO_BASELINE_FIXTURE.grantSlug}/apply`,
     'frontend /grants/:slug/apply'
   );
 };
@@ -171,7 +172,7 @@ const registerApplicant = async () => {
 const main = async () => {
   await cleanupVerifierArtifacts();
   console.log('Seeding deterministic grant integration fixture...');
-  const fixture = await ensureGrantIntegrationFixture(prisma);
+  const fixture = await ensureDemoBaseline(prisma);
 
   console.log('Verifying frontend grant routes resolve through the dev server...');
   await verifyFrontendRoutes();
@@ -184,7 +185,7 @@ const main = async () => {
     'list grants'
   );
   const grantItem = grantList.data.items.find(
-    (item) => item.slug === GRANT_INTEGRATION_FIXTURE.grantSlug
+    (item) => item.slug === DEMO_BASELINE_FIXTURE.grantSlug
   );
 
   if (!grantItem) {
@@ -192,7 +193,7 @@ const main = async () => {
   }
 
   const grantDetail = await readJson(
-    `${BACKEND_ORIGIN}/api/v1/grants/${GRANT_INTEGRATION_FIXTURE.grantSlug}`,
+    `${BACKEND_ORIGIN}/api/v1/grants/${DEMO_BASELINE_FIXTURE.grantSlug}`,
     undefined,
     200,
     'grant detail'
@@ -392,6 +393,6 @@ try {
   await main();
 } finally {
   await cleanupVerifierArtifacts();
-  await cleanupGrantIntegrationFixture(prisma);
+  await cleanupDemoBaseline(prisma);
   await prisma.$disconnect();
 }
