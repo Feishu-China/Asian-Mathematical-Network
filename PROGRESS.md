@@ -4,11 +4,33 @@
 
 ## 当前项目状态
 *   **最新版本**: V4.0-Optimized
-*   **总览**: `AUTH`、`PROFILE` 与 `CONF` 三个 Epic 已完成；`GRANT` 已完成后端首个切片 `BE-GRANT-001`。下一步应转入 `FE-GRANT-001`，之后再进行 `INT-GRANT-001`。
+*   **总览**: `AUTH`、`PROFILE`、`CONF` 与 `GRANT` 四个 Epic 已完成。`GRANT` 现已通过真实前后端联调验证；下一步可进入 `REVIEW` Epic。
 
 ---
 
 ## 📅 Handoff 历史记录
+
+### 2026-04-21 (Session 21)
+*   **Agent 角色**: Coding Agent (Integration)
+*   **完成 Feature**: `INT-GRANT-001`
+*   **变更记录**:
+    *   新增 `backend/tests/helpers/grantIntegrationFixture.ts`，通过 Prisma 直接 seed 固定的 published conference + published grant fixture，避免为联调额外扩展 organizer grant CRUD。
+    *   新增 `scripts/grant-real-flow-check.mjs` 与根脚本入口 `test:grant:int`，可复跑地验证真实 `GRANT` 主链路：公开 grant 读取、conference prerequisite 阻断、conference submit 后 grant draft create/update/submit，以及 conference/grant 仍为两条独立 application 记录。
+    *   修正了 `frontend/src/features/conference/httpConferenceProvider.ts` 的真实运行时 adapter 形状；此前它错误地把 `frontend/src/api/conference.ts` 返回的 `response.data` 再当作 AxiosResponse 读取，这会破坏真实 `CONF` / `GRANT` 运行路径。对应前端测试契约已同步到真实 wrapper 形状。
+    *   新增 `backend/tests/grantIntegrationFixture.test.ts`，保证 deterministic fixture helper 可重复创建、不会重复插入同一条 published grant fixture。
+*   **验证记录**:
+    *   执行通过 `cd /Users/brenda/Projects/Asian-Mathematical-Network/frontend && npm run test:run -- src/features/conference/httpConferenceProvider.test.ts`
+    *   执行通过 `cd /Users/brenda/Projects/Asian-Mathematical-Network/backend && npx jest tests/grantIntegrationFixture.test.ts --runInBand`
+    *   执行通过 `node /Users/brenda/Projects/Asian-Mathematical-Network/scripts/grant-real-flow-check.mjs`，真实联调成功验证：
+        *   `/grants`、`/grants/:slug`、`/grants/:slug/apply` 前端路由可由本地 dev server 提供
+        *   未提交 conference application 前，grant draft 创建返回 prerequisite failure
+        *   提交 conference application 后，grant draft create/update/submit 成功
+        *   `conference_application` 与 `grant_application` 保持为独立记录
+*   **边界与说明**:
+    *   本轮未新增 organizer grant CRUD、review/decision release、dashboard 聚合、post-visit report。
+    *   已知 `CONF` 的 stale `Draft saved.` banner 问题仍保持原样，没有扩大修复范围。
+    *   `docs/planning/` 继续保持只读，本轮只更新 `PROGRESS.md`。
+*   **下一步**: `GRANT` Epic 已完成，可进入 `REVIEW` Epic。
 
 ### 2026-04-21 (Session 20)
 *   **Agent 角色**: Coding Agent (Backend)

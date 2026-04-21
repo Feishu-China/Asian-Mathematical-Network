@@ -50,13 +50,13 @@ const getApiMessage = (error: unknown, fallback: string) => {
 export const httpConferenceProvider: ConferenceProvider = {
   async listPublicConferences() {
     const response = await fetchConferenceList();
-    return response.data.items.map(fromTransportConferenceListItem);
+    return response.items.map(fromTransportConferenceListItem);
   },
 
   async getConferenceBySlug(slug) {
     try {
       const response = await fetchConferenceDetail(slug);
-      return fromTransportConferenceDetail(response.data.conference);
+      return fromTransportConferenceDetail(response.conference);
     } catch (error) {
       if (hasStatus(error, 404)) {
         return null;
@@ -68,13 +68,13 @@ export const httpConferenceProvider: ConferenceProvider = {
 
   async getConferenceApplicationForm(conferenceId) {
     const response = await fetchConferenceApplicationForm(conferenceId);
-    return fromTransportConferenceApplicationForm(response.data);
+    return fromTransportConferenceApplicationForm(response);
   },
 
   async getMyConferenceApplication(conferenceId) {
     try {
       const response = await fetchMyConferenceApplication(readToken(), conferenceId);
-      return fromTransportConferenceApplication(response.data.application);
+      return fromTransportConferenceApplication(response.application);
     } catch (error) {
       if (hasStatus(error, 404)) {
         return null;
@@ -89,12 +89,12 @@ export const httpConferenceProvider: ConferenceProvider = {
       readToken(),
       toTransportConferencePayload(values)
     );
-    return fromTransportOrganizerConference(response.data.conference).conference;
+    return fromTransportOrganizerConference(response.conference).conference;
   },
 
   async getOrganizerConference(id) {
     const response = await fetchOrganizerConference(readToken(), id);
-    return fromTransportOrganizerConference(response.data.conference).conference;
+    return fromTransportOrganizerConference(response.conference).conference;
   },
 
   async updateOrganizerConference(id, values) {
@@ -103,17 +103,17 @@ export const httpConferenceProvider: ConferenceProvider = {
       id,
       toTransportConferencePayload(values)
     );
-    return fromTransportOrganizerConference(response.data.conference).conference;
+    return fromTransportOrganizerConference(response.conference).conference;
   },
 
   async publishOrganizerConference(id) {
     const response = await publishOrganizerConferenceRequest(readToken(), id);
-    return fromTransportOrganizerConference(response.data.conference).conference;
+    return fromTransportOrganizerConference(response.conference).conference;
   },
 
   async closeOrganizerConference(id) {
     const response = await closeOrganizerConferenceRequest(readToken(), id);
-    return fromTransportOrganizerConference(response.data.conference).conference;
+    return fromTransportOrganizerConference(response.conference).conference;
   },
 
   async createConferenceApplication(conferenceId, values) {
@@ -123,7 +123,7 @@ export const httpConferenceProvider: ConferenceProvider = {
         conferenceId,
         toTransportConferenceApplicationPayload(values)
       );
-      return fromTransportConferenceApplication(response.data.application);
+      return fromTransportConferenceApplication(response.application);
     } catch (error) {
       if (hasStatus(error, 409)) {
         const conflict = new Error(
@@ -143,11 +143,11 @@ export const httpConferenceProvider: ConferenceProvider = {
       applicationId,
       toTransportConferenceApplicationPayload(values)
     );
-    return fromTransportConferenceApplication(response.data.application);
+    return fromTransportConferenceApplication(response.application);
   },
 
   async submitConferenceApplication(applicationId) {
     const response = await submitMyConferenceApplicationRequest(readToken(), applicationId);
-    return fromTransportConferenceApplication(response.data.application);
+    return fromTransportConferenceApplication(response.application);
   },
 };

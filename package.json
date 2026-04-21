@@ -4,6 +4,7 @@
   "description": "Asian-Mathematical-Network",
   "scripts": {
     "test:smoke": "echo 'Running smoke tests...' && npm run test:frontend && npm run test:backend && echo 'Smoke test passed! Clean state verified.'",
+    "test:grant:int": "node scripts/grant-real-flow-check.mjs",
     "test:frontend": "cd frontend && npm run dev -- --version && npm run build",
     "test:backend": "cd backend && npm run dev -- --version && npm run test",
     "test:types": "tsc --noEmit",
