@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { StatusBadge } from '../../components/ui/StatusBadge';
 import type { ConferenceListItem } from './types';
 
 type Props = {
@@ -15,9 +16,9 @@ export function ConferenceListCard({ conference }: Props) {
       <h2>{conference.title}</h2>
       <p className="conference-card-subtitle">{conference.shortName || 'Conference opportunity'}</p>
       <div className="conference-card-actions">
-        <span className={conference.isApplicationOpen ? 'conference-chip open' : 'conference-chip closed'}>
+        <StatusBadge tone={conference.isApplicationOpen ? 'success' : 'neutral'}>
           {conference.isApplicationOpen ? 'Applications open' : 'Applications closed'}
-        </span>
+        </StatusBadge>
         <Link to={`/conferences/${conference.slug}`}>View details</Link>
       </div>
     </article>

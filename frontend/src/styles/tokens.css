@@ -1,0 +1,71 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif:wght@500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap');
+
+:root {
+  color-scheme: light;
+
+  --color-navy-950: #0f1a2d;
+  --color-navy-900: #15233b;
+  --color-navy-800: #1f3454;
+  --color-navy-700: #2a466f;
+  --color-navy-600: #3a5f91;
+
+  --color-stone-50: #fbfaf7;
+  --color-stone-100: #f6f2ea;
+  --color-stone-150: #efe9de;
+  --color-stone-200: #ddd5c7;
+  --color-stone-300: #c4b9a7;
+  --color-stone-500: #7b7266;
+  --color-stone-700: #4d4942;
+
+  --color-accent: #7a6239;
+  --color-accent-soft: #efe5d3;
+  --color-success: #1d6b51;
+  --color-success-soft: #e4f1ea;
+  --color-warning: #996816;
+  --color-warning-soft: #f7edd9;
+  --color-danger: #a14639;
+  --color-danger-soft: #f8e5e1;
+  --color-info: #2d577a;
+  --color-info-soft: #e6eef5;
+
+  --color-text: #182234;
+  --color-text-muted: #5b6577;
+  --color-text-subtle: #7d8695;
+
+  --surface-canvas: var(--color-stone-50);
+  --surface-panel: rgba(255, 253, 249, 0.94);
+  --surface-panel-strong: #fffdf9;
+  --surface-muted: #f4efe6;
+  --surface-alt: #edf2f7;
+
+  --border-subtle: rgba(31, 52, 84, 0.12);
+  --border-strong: rgba(31, 52, 84, 0.24);
+
+  --shadow-sm: 0 8px 20px rgba(15, 26, 45, 0.08);
+  --shadow-md: 0 18px 40px rgba(15, 26, 45, 0.08);
+  --shadow-lg: 0 28px 70px rgba(15, 26, 45, 0.12);
+
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-pill: 999px;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+
+  --font-heading: 'Noto Serif', 'Iowan Old Style', 'Palatino Linotype', serif;
+  --font-body: 'Source Sans 3', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+
+  --focus-ring: 0 0 0 3px rgba(58, 95, 145, 0.18);
+
+  --layout-max: 1120px;
+  --layout-narrow: 860px;
+}

@@ -28,6 +28,7 @@ export default function OrganizerConferenceNew() {
   return (
     <div className="conference-page">
       <ConferenceEditorForm
+        key="new-conference-draft"
         title="New conference draft"
         initialValues={emptyValues}
         status={status}

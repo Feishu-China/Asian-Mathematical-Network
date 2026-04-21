@@ -55,6 +55,7 @@ export default function OrganizerConferenceEditor() {
   return (
     <div className="conference-page">
       <ConferenceEditorForm
+        key={`${conference.id}:${conference.status}:${conference.slug}`}
         title={conference.title}
         conference={conference}
         initialValues={toEditorValues(conference)}

@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
+import { StatusBadge } from '../../components/ui/StatusBadge';
 import { participationTypeOptions } from './conferenceFields';
 import type {
   ConferenceApplication,
@@ -26,10 +27,6 @@ const toValues = (application: ConferenceApplication | null): ConferenceApplicat
 export function ConferenceApplyForm({ schema, application, status, onSave, onSubmit }: Props) {
   const [values, setValues] = useState<ConferenceApplicationValues>(() => toValues(application));
 
-  useEffect(() => {
-    setValues(toValues(application));
-  }, [application]);
-
   const fieldKeys = useMemo(() => new Set(schema.fields.map((field) => field.key)), [schema]);
 
   const requiresAbstract = fieldKeys.has('abstract_title') || fieldKeys.has('abstract_text');
@@ -46,6 +43,15 @@ export function ConferenceApplyForm({ schema, application, status, onSave, onSub
     setValues((current) => ({ ...current, [key]: value }));
   };
 
+  const badgeTone =
+    status === 'submitted'
+      ? 'success'
+      : status === 'saving' || status === 'submitting'
+        ? 'warning'
+        : status === 'conflict' || status === 'error'
+          ? 'danger'
+          : 'info';
+
   return (
     <form
       className="conference-detail-card conference-form"
@@ -57,12 +63,12 @@ export function ConferenceApplyForm({ schema, application, status, onSave, onSub
       <header className="conference-form-header">
         <div>
           <p className="conference-eyebrow">Applicant workspace</p>
-          <h1>Conference application</h1>
+          <h2>Conference application</h2>
           <p className="conference-muted-note">
             Conference and grant applications stay separate, even when they later share workflow components.
           </p>
         </div>
-        <div className="conference-status-badge">status: {application?.status ?? 'not started'}</div>
+        <StatusBadge tone={badgeTone}>Status: {application?.status ?? 'not started'}</StatusBadge>
       </header>
 
       <label>

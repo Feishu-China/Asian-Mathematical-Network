@@ -1,12 +1,35 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { LogOut, User } from 'lucide-react';
+import { WorkspaceShell } from '../components/layout/WorkspaceShell';
+import { PageModeBadge } from '../components/ui/PageModeBadge';
+import { RoleBadge } from '../components/ui/RoleBadge';
+import { StatusBadge } from '../components/ui/StatusBadge';
 import { getMe } from '../api/auth';
-import { LayoutDashboard, LogOut, User } from 'lucide-react';
 import './Dashboard.css';
+
+type DashboardRole = 'visitor' | 'applicant' | 'reviewer' | 'organizer' | 'admin';
+
+type DashboardData = {
+  user?: {
+    email?: string | null;
+    status?: string | null;
+    role?: string | null;
+  };
+};
+
+const toRole = (role?: string | null): DashboardRole =>
+  role === 'visitor' ||
+  role === 'applicant' ||
+  role === 'reviewer' ||
+  role === 'organizer' ||
+  role === 'admin'
+    ? role
+    : 'applicant';
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const [userData, setUserData] = useState<any>(null);
+  const [userData, setUserData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -19,7 +42,7 @@ export default function Dashboard() {
       try {
         const data = await getMe(token);
         setUserData(data);
-      } catch (err) {
+      } catch {
         localStorage.removeItem('token');
         navigate('/login');
       } finally {
@@ -39,27 +62,33 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="dashboard-container">
-      <header className="dashboard-header">
-        <div className="logo">
-          <LayoutDashboard className="icon" />
-          <span>Asiamath Portal</span>
-        </div>
+    <WorkspaceShell
+      eyebrow="Applicant workspace"
+      title="Dashboard"
+      description="A stable working surface for authenticated participation across the Asiamath network."
+      badges={
+        <>
+          <RoleBadge role={toRole(userData?.user?.role)} />
+          <PageModeBadge mode="real-aligned" />
+          <StatusBadge tone="success">{userData?.user?.status || 'active'}</StatusBadge>
+        </>
+      }
+      actions={
         <button className="logout-btn" onClick={handleLogout}>
           <LogOut size={18} />
           <span>Logout</span>
         </button>
-      </header>
-
-      <main className="dashboard-main">
+      }
+    >
+      <div className="dashboard-page">
         <div className="welcome-card">
           <div className="avatar">
             <User size={48} />
           </div>
           <div className="user-info">
-            <h1>Welcome back!</h1>
+            <h2>Welcome back</h2>
             <p className="email">{userData?.user?.email || 'User'}</p>
-            <div className="status-badge">{userData?.user?.status || 'active'}</div>
+            <p className="dashboard-note">Your authenticated session is active on the current MVP path.</p>
           </div>
         </div>
 
@@ -73,7 +102,7 @@ export default function Dashboard() {
             <p>Explore latest mathematical conferences in Asia.</p>
           </div>
         </div>
-      </main>
-    </div>
+      </div>
+    </WorkspaceShell>
   );
 }

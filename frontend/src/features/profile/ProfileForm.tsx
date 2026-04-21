@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { StatusBadge } from '../../components/ui/StatusBadge';
 import { careerStageOptions } from './profileFields';
 import type { EditableProfile, ProfileFormValues } from './types';
 
@@ -27,12 +28,24 @@ const toFormValues = (profile: EditableProfile): ProfileFormValues => ({
   isProfilePublic: profile.isProfilePublic,
 });
 
+const statusTone: Record<Props['status'], 'info' | 'warning' | 'success' | 'danger'> = {
+  loading: 'info',
+  idle: 'info',
+  saving: 'warning',
+  saved: 'success',
+  error: 'danger',
+};
+
+const statusLabel: Record<Props['status'], string> = {
+  loading: 'Loading',
+  idle: 'Ready',
+  saving: 'Saving',
+  saved: 'Saved',
+  error: 'Error',
+};
+
 export function ProfileForm({ profile, status, onSave }: Props) {
   const [values, setValues] = useState<ProfileFormValues>(() => toFormValues(profile));
-
-  useEffect(() => {
-    setValues(toFormValues(profile));
-  }, [profile]);
 
   const setField = <K extends keyof ProfileFormValues>(key: K, value: ProfileFormValues[K]) => {
     setValues((current) => ({ ...current, [key]: value }));
@@ -49,13 +62,13 @@ export function ProfileForm({ profile, status, onSave }: Props) {
       <header className="profile-card-header">
         <div>
           <p className="profile-eyebrow">Private profile editor</p>
-          <h1>{profile.fullName}</h1>
+          <h2>{profile.fullName}</h2>
           <p className="profile-subtitle">
             Update the profile data that will later be connected to the real API in
             `INT-PROFILE-001`.
           </p>
         </div>
-        <div className={`profile-status profile-status-${status}`}>{status}</div>
+        <StatusBadge tone={statusTone[status]}>{statusLabel[status]}</StatusBadge>
       </header>
 
       <div className="profile-grid">

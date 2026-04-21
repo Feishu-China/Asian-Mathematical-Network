@@ -1,4 +1,8 @@
 import { useEffect, useState } from 'react';
+import { WorkspaceShell } from '../components/layout/WorkspaceShell';
+import { PageModeBadge } from '../components/ui/PageModeBadge';
+import { RoleBadge } from '../components/ui/RoleBadge';
+import { StatusBadge } from '../components/ui/StatusBadge';
 import { ProfileForm } from '../features/profile/ProfileForm';
 import { profileProvider } from '../features/profile/profileProvider';
 import type { EditableProfile, ProfileFormValues } from '../features/profile/types';
@@ -35,9 +39,30 @@ export default function MeProfile() {
     return <div className="profile-page">Loading profile...</div>;
   }
 
+  const badgeTone =
+    status === 'saved' ? 'success' : status === 'saving' ? 'warning' : status === 'error' ? 'danger' : 'info';
+
   return (
-    <div className="profile-page">
-      <ProfileForm profile={profile} status={status} onSave={handleSave} />
-    </div>
+    <WorkspaceShell
+      eyebrow="Academic directory"
+      title="Profile"
+      description="Maintain the private profile record that will later feed directory, reviewer, and application contexts."
+      badges={
+        <>
+          <RoleBadge role="applicant" />
+          <PageModeBadge mode="real-aligned" />
+          <StatusBadge tone={badgeTone}>{status}</StatusBadge>
+        </>
+      }
+    >
+      <div className="profile-page">
+        <ProfileForm
+          key={`${profile.userId}:${profile.updatedAt}`}
+          profile={profile}
+          status={status}
+          onSave={handleSave}
+        />
+      </div>
+    </WorkspaceShell>
   );
 }

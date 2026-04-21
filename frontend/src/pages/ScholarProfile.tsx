@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { PortalShell } from '../components/layout/PortalShell';
+import { PageModeBadge } from '../components/ui/PageModeBadge';
+import { RoleBadge } from '../components/ui/RoleBadge';
 import { PublicScholarCard } from '../features/profile/PublicScholarCard';
 import { profileProvider } from '../features/profile/profileProvider';
 import type { PublicScholarProfile } from '../features/profile/types';
@@ -24,8 +27,20 @@ export default function ScholarProfile() {
   }
 
   return (
-    <div className="profile-page">
-      <PublicScholarCard profile={profile} />
-    </div>
+    <PortalShell
+      eyebrow="Academic directory"
+      title="Scholar profile"
+      description="Public-facing profile detail used for directory visibility and later reviewer sourcing context."
+      badges={
+        <>
+          <RoleBadge role="visitor" />
+          <PageModeBadge mode="real-aligned" />
+        </>
+      }
+    >
+      <div className="profile-page">
+        <PublicScholarCard profile={profile} />
+      </div>
+    </PortalShell>
   );
 }

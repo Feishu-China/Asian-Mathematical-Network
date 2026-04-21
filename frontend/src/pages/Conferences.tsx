@@ -1,4 +1,8 @@
 import { useEffect, useState } from 'react';
+import { PortalShell } from '../components/layout/PortalShell';
+import { PageModeBadge } from '../components/ui/PageModeBadge';
+import { RoleBadge } from '../components/ui/RoleBadge';
+import { StatusBadge } from '../components/ui/StatusBadge';
 import { ConferenceListCard } from '../features/conference/ConferenceListCard';
 import { conferenceProvider } from '../features/conference/conferenceProvider';
 import type { ConferenceListItem } from '../features/conference/types';
@@ -18,22 +22,29 @@ export default function Conferences() {
   }
 
   return (
-    <div className="conference-page">
-      <header className="conference-hero">
-        <p className="conference-eyebrow">Public opportunities</p>
-        <h1>Conferences</h1>
-        <p>Browse the published conference opportunities currently open on the network.</p>
-      </header>
-
-      {items.length === 0 ? (
-        <div className="conference-empty">No published conferences yet.</div>
-      ) : (
-        <div className="conference-grid">
-          {items.map((conference) => (
-            <ConferenceListCard key={conference.id} conference={conference} />
-          ))}
-        </div>
-      )}
-    </div>
+    <PortalShell
+      eyebrow="Public opportunities"
+      title="Conferences"
+      description="Browse the published conference opportunities currently open on the network."
+      badges={
+        <>
+          <RoleBadge role="visitor" />
+          <PageModeBadge mode="hybrid" />
+          <StatusBadge tone="info">Portal entry</StatusBadge>
+        </>
+      }
+    >
+      <div className="conference-page">
+        {items.length === 0 ? (
+          <div className="conference-empty">No published conferences yet.</div>
+        ) : (
+          <div className="conference-grid">
+            {items.map((conference) => (
+              <ConferenceListCard key={conference.id} conference={conference} />
+            ))}
+          </div>
+        )}
+      </div>
+    </PortalShell>
   );
 }
