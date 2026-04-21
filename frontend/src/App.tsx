@@ -1,7 +1,7 @@
 import type { ComponentType } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
-const pages = import.meta.glob('./pages/*.tsx', { eager: true });
+const pages = import.meta.glob(['./pages/*.tsx', '!./pages/*.test.tsx'], { eager: true });
 
 const routes = Object.entries(pages)
   .map(([path, module]) => {

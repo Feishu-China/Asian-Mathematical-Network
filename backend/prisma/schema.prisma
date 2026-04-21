@@ -8,15 +8,19 @@ datasource db {
 }
 
 model User {
-  id              String    @id @default(uuid())
-  email           String    @unique
-  passwordHash    String
-  status          String    @default("active") // active, inactive, suspended
-  emailVerifiedAt DateTime?
-  lastLoginAt     DateTime?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  profile         Profile?
+  id                      String                     @id @default(uuid())
+  email                   String                     @unique
+  passwordHash            String
+  status                  String                     @default("active") // active, inactive, suspended
+  emailVerifiedAt         DateTime?
+  lastLoginAt             DateTime?
+  createdAt               DateTime                   @default(now())
+  updatedAt               DateTime                   @updatedAt
+  profile                 Profile?
+  createdConferences      Conference[]               @relation("ConferenceCreator")
+  conferenceStaff         ConferenceStaff[]
+  applications            Application[]              @relation("ApplicationApplicant")
+  applicationStatusEvents ApplicationStatusHistory[] @relation("ApplicationStatusChangedBy")
 }
 
 model Profile {
@@ -56,4 +60,87 @@ model ProfileMscCode {
   codeRef   MscCode          @relation(fields: [mscCode], references: [code], onDelete: Restrict)
 
   @@id([userId, mscCode])
+}
+
+model Conference {
+  id                        String            @id @default(uuid())
+  slug                      String            @unique
+  title                     String
+  shortName                 String?
+  locationText              String?
+  startDate                 String?
+  endDate                   String?
+  description               String?
+  applicationDeadline       DateTime?
+  status                    String            @default("draft")
+  applicationFormSchemaJson String            @default("{\"fields\":[]}")
+  settingsJson              String            @default("{}")
+  publishedAt               DateTime?
+  closedAt                  DateTime?
+  createdByUserId           String
+  createdAt                 DateTime          @default(now())
+  updatedAt                 DateTime          @updatedAt
+  creator                   User              @relation("ConferenceCreator", fields: [createdByUserId], references: [id], onDelete: Cascade)
+  staff                     ConferenceStaff[]
+  applications              Application[]
+
+  @@index([status, applicationDeadline])
+}
+
+model ConferenceStaff {
+  id           String     @id @default(uuid())
+  conferenceId String
+  userId       String
+  staffRole    String
+  createdAt    DateTime   @default(now())
+  conference   Conference @relation(fields: [conferenceId], references: [id], onDelete: Cascade)
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conferenceId, userId])
+}
+
+model Application {
+  id                           String                     @id @default(uuid())
+  applicationType              String
+  sourceModule                 String
+  conferenceId                 String?
+  grantId                      String?
+  linkedConferenceId           String?
+  linkedConferenceApplicationId String?
+  applicantUserId              String
+  status                       String                     @default("draft")
+  participationType            String?
+  statement                    String?
+  abstractTitle                String?
+  abstractText                 String?
+  interestedInTravelSupport    Boolean                    @default(false)
+  travelPlanSummary            String?
+  fundingNeedSummary           String?
+  extraAnswersJson             String                     @default("{}")
+  applicantProfileSnapshotJson String?
+  submittedAt                  DateTime?
+  decidedAt                    DateTime?
+  createdAt                    DateTime                   @default(now())
+  updatedAt                    DateTime                   @updatedAt
+  conference                   Conference?                @relation(fields: [conferenceId], references: [id], onDelete: Cascade)
+  applicant                    User                       @relation("ApplicationApplicant", fields: [applicantUserId], references: [id], onDelete: Cascade)
+  statusHistory                ApplicationStatusHistory[]
+
+  @@unique([conferenceId, applicantUserId, applicationType])
+  @@index([conferenceId, status])
+  @@index([applicantUserId, status])
+}
+
+model ApplicationStatusHistory {
+  id              String      @id @default(uuid())
+  applicationId   String
+  fromStatus      String?
+  toStatus        String
+  changedByUserId String
+  reason          String?
+  createdAt       DateTime    @default(now())
+  application     Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  changedBy       User        @relation("ApplicationStatusChangedBy", fields: [changedByUserId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId, createdAt])
 }
