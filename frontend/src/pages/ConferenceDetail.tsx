@@ -1,5 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { PortalShell } from '../components/layout/PortalShell';
+import { PageModeBadge } from '../components/ui/PageModeBadge';
+import { RoleBadge } from '../components/ui/RoleBadge';
+import { StatusBadge } from '../components/ui/StatusBadge';
 import { conferenceProvider } from '../features/conference/conferenceProvider';
 import type { ConferenceDetail as ConferenceDetailModel } from '../features/conference/types';
 import './Conference.css';
@@ -23,15 +27,36 @@ export default function ConferenceDetail() {
   }
 
   return (
-    <div className="conference-page conference-detail-page">
-      <header className="conference-hero">
-        <p className="conference-eyebrow">Conference detail</p>
-        <h1>{conference.title}</h1>
-        <p>{conference.description || 'No description has been published yet.'}</p>
-      </header>
-
-      <section className="conference-detail-grid">
-        <div className="conference-detail-card">
+    <PortalShell
+      eyebrow="Conference detail"
+      title={conference.title}
+      description={conference.description || 'No description has been published yet.'}
+      badges={
+        <>
+          <RoleBadge role="visitor" />
+          <PageModeBadge mode="hybrid" />
+          <StatusBadge tone={conference.isApplicationOpen ? 'success' : 'neutral'}>
+            {conference.isApplicationOpen ? 'Applications open' : 'Applications closed'}
+          </StatusBadge>
+        </>
+      }
+      aside={
+        <div className="conference-detail-card conference-cta-card">
+          <p>
+            Conference applications remain separate from travel-grant applications in the MVP.
+          </p>
+          {conference.isApplicationOpen ? (
+            <Link className="conference-primary-link" to={`/conferences/${conference.slug}/apply`}>
+              Apply for conference
+            </Link>
+          ) : (
+            <div className="conference-muted-note">This conference is no longer accepting applications.</div>
+          )}
+        </div>
+      }
+    >
+      <div className="conference-page conference-detail-page">
+        <section className="conference-detail-card">
           <h2>Event snapshot</h2>
           <dl>
             <div>
@@ -49,24 +74,8 @@ export default function ConferenceDetail() {
               <dd>{conference.applicationDeadline || 'Pending'}</dd>
             </div>
           </dl>
-        </div>
-
-        <aside className="conference-detail-card conference-cta-card">
-          <span className={conference.isApplicationOpen ? 'conference-chip open' : 'conference-chip closed'}>
-            {conference.isApplicationOpen ? 'Applications open' : 'Applications closed'}
-          </span>
-          <p>
-            Conference applications remain separate from travel-grant applications in the MVP.
-          </p>
-          {conference.isApplicationOpen ? (
-            <Link className="conference-primary-link" to={`/conferences/${conference.slug}/apply`}>
-              Apply for conference
-            </Link>
-          ) : (
-            <div className="conference-muted-note">This conference is no longer accepting applications.</div>
-          )}
-        </aside>
-      </section>
-    </div>
+        </section>
+      </div>
+    </PortalShell>
   );
 }

@@ -14,7 +14,7 @@ export function PublicScholarCard({ profile }: Props) {
       <header className="scholar-header">
         <div>
           <p className="scholar-kicker">Public scholar profile</p>
-          <h1>{profile.fullName}</h1>
+          <h2>{profile.fullName}</h2>
           <p>{headingLine || 'Profile details available below.'}</p>
         </div>
       </header>

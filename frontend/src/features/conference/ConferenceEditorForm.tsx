@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
+import { StatusBadge } from '../../components/ui/StatusBadge';
 import type { ConferenceEditorValues, OrganizerConference } from './types';
 
 type Props = {
@@ -33,15 +34,20 @@ export function ConferenceEditorForm({
 }: Props) {
   const [values, setValues] = useState(initialValues);
 
-  useEffect(() => {
-    setValues(initialValues);
-  }, [initialValues]);
-
   const publishReady = useMemo(() => isPublishReady(values), [values]);
 
   const setField = <K extends keyof ConferenceEditorValues>(key: K, value: ConferenceEditorValues[K]) => {
     setValues((current) => ({ ...current, [key]: value }));
   };
+
+  const badgeTone =
+    status === 'saved'
+      ? 'success'
+      : status === 'saving' || status === 'publishing' || status === 'closing'
+        ? 'warning'
+        : status === 'error'
+          ? 'danger'
+          : 'info';
 
   return (
     <form
@@ -54,12 +60,12 @@ export function ConferenceEditorForm({
       <header className="conference-form-header">
         <div>
           <p className="conference-eyebrow">Organizer workspace</p>
-          <h1>{title}</h1>
+          <h2>{title}</h2>
           <p className="conference-muted-note">
             The application form editor intentionally supports only the current M2 field subset.
           </p>
         </div>
-        <div className="conference-status-badge">status: {conference?.status ?? 'draft'}</div>
+        <StatusBadge tone={badgeTone}>Status: {conference?.status ?? 'draft'}</StatusBadge>
       </header>
 
       <div className="conference-form-grid">
