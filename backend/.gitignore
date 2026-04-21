@@ -2,6 +2,12 @@ node_modules
 dist
 dev.db
 prisma/dev.db
+dev.db-journal
+prisma/dev.db-journal
+test.db
+prisma/test.db
+test.db-journal
+prisma/test.db-journal
 # Keep environment variables out of version control
 .env
 
