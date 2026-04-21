@@ -283,7 +283,7 @@
         "Integrate with mock endpoints"
       ],
       "status": "completed",
-      "passes": true
+      "passes": false
     },
     {
       "id": "BE-PROFILE-001",
@@ -301,7 +301,7 @@
         "Write backend unit tests"
       ],
       "status": "completed",
-      "passes": true
+      "passes": false
     },
     {
       "id": "INT-PROFILE-001",
@@ -338,7 +338,7 @@
         "Integrate with mock endpoints"
       ],
       "status": "completed",
-      "passes": true
+      "passes": false
     },
     {
       "id": "BE-CONF-001",
@@ -356,7 +356,7 @@
         "Write backend unit tests"
       ],
       "status": "completed",
-      "passes": true
+      "passes": false
     },
     {
       "id": "INT-CONF-001",
@@ -393,7 +393,7 @@
         "Integrate with mock endpoints"
       ],
       "status": "completed",
-      "passes": true
+      "passes": false
     },
     {
       "id": "BE-GRANT-001",
@@ -411,7 +411,7 @@
         "Enforce conference linkage validation"
       ],
       "status": "completed",
-      "passes": true
+      "passes": false
     },
     {
       "id": "INT-GRANT-001",
