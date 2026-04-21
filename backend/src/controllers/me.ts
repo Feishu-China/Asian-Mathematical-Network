@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { Prisma } from '@prisma/client';
 import { mapProfileRecord } from '../lib/profile';
 import { prisma } from '../lib/prisma';
 import { requireAuthenticatedUserId } from '../lib/auth';
@@ -6,29 +7,44 @@ import {
   buildApplicantProfileSnapshot,
   parseConferenceApplicationInput,
 } from '../lib/conference';
+import {
+  parseGrantApplicationInput,
+  requireEligibleLinkedConferenceApplication,
+} from '../lib/grant';
 import { serializeConferenceApplication } from '../serializers/conference';
+import { serializeGrantApplication } from '../serializers/grant';
 
 const readApplicationId = (req: Request) =>
   Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
 
-const loadOwnedConferenceApplication = async (applicationId: string, userId: string) =>
+type OwnedApplicationRecord = Prisma.ApplicationGetPayload<{
+  include: {
+    conference: true;
+    grant: true;
+  };
+}>;
+
+const loadOwnedApplication = async (
+  applicationId: string,
+  userId: string
+): Promise<OwnedApplicationRecord | null> =>
   prisma.application.findFirst({
     where: {
       id: applicationId,
       applicantUserId: userId,
-      applicationType: 'conference_application',
     },
     include: {
       conference: true,
+      grant: true,
     },
   });
 
 export const updateMyConferenceApplicationDraft = async (req: Request, res: Response) => {
   try {
     const userId = requireAuthenticatedUserId(req);
-    const existing = await loadOwnedConferenceApplication(readApplicationId(req), userId);
+    const existing = await loadOwnedApplication(readApplicationId(req), userId);
 
-    if (!existing || !existing.conference) {
+    if (!existing) {
       res.status(404).json({ message: 'Application not found' });
       return;
     }
@@ -38,30 +54,81 @@ export const updateMyConferenceApplicationDraft = async (req: Request, res: Resp
       return;
     }
 
-    const input = parseConferenceApplicationInput(req.body as Record<string, unknown>);
-    const application = await prisma.application.update({
-      where: { id: existing.id },
-      data: {
-        participationType: input.participationType,
-        statement: input.statement,
-        abstractTitle: input.abstractTitle,
-        abstractText: input.abstractText,
-        interestedInTravelSupport: input.interestedInTravelSupport,
-        extraAnswersJson: input.extraAnswersJson,
-      },
-    });
+    if (existing.applicationType === 'conference_application') {
+      if (!existing.conference) {
+        res.status(404).json({ message: 'Application not found' });
+        return;
+      }
 
-    res.status(200).json({
-      data: {
-        application: serializeConferenceApplication({
-          ...application,
-          conferenceTitle: existing.conference.title,
-        }),
-      },
-    });
+      const input = parseConferenceApplicationInput(req.body as Record<string, unknown>);
+      const application = await prisma.application.update({
+        where: { id: existing.id },
+        data: {
+          participationType: input.participationType,
+          statement: input.statement,
+          abstractTitle: input.abstractTitle,
+          abstractText: input.abstractText,
+          interestedInTravelSupport: input.interestedInTravelSupport,
+          extraAnswersJson: input.extraAnswersJson,
+        },
+      });
+
+      res.status(200).json({
+        data: {
+          application: serializeConferenceApplication({
+            ...application,
+            conferenceTitle: existing.conference.title,
+          }),
+        },
+      });
+      return;
+    }
+
+    if (existing.applicationType === 'grant_application' && existing.grant) {
+      const input = parseGrantApplicationInput(req.body as Record<string, unknown>);
+      await requireEligibleLinkedConferenceApplication({
+        linkedConferenceApplicationId: input.linkedConferenceApplicationId,
+        applicantUserId: userId,
+        linkedConferenceId: existing.grant.linkedConferenceId,
+      });
+
+      const application = await prisma.application.update({
+        where: { id: existing.id },
+        data: {
+          linkedConferenceId: existing.grant.linkedConferenceId,
+          linkedConferenceApplicationId: input.linkedConferenceApplicationId,
+          statement: input.statement,
+          travelPlanSummary: input.travelPlanSummary,
+          fundingNeedSummary: input.fundingNeedSummary,
+          extraAnswersJson: input.extraAnswersJson,
+        },
+      });
+
+      res.status(200).json({
+        data: {
+          application: serializeGrantApplication({
+            ...application,
+            grantTitle: existing.grant.title,
+          }),
+        },
+      });
+      return;
+    }
+
+    res.status(404).json({ message: 'Application not found' });
   } catch (error) {
     if ((error as Error).message === 'UNAUTHORIZED') {
       res.status(401).json({ message: 'Unauthorized' });
+      return;
+    }
+
+    if ((error as Error).message === 'FILES_NOT_SUPPORTED_YET') {
+      res.status(422).json({ message: 'file attachments are not available yet' });
+      return;
+    }
+
+    if ((error as Error).message === 'GRANT_PREREQUISITE_REQUIRED') {
+      res.status(422).json({ message: 'A submitted linked conference application is required' });
       return;
     }
 
@@ -72,9 +139,9 @@ export const updateMyConferenceApplicationDraft = async (req: Request, res: Resp
 export const submitMyConferenceApplication = async (req: Request, res: Response) => {
   try {
     const userId = requireAuthenticatedUserId(req);
-    const existing = await loadOwnedConferenceApplication(readApplicationId(req), userId);
+    const existing = await loadOwnedApplication(readApplicationId(req), userId);
 
-    if (!existing || !existing.conference) {
+    if (!existing) {
       res.status(404).json({ message: 'Application not found' });
       return;
     }
@@ -96,6 +163,67 @@ export const submitMyConferenceApplication = async (req: Request, res: Response)
 
     const snapshot = buildApplicantProfileSnapshot(mapProfileRecord(profileRecord));
     const submittedAt = new Date();
+
+    if (existing.applicationType === 'grant_application') {
+      if (!existing.grant) {
+        res.status(404).json({ message: 'Application not found' });
+        return;
+      }
+
+      if (
+        !existing.linkedConferenceApplicationId ||
+        !existing.statement ||
+        !existing.travelPlanSummary ||
+        !existing.fundingNeedSummary
+      ) {
+        res.status(422).json({ message: 'Grant application is incomplete' });
+        return;
+      }
+
+      await requireEligibleLinkedConferenceApplication({
+        linkedConferenceApplicationId: existing.linkedConferenceApplicationId,
+        applicantUserId: userId,
+        linkedConferenceId: existing.grant.linkedConferenceId,
+      });
+
+      const application = await prisma.$transaction(async (tx) => {
+        const updatedApplication = await tx.application.update({
+          where: { id: existing.id },
+          data: {
+            status: 'submitted',
+            submittedAt,
+            applicantProfileSnapshotJson: JSON.stringify(snapshot),
+          },
+        });
+
+        await tx.applicationStatusHistory.create({
+          data: {
+            applicationId: existing.id,
+            fromStatus: 'draft',
+            toStatus: 'submitted',
+            changedByUserId: userId,
+            reason: 'applicant_submit',
+          },
+        });
+
+        return updatedApplication;
+      });
+
+      res.status(200).json({
+        data: {
+          application: serializeGrantApplication({
+            ...application,
+            grantTitle: existing.grant.title,
+          }),
+        },
+      });
+      return;
+    }
+
+    if (!existing.conference) {
+      res.status(404).json({ message: 'Application not found' });
+      return;
+    }
 
     const application = await prisma.$transaction(async (tx) => {
       const updatedApplication = await tx.application.update({
@@ -122,13 +250,23 @@ export const submitMyConferenceApplication = async (req: Request, res: Response)
 
     res.status(200).json({
       data: {
-        application: serializeConferenceApplication({
-          ...application,
-          conferenceTitle: existing.conference.title,
-        }),
-      },
-    });
-  } catch {
-    res.status(401).json({ message: 'Unauthorized' });
+          application: serializeConferenceApplication({
+            ...application,
+            conferenceTitle: existing.conference.title,
+          }),
+        },
+      });
+  } catch (error) {
+    if ((error as Error).message === 'UNAUTHORIZED') {
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
+    }
+
+    if ((error as Error).message === 'GRANT_PREREQUISITE_REQUIRED') {
+      res.status(422).json({ message: 'A submitted linked conference application is required' });
+      return;
+    }
+
+    res.status(400).json({ message: 'Invalid application submission' });
   }
 };

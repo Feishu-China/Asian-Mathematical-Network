@@ -4,11 +4,30 @@
 
 ## 当前项目状态
 *   **最新版本**: V4.0-Optimized
-*   **总览**: `AUTH`、`PROFILE` 与 `CONF` 三个 Epic 已完成。下一步应转入 `GRANT` Epic，从 `FE-GRANT-001` 或 `BE-GRANT-001` 开始。
+*   **总览**: `AUTH`、`PROFILE` 与 `CONF` 三个 Epic 已完成；`GRANT` 已完成后端首个切片 `BE-GRANT-001`。下一步应转入 `FE-GRANT-001`，之后再进行 `INT-GRANT-001`。
 
 ---
 
 ## 📅 Handoff 历史记录
+
+### 2026-04-21 (Session 20)
+*   **Agent 角色**: Coding Agent (Backend)
+*   **完成 Feature**: `BE-GRANT-001`
+*   **变更记录**:
+    *   为 `GRANT` Epic 新增真实的 `GrantOpportunity` Prisma 模型、SQLite 迁移，以及 grant 侧索引/唯一约束；`Application` 表现在具备 `grantId` 外键和 grant 申请唯一性约束。
+    *   新增 `GET /api/v1/grants`、`GET /api/v1/grants/:slug`、`GET /api/v1/grants/:id/application-form`、`GET /api/v1/grants/:id/applications/me`、`POST /api/v1/grants/:id/applications`，完成公开 grant 读取和 applicant grant draft 创建/回读闭环。
+    *   新增 grant payload parser / prerequisite helper，后端会强制校验：grant draft 必须关联当前用户本人、同一 linked conference、且已 `submitted` 的 `conference_application`。
+    *   将共享 applicant mutation 路径 `PUT /api/v1/me/applications/:id/draft` 与 `POST /api/v1/me/applications/:id/submit` 泛化到 `grant_application`，同时保持既有 `conference_application` 行为不变。
+    *   新增 `backend/tests/grants.test.ts`，覆盖 grant public reads、draft create/read、shared me update/submit；并补充 `docs/specs/openapi.yaml` 中这次真实实现的 grant 路径留档。
+*   **验证记录**:
+    *   执行通过 `cd backend && npx jest tests/grants.test.ts --runInBand`
+    *   执行通过 `cd backend && npx jest tests/conferences.test.ts --runInBand`
+    *   执行通过 `cd backend && npm test`，结果为 `4` 个 test suites、`24` 个 tests 全部通过
+*   **边界与说明**:
+    *   本轮未实现 organizer grant CRUD、decision release、applicant dashboard grant 聚合、post-visit report。
+    *   按用户要求，`docs/planning/` 视为只读，因此未修改 feature-list JSON 状态文件；本次完成状态仅记录在 `PROGRESS.md` 与 `docs/specs/openapi.yaml`。
+    *   已知 `CONF` 的 stale `Draft saved.` banner 问题未被扩大修复，保持原样。
+*   **下一步**: `FE-GRANT-001`
 
 ### 2026-04-21 (Session 19)
 *   **Agent 角色**: Coding Agent (Integration Stabilization)
