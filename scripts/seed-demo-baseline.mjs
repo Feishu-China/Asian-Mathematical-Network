@@ -15,6 +15,7 @@ require('../backend/node_modules/ts-node/register/transpile-only');
 
 const { PrismaClient } = require('../backend/node_modules/@prisma/client');
 const {
+  DEMO_BASELINE_FIXTURE,
   ensureDemoBaseline,
 } = require('../backend/src/lib/demoBaseline.ts');
 
@@ -31,6 +32,16 @@ const main = async () => {
           id: fixture.conference.id,
           slug: fixture.conference.slug,
           status: fixture.conference.status,
+        },
+        accounts: {
+          organizer: {
+            email: DEMO_BASELINE_FIXTURE.creatorEmail,
+            password: DEMO_BASELINE_FIXTURE.creatorPassword,
+          },
+          reviewer: {
+            email: DEMO_BASELINE_FIXTURE.reviewerEmail,
+            password: DEMO_BASELINE_FIXTURE.reviewerPassword,
+          },
         },
         grant: {
           id: fixture.grant.id,

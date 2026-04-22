@@ -160,6 +160,20 @@ describe('GET /api/v1/me/applications', () => {
     });
     decidedConferenceApplicationId = decidedApp.id;
 
+    await prisma.decision.create({
+      data: {
+        applicationId: decidedApp.id,
+        decisionKind: 'conference_admission',
+        finalStatus: 'accepted',
+        releaseStatus: 'released',
+        noteInternal: 'Priority candidate',
+        noteExternal: 'Welcome to the conference.',
+        decidedByUserId: creator.id,
+        decidedAt: new Date('2026-04-28T10:00:00Z'),
+        releasedAt: new Date('2026-04-29T12:00:00Z'),
+      },
+    });
+
     await prisma.application.create({
       data: {
         applicationType: 'conference_application',
@@ -221,15 +235,12 @@ describe('GET /api/v1/me/applications', () => {
     expect(item).toMatchObject({
       application_type: 'conference_application',
       source_module: 'M2',
-      status: 'submitted',
-      conference_id: conferenceId,
-      conference_slug: conferenceSlug,
-      conference_title: 'Me Applications Conference 2026',
-      grant_id: null,
-      grant_slug: null,
-      grant_title: null,
-      linked_conference_application_id: null,
-      decision: null,
+      source_id: conferenceId,
+      source_title: 'Me Applications Conference 2026',
+      linked_conference_title: null,
+      viewer_status: 'under_review',
+      released_decision: null,
+      next_action: 'view_submission',
     });
     expect(item.submitted_at).toBe('2026-05-01T09:00:00.000Z');
   });
@@ -245,21 +256,17 @@ describe('GET /api/v1/me/applications', () => {
     expect(item).toMatchObject({
       application_type: 'grant_application',
       source_module: 'M7',
-      status: 'draft',
-      conference_id: null,
-      conference_slug: null,
-      conference_title: null,
-      grant_id: grantId,
-      grant_slug: grantSlug,
-      grant_title: 'Me Applications Grant 2026',
-      linked_conference_id: conferenceId,
-      linked_conference_application_id: conferenceApplicationId,
+      source_id: grantId,
+      source_title: 'Me Applications Grant 2026',
+      linked_conference_title: 'Me Applications Conference 2026',
+      viewer_status: 'draft',
       submitted_at: null,
-      decision: null,
+      released_decision: null,
+      next_action: 'continue_draft',
     });
   });
 
-  it('keeps decision null even for decided applications until release semantics land', async () => {
+  it('returns released outcome only after decision release', async () => {
     const res = await request(app)
       .get('/api/v1/me/applications')
       .set('Authorization', `Bearer ${ownerToken}`);
@@ -267,7 +274,17 @@ describe('GET /api/v1/me/applications', () => {
     const decided = res.body.data.items.find(
       (i: { id: string }) => i.id === decidedConferenceApplicationId
     );
-    expect(decided.status).toBe('decided');
-    expect(decided.decision).toBeNull();
+    expect(decided).toMatchObject({
+      id: decidedConferenceApplicationId,
+      application_type: 'conference_application',
+      viewer_status: 'result_released',
+      released_decision: {
+        decision_kind: 'conference_admission',
+        final_status: 'accepted',
+        display_label: 'Accepted',
+        released_at: '2026-04-29T12:00:00.000Z',
+      },
+      next_action: 'view_result',
+    });
   });
 });

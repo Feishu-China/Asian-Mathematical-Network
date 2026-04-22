@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { requireAuthenticatedUserId } from '../lib/auth';
 import { canPublishConference, parseConferenceInput } from '../lib/conference';
+import { ensureUserRole } from '../lib/userRoles';
 import { serializeOrganizerConference } from '../serializers/conference';
 
 const loadOwnedConference = async (conferenceId: string, userId: string) =>
@@ -26,21 +27,25 @@ export const createConference = async (req: Request, res: Response) => {
     const userId = requireAuthenticatedUserId(req);
     const input = parseConferenceInput(req.body as Record<string, unknown>);
 
-    const conference = await prisma.conference.create({
-      data: {
-        ...input,
-        status: 'draft',
-        createdByUserId: userId,
-        staff: {
-          create: {
-            userId,
-            staffRole: 'owner',
+    const conference = await prisma.$transaction(async (tx) => {
+      await ensureUserRole(userId, 'organizer', tx);
+
+      return tx.conference.create({
+        data: {
+          ...input,
+          status: 'draft',
+          createdByUserId: userId,
+          staff: {
+            create: {
+              userId,
+              staffRole: 'owner',
+            },
           },
         },
-      },
-      include: {
-        staff: true,
-      },
+        include: {
+          staff: true,
+        },
+      });
     });
 
     res.status(201).json({

@@ -20,8 +20,12 @@ model User {
   createdConferences      Conference[]               @relation("ConferenceCreator")
   createdGrantOpportunities GrantOpportunity[]       @relation("GrantOpportunityCreator")
   conferenceStaff         ConferenceStaff[]
+  userRoles               UserRole[]
   applications            Application[]              @relation("ApplicationApplicant")
   applicationStatusEvents ApplicationStatusHistory[] @relation("ApplicationStatusChangedBy")
+  assignedReviewAssignments ReviewAssignment[]       @relation("ReviewAssignmentReviewer")
+  createdReviewAssignments ReviewAssignment[]        @relation("ReviewAssignmentAssigner")
+  decisions               Decision[]                 @relation("DecisionMaker")
 }
 
 model Profile {
@@ -155,6 +159,8 @@ model Application {
   grant                        GrantOpportunity?          @relation(fields: [grantId], references: [id], onDelete: Cascade)
   applicant                    User                       @relation("ApplicationApplicant", fields: [applicantUserId], references: [id], onDelete: Cascade)
   statusHistory                ApplicationStatusHistory[]
+  reviewAssignments            ReviewAssignment[]
+  decision                     Decision?
 
   @@unique([conferenceId, applicantUserId, applicationType])
   @@unique([grantId, applicantUserId, applicationType])
@@ -176,4 +182,72 @@ model ApplicationStatusHistory {
   changedBy       User        @relation("ApplicationStatusChangedBy", fields: [changedByUserId], references: [id], onDelete: Cascade)
 
   @@index([applicationId, createdAt])
+}
+
+model UserRole {
+  id        String   @id @default(uuid())
+  userId    String
+  role      String
+  isPrimary Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, role])
+  @@index([role])
+  @@index([userId, isPrimary])
+}
+
+model ReviewAssignment {
+  id               String      @id @default(uuid())
+  applicationId    String
+  reviewerUserId   String
+  assignedByUserId String
+  status           String      @default("assigned")
+  conflictState    String      @default("clear")
+  conflictNote     String?
+  dueAt            DateTime?
+  assignedAt       DateTime    @default(now())
+  completedAt      DateTime?
+  cancelledAt      DateTime?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  application      Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  reviewer         User        @relation("ReviewAssignmentReviewer", fields: [reviewerUserId], references: [id], onDelete: Cascade)
+  assignedBy       User        @relation("ReviewAssignmentAssigner", fields: [assignedByUserId], references: [id], onDelete: Cascade)
+  review           Review?
+
+  @@index([reviewerUserId, status, dueAt])
+  @@index([applicationId, status])
+}
+
+model Review {
+  id             String           @id @default(uuid())
+  assignmentId   String           @unique
+  score          Int?
+  recommendation String
+  comment        String
+  submittedAt    DateTime         @default(now())
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  assignment     ReviewAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+}
+
+model Decision {
+  id              String      @id @default(uuid())
+  applicationId   String      @unique
+  decisionKind    String
+  finalStatus     String
+  releaseStatus   String      @default("unreleased")
+  noteInternal    String?
+  noteExternal    String?
+  decidedByUserId String
+  decidedAt       DateTime    @default(now())
+  releasedAt      DateTime?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  application     Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  decidedBy       User        @relation("DecisionMaker", fields: [decidedByUserId], references: [id], onDelete: Cascade)
+
+  @@index([releaseStatus, decidedAt])
+  @@index([finalStatus, decidedAt])
 }

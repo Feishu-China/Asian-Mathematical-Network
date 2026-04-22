@@ -26,7 +26,27 @@ export const listMyApplications = async (req: Request, res: Response) => {
       where: { applicantUserId: userId },
       include: {
         conference: { select: { id: true, slug: true, title: true } },
-        grant: { select: { id: true, slug: true, title: true } },
+        grant: {
+          select: {
+            id: true,
+            slug: true,
+            title: true,
+            reportRequired: true,
+            linkedConference: {
+              select: {
+                title: true,
+              },
+            },
+          },
+        },
+        decision: {
+          select: {
+            decisionKind: true,
+            finalStatus: true,
+            releaseStatus: true,
+            releasedAt: true,
+          },
+        },
       },
       orderBy: [{ updatedAt: 'desc' }],
     });
