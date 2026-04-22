@@ -585,6 +585,52 @@ paths:
         '422':
           description: Submitted linked conference application is required
 
+  /me/applications:
+    get:
+      summary: List the current user's applications across conference and grant subtypes
+      tags: [Applicant]
+      responses:
+        '200':
+          description: Aggregated dashboard view of the current user's applications.
+                       Decision payload is always null until the REVIEW epic adds release semantics.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id: { type: string, format: uuid }
+                            application_type:
+                              type: string
+                              enum: [conference_application, grant_application]
+                            source_module: { type: string }
+                            status: { type: string }
+                            conference_id: { type: string, format: uuid, nullable: true }
+                            conference_slug: { type: string, nullable: true }
+                            conference_title: { type: string, nullable: true }
+                            grant_id: { type: string, format: uuid, nullable: true }
+                            grant_slug: { type: string, nullable: true }
+                            grant_title: { type: string, nullable: true }
+                            linked_conference_id: { type: string, format: uuid, nullable: true }
+                            linked_conference_application_id: { type: string, format: uuid, nullable: true }
+                            submitted_at: { type: string, format: date-time, nullable: true }
+                            decision: { type: object, nullable: true }
+                            created_at: { type: string, format: date-time }
+                            updated_at: { type: string, format: date-time }
+                  meta:
+                    type: object
+                    properties:
+                      total: { type: integer }
+        '401':
+          description: Unauthorized
+
   /me/applications/{id}/draft:
     put:
       summary: Update my draft application for either conference or grant subtype
