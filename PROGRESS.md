@@ -4,11 +4,30 @@
 
 ## 当前项目状态
 *   **最新版本**: V4.0-Optimized
-*   **总览**: `AUTH`、`PROFILE`、`CONF` 与 `GRANT` 四个 Epic 已完成。`GRANT` 现已通过真实前后端联调验证；下一步可进入 `REVIEW` Epic。
+*   **总览**: `AUTH`、`PROFILE`、`CONF` 与 `GRANT` 四个 Epic 已完成并通过真实联调验证。`PORTAL` Epic 已落地后端聚合接口 `BE-PORTAL-001`，等待 `FE-PORTAL-001`（仪表板 UI）与 `INT-PORTAL-001`（仍依赖未启动的 `REVIEW` Epic 提供 release 语义）。
 
 ---
 
 ## 📅 Handoff 历史记录
+
+### 2026-04-22 (Session 23)
+*   **Agent 角色**: Coding Agent (Backend)
+*   **完成 Feature**: `BE-PORTAL-001`
+*   **变更记录**:
+    *   新增 `GET /api/v1/me/applications` 聚合接口，返回当前登录用户在 `conference_application` 与 `grant_application` 两类下的全部 applications，按 `updated_at` 倒序排列。
+    *   新增 `backend/src/serializers/applicationDashboard.ts`，提供 dashboard 视图专用的 `serializeMyApplicationItem`。该 serializer 始终把 `decision` 输出为 `null`，把决策可见性的实现完整推迟到 `BE-REVIEW-001`：当前数据库尚未存在 `Decision` 表，仅有 `Application.decidedAt`，因此即使 `status === 'decided'` 仍不暴露最终结果，符合 "released vs unreleased" 的产品约束。
+    *   `backend/src/controllers/me.ts` 新增 `listMyApplications`，使用单次 `findMany` 同时 include conference 与 grant 的 `id/slug/title`，避免 N+1。`backend/src/routes/me.ts` 自动挂载点新增 `GET /applications` 路由。
+    *   在 `docs/specs/openapi.yaml` 中补充 `/me/applications` 的 GET 定义，并明确标注 `decision` 字段在 REVIEW Epic 落地前保持 `null`。
+*   **验证记录**:
+    *   新增 `backend/tests/meApplications.test.ts`（6 用例）：401 未授权、空列表、自有数据隔离、conference application 上下文映射、grant application 上下文映射、decided application 仍保持 `decision: null`。
+    *   执行通过 `cd backend && npm test`，结果为 `8` 个 test suites、`34` 个 tests 全部通过。
+    *   执行通过仓库级 `npm run test:smoke`（前端 build + 后端 jest）。
+*   **边界与说明**:
+    *   本轮没有新增 `Decision` Prisma 模型、决策发布接口、或 organizer/reviewer 评审分配能力 —— 这些归属 `BE-REVIEW-001`。
+    *   `decision` 字段在响应中以 `null` 占位，等 `BE-REVIEW-001` 落地 `Decision` 表与 `releaseStatus` 后再回头让 dashboard serializer 在 `released` 时填充 `final_status` / `released_at` / `external_notes`。
+    *   未触碰 `docs/planning/` 下的 feature-list JSON；保持本仓库 "planning 只读" 约定。
+    *   未启动 `FE-PORTAL-001`，按 "One Feature at a Time" 原则留作下一轮独立会话。
+*   **下一步**: `FE-PORTAL-001`（公众门户首页 + Applicant Dashboard UI）。建议复用 `PortalShell` 做公众入口、`WorkspaceShell` 承载 dashboard，并以 `GET /api/v1/me/applications` 为真实数据源直接接 `httpProvider`，避免再走 fake provider。
 
 ### 2026-04-21 (Session 22)
 *   **Agent 角色**: Coding Agent (Frontend / QA Follow-up)

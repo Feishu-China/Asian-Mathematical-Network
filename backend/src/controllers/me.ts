@@ -13,9 +13,40 @@ import {
 } from '../lib/grant';
 import { serializeConferenceApplication } from '../serializers/conference';
 import { serializeGrantApplication } from '../serializers/grant';
+import { serializeMyApplicationItem } from '../serializers/applicationDashboard';
 
 const readApplicationId = (req: Request) =>
   Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+
+export const listMyApplications = async (req: Request, res: Response) => {
+  try {
+    const userId = requireAuthenticatedUserId(req);
+
+    const applications = await prisma.application.findMany({
+      where: { applicantUserId: userId },
+      include: {
+        conference: { select: { id: true, slug: true, title: true } },
+        grant: { select: { id: true, slug: true, title: true } },
+      },
+      orderBy: [{ updatedAt: 'desc' }],
+    });
+
+    res.status(200).json({
+      data: {
+        items: applications.map(serializeMyApplicationItem),
+      },
+      meta: {
+        total: applications.length,
+      },
+    });
+  } catch (error) {
+    if ((error as Error).message === 'UNAUTHORIZED') {
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
+    }
+    res.status(500).json({ message: 'Failed to load applications' });
+  }
+};
 
 type OwnedApplicationRecord = Prisma.ApplicationGetPayload<{
   include: {
