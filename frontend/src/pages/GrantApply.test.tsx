@@ -138,11 +138,12 @@ describe('grant apply page', () => {
     await user.click(screen.getByRole('button', { name: /save draft/i }));
 
     expect(await screen.findByText(/draft saved/i)).toBeInTheDocument();
-    expect(screen.getByText(/draft in progress/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /draft in progress/i })).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /submit application/i }));
     expect(await screen.findByText(/application submitted/i)).toBeInTheDocument();
     expect(screen.getByText(/submitted and under review/i)).toBeInTheDocument();
+    expect(screen.getByText('Applicant view: under review')).toBeInTheDocument();
     expect(screen.queryByText(/^Released outcome$/)).not.toBeInTheDocument();
   });
 
@@ -166,7 +167,7 @@ describe('grant apply page', () => {
     );
 
     expect(await screen.findByText(/draft saved/i)).toBeInTheDocument();
-    expect(screen.getByText(/draft in progress/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /draft in progress/i })).toBeInTheDocument();
     expect(screen.getByDisplayValue('Saved funding request')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Saved travel plan')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Saved funding need')).toBeInTheDocument();
@@ -200,6 +201,7 @@ describe('grant apply page', () => {
 
     expect(await screen.findByText(/^Released outcome$/)).toBeInTheDocument();
     expect(screen.getByText(/travel grant awarded/i)).toBeInTheDocument();
+    expect(screen.getByText('Applicant view: released outcome')).toBeInTheDocument();
     expect(
       screen.getByText(/this sample only shows the applicant-visible released outcome\. non-public review details remain hidden/i)
     ).toBeInTheDocument();
@@ -286,5 +288,6 @@ describe('grant apply page', () => {
 
     expect(await screen.findByText(/^Released outcome$/)).toBeInTheDocument();
     expect(screen.getByText(/travel grant awarded/i)).toBeInTheDocument();
+    expect(screen.getByText('Applicant view: released outcome')).toBeInTheDocument();
   });
 });
