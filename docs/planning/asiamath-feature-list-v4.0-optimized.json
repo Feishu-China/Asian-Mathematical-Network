@@ -447,8 +447,8 @@
         "Build Decision release UI for Organizer",
         "Integrate with mock endpoints"
       ],
-      "status": "not_started",
-      "passes": false
+      "status": "completed",
+      "passes": true
     },
     {
       "id": "BE-REVIEW-001",
@@ -465,8 +465,8 @@
         "Implement review submission endpoints",
         "Implement decision issue & release endpoints"
       ],
-      "status": "not_started",
-      "passes": false
+      "status": "completed",
+      "passes": true
     },
     {
       "id": "INT-REVIEW-001",
@@ -483,8 +483,8 @@
         "Run full lifecycle test from submission to decision",
         "Mark feature passes=true"
       ],
-      "status": "not_started",
-      "passes": false
+      "status": "completed",
+      "passes": true
     },
     {
       "id": "FE-PORTAL-001",

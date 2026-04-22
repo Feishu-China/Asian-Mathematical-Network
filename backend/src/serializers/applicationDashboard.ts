@@ -1,3 +1,8 @@
+import {
+  getApplicantViewerStatus,
+  getReleasedDecisionDisplayLabel,
+} from '../lib/workflow';
+
 type ConferenceContext = {
   id: string;
   slug: string;
@@ -8,6 +13,17 @@ type GrantContext = {
   id: string;
   slug: string;
   title: string;
+  linkedConference: {
+    title: string;
+  } | null;
+  reportRequired: boolean;
+} | null;
+
+type DecisionContext = {
+  decisionKind: string;
+  finalStatus: string;
+  releaseStatus: string;
+  releasedAt: Date | null;
 } | null;
 
 export type DashboardApplicationRecord = {
@@ -24,23 +40,48 @@ export type DashboardApplicationRecord = {
   updatedAt: Date;
   conference: ConferenceContext;
   grant: GrantContext;
+  decision: DecisionContext;
 };
 
-export const serializeMyApplicationItem = (application: DashboardApplicationRecord) => ({
-  id: application.id,
-  application_type: application.applicationType,
-  source_module: application.sourceModule,
-  status: application.status,
-  conference_id: application.conferenceId,
-  conference_slug: application.conference?.slug ?? null,
-  conference_title: application.conference?.title ?? null,
-  grant_id: application.grantId,
-  grant_slug: application.grant?.slug ?? null,
-  grant_title: application.grant?.title ?? null,
-  linked_conference_id: application.linkedConferenceId,
-  linked_conference_application_id: application.linkedConferenceApplicationId,
-  submitted_at: application.submittedAt?.toISOString() ?? null,
-  decision: null,
-  created_at: application.createdAt.toISOString(),
-  updated_at: application.updatedAt.toISOString(),
-});
+export const serializeMyApplicationItem = (application: DashboardApplicationRecord) => {
+  const viewerStatus = getApplicantViewerStatus(
+    application.status,
+    application.decision?.releaseStatus
+  );
+  const releasedDecision =
+    application.decision?.releaseStatus === 'released'
+      ? {
+          decision_kind: application.decision.decisionKind,
+          final_status: application.decision.finalStatus,
+          display_label: getReleasedDecisionDisplayLabel(
+            application.applicationType,
+            application.decision.finalStatus
+          ),
+          released_at: application.decision.releasedAt?.toISOString() ?? null,
+        }
+      : null;
+  const nextAction =
+    viewerStatus === 'draft'
+      ? 'continue_draft'
+      : viewerStatus === 'result_released'
+        ? application.applicationType === 'grant_application' &&
+          releasedDecision?.final_status === 'accepted' &&
+          application.grant?.reportRequired
+          ? 'submit_post_visit_report'
+          : 'view_result'
+        : 'view_submission';
+
+  return {
+    id: application.id,
+    application_type: application.applicationType,
+    source_module: application.sourceModule,
+    source_id: application.conferenceId ?? application.grantId,
+    source_title: application.conference?.title ?? application.grant?.title ?? null,
+    linked_conference_title: application.grant?.linkedConference?.title ?? null,
+    viewer_status: viewerStatus,
+    submitted_at: application.submittedAt?.toISOString() ?? null,
+    released_decision: releasedDecision,
+    next_action: nextAction,
+    post_visit_report_status: null,
+  };
+};
