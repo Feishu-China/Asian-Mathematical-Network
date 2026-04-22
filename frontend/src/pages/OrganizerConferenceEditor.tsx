@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useParams } from 'react-router-dom';
 import { ConferenceEditorForm } from '../features/conference/ConferenceEditorForm';
 import { fromTransportOrganizerConference } from '../features/conference/conferenceMappers';
@@ -96,6 +97,14 @@ export default function OrganizerConferenceEditor() {
           }
         }}
       />
+
+      <div className="conference-detail-card">
+        <h3>Review workflow</h3>
+        <p>Open the organizer application queue once you are ready to assign reviewers and manage decisions.</p>
+        <Link className="conference-primary-link" to={`/organizer/conferences/${conference.id}/applications`}>
+          Open conference applications
+        </Link>
+      </div>
     </div>
   );
 }

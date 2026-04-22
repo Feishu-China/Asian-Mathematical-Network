@@ -200,6 +200,15 @@ describe('Conference API', () => {
 
     expect(staffRow?.staffRole).toBe('owner');
 
+    const meRes = await request(app)
+      .get('/api/v1/auth/me')
+      .set('Authorization', `Bearer ${organizerRes.body.accessToken}`);
+
+    expect(meRes.status).toBe(200);
+    expect(meRes.body.user.role).toBe('organizer');
+    expect(meRes.body.user.primary_role).toBe('organizer');
+    expect(meRes.body.user.roles).toEqual(expect.arrayContaining(['applicant', 'organizer']));
+
     const updateRes = await request(app)
       .put(`/api/v1/organizer/conferences/${conferenceId}`)
       .set('Authorization', `Bearer ${organizerRes.body.accessToken}`)
