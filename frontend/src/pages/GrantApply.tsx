@@ -269,6 +269,7 @@ export default function GrantApply() {
           schema={schema}
           application={application}
           linkedConferenceApplicationId={linkedConferenceApplicationId}
+          visibleState={visibleState}
           status={status}
           blocked={prerequisiteBlocked}
           onSave={saveDraft}
