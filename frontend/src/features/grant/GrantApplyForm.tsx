@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { StatusBadge } from '../../components/ui/StatusBadge';
 import type {
   GrantApplication,
   GrantApplicationValues,
@@ -47,13 +48,25 @@ export function GrantApplyForm({
 
   const fieldKeys = new Set<SupportedGrantFieldKey>(schema.fields.map((field) => field.key));
   const hasField = (key: SupportedGrantFieldKey) => fieldKeys.size === 0 || fieldKeys.has(key);
+  const isSubmitted = application?.status === 'submitted';
   const canSubmit = Boolean(
     application &&
       values.statement.trim() &&
       values.travelPlanSummary.trim() &&
       values.fundingNeedSummary.trim() &&
-      !blocked
+      !blocked &&
+      !isSubmitted
   );
+  const badgeTone =
+    status === 'error' || status === 'conflict'
+      ? 'danger'
+      : isSubmitted
+        ? 'success'
+        : status === 'saving' || status === 'submitting'
+          ? 'warning'
+          : blocked
+            ? 'warning'
+            : 'info';
 
   const setField = <K extends keyof GrantApplicationValues>(key: K, value: GrantApplicationValues[K]) => {
     setValues((current) => ({
@@ -79,7 +92,7 @@ export function GrantApplyForm({
             submission is required first.
           </p>
         </div>
-        <span className="conference-status-badge">Status: {application?.status ?? 'not started'}</span>
+        <StatusBadge tone={badgeTone}>Status: {application?.status ?? 'not started'}</StatusBadge>
       </header>
 
       <div className="conference-publish-hint">
@@ -94,6 +107,7 @@ export function GrantApplyForm({
             rows={5}
             value={values.statement}
             onChange={(event) => setField('statement', event.target.value)}
+            disabled={isSubmitted}
             required
           />
         </label>
@@ -106,6 +120,7 @@ export function GrantApplyForm({
             rows={5}
             value={values.travelPlanSummary}
             onChange={(event) => setField('travelPlanSummary', event.target.value)}
+            disabled={isSubmitted}
             required
           />
         </label>
@@ -118,13 +133,14 @@ export function GrantApplyForm({
             rows={5}
             value={values.fundingNeedSummary}
             onChange={(event) => setField('fundingNeedSummary', event.target.value)}
+            disabled={isSubmitted}
             required
           />
         </label>
       ) : null}
 
       <div className="conference-form-actions">
-        <button type="submit" disabled={blocked || status === 'saving'}>
+        <button type="submit" disabled={blocked || status === 'saving' || isSubmitted}>
           {status === 'saving' ? 'Saving...' : 'Save draft'}
         </button>
         <button
