@@ -5,7 +5,12 @@ import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
 import { dashboardProvider } from '../features/dashboard/dashboardProvider';
-import type { MyApplication, MyApplicationStatus } from '../features/dashboard/types';
+import type {
+  MyApplication,
+  NextAction,
+  ReleasedDecisionFinalStatus,
+  ViewerStatus,
+} from '../features/dashboard/types';
 import './MyApplications.css';
 
 export const routePath = '/me/applications';
@@ -15,20 +20,31 @@ type Bucket = {
   grant: MyApplication[];
 };
 
-const STATUS_TONES: Record<MyApplicationStatus, 'neutral' | 'info' | 'success' | 'warning' | 'danger'> = {
+type BadgeTone = 'neutral' | 'info' | 'success' | 'warning' | 'danger';
+
+const VIEWER_STATUS_TONES: Record<ViewerStatus, BadgeTone> = {
   draft: 'neutral',
-  submitted: 'info',
   under_review: 'warning',
-  decided: 'success',
-  withdrawn: 'danger',
+  result_released: 'info',
 };
 
-const STATUS_LABELS: Record<MyApplicationStatus, string> = {
+const VIEWER_STATUS_LABELS: Record<ViewerStatus, string> = {
   draft: 'Draft',
-  submitted: 'Submitted',
   under_review: 'Under review',
-  decided: 'Decided',
-  withdrawn: 'Withdrawn',
+  result_released: 'Result released',
+};
+
+const FINAL_STATUS_TONES: Record<ReleasedDecisionFinalStatus, BadgeTone> = {
+  accepted: 'success',
+  waitlisted: 'warning',
+  rejected: 'danger',
+};
+
+const NEXT_ACTION_LABELS: Record<NextAction, string> = {
+  continue_draft: 'Continue draft',
+  view_submission: 'View submission',
+  view_result: 'View result',
+  submit_post_visit_report: 'Submit post-visit report',
 };
 
 const splitByKind = (items: MyApplication[]): Bucket =>
@@ -44,40 +60,20 @@ const splitByKind = (items: MyApplication[]): Bucket =>
     { conference: [], grant: [] }
   );
 
-const conferenceCta = (item: MyApplication) => {
-  if (!item.conferenceSlug) {
-    return null;
+const renderStatusBadge = (item: MyApplication) => {
+  if (item.viewerStatus === 'result_released' && item.releasedDecision) {
+    return (
+      <StatusBadge tone={FINAL_STATUS_TONES[item.releasedDecision.finalStatus]}>
+        {item.releasedDecision.displayLabel}
+      </StatusBadge>
+    );
   }
 
-  if (item.status === 'draft') {
-    return {
-      to: `/conferences/${item.conferenceSlug}/apply`,
-      label: 'Continue draft',
-    };
-  }
-
-  return {
-    to: `/conferences/${item.conferenceSlug}`,
-    label: 'View conference',
-  };
-};
-
-const grantCta = (item: MyApplication) => {
-  if (!item.grantSlug) {
-    return null;
-  }
-
-  if (item.status === 'draft') {
-    return {
-      to: `/grants/${item.grantSlug}/apply`,
-      label: 'Continue draft',
-    };
-  }
-
-  return {
-    to: `/grants/${item.grantSlug}`,
-    label: 'View grant',
-  };
+  return (
+    <StatusBadge tone={VIEWER_STATUS_TONES[item.viewerStatus]}>
+      {VIEWER_STATUS_LABELS[item.viewerStatus]}
+    </StatusBadge>
+  );
 };
 
 export default function MyApplications() {
@@ -145,8 +141,7 @@ export default function MyApplications() {
             items={buckets?.conference ?? []}
             emptyHint="You have no conference applications yet."
             browseLink={{ to: '/conferences', label: 'Browse conferences' }}
-            renderCta={conferenceCta}
-            renderTitle={(item) => item.conferenceTitle ?? 'Untitled conference'}
+            untitledFallback="Untitled conference"
           />
 
           <ApplicationSection
@@ -154,8 +149,7 @@ export default function MyApplications() {
             items={buckets?.grant ?? []}
             emptyHint="You have no travel grant applications yet."
             browseLink={{ to: '/grants', label: 'Browse grants' }}
-            renderCta={grantCta}
-            renderTitle={(item) => item.grantTitle ?? 'Untitled grant'}
+            untitledFallback="Untitled grant"
           />
         </div>
       )}
@@ -168,8 +162,7 @@ type ApplicationSectionProps = {
   items: MyApplication[];
   emptyHint: string;
   browseLink: { to: string; label: string };
-  renderCta: (item: MyApplication) => { to: string; label: string } | null;
-  renderTitle: (item: MyApplication) => string;
+  untitledFallback: string;
 };
 
 function ApplicationSection({
@@ -177,8 +170,7 @@ function ApplicationSection({
   items,
   emptyHint,
   browseLink,
-  renderCta,
-  renderTitle,
+  untitledFallback,
 }: ApplicationSectionProps) {
   return (
     <section className="dashboard-widget" aria-labelledby={`section-${heading}`}>
@@ -193,29 +185,27 @@ function ApplicationSection({
         <p className="conference-empty">{emptyHint}</p>
       ) : (
         <ul className="my-applications__list">
-          {items.map((item) => {
-            const cta = renderCta(item);
-            return (
-              <li key={item.id} className="surface-card my-applications__row">
-                <div className="my-applications__row-meta">
-                  <h3>{renderTitle(item)}</h3>
-                  <StatusBadge tone={STATUS_TONES[item.status]}>
-                    {STATUS_LABELS[item.status]}
-                  </StatusBadge>
-                </div>
-                {item.submittedAt ? (
-                  <p className="my-applications__row-timestamp">
-                    Submitted {new Date(item.submittedAt).toLocaleDateString()}
-                  </p>
-                ) : null}
-                {cta ? (
-                  <Link to={cta.to} className="conference-primary-link">
-                    {cta.label}
-                  </Link>
-                ) : null}
-              </li>
-            );
-          })}
+          {items.map((item) => (
+            <li key={item.id} className="surface-card my-applications__row">
+              <div className="my-applications__row-meta">
+                <h3>{item.sourceTitle ?? untitledFallback}</h3>
+                {renderStatusBadge(item)}
+              </div>
+              {item.linkedConferenceTitle ? (
+                <p className="my-applications__row-linked">
+                  Linked conference: {item.linkedConferenceTitle}
+                </p>
+              ) : null}
+              {item.submittedAt ? (
+                <p className="my-applications__row-timestamp">
+                  Submitted {new Date(item.submittedAt).toLocaleDateString()}
+                </p>
+              ) : null}
+              <p className="my-applications__row-next-action" aria-label="Next step">
+                Next step: {NEXT_ACTION_LABELS[item.nextAction]}
+              </p>
+            </li>
+          ))}
         </ul>
       )}
     </section>

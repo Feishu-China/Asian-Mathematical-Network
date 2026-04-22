@@ -8,42 +8,51 @@ import {
 import type { MyApplication } from '../features/dashboard/types';
 import MyApplications from './MyApplications';
 
-const baseConferenceApp: MyApplication = {
+const submittedConferenceApp: MyApplication = {
   id: 'conf-app-1',
   applicationType: 'conference_application',
   sourceModule: 'M2',
-  status: 'submitted',
-  conferenceId: 'conf-1',
-  conferenceSlug: 'asiamath-2026',
-  conferenceTitle: 'Asiamath 2026 Workshop',
-  grantId: null,
-  grantSlug: null,
-  grantTitle: null,
-  linkedConferenceId: null,
-  linkedConferenceApplicationId: null,
+  sourceId: 'conf-1',
+  sourceTitle: 'Asiamath 2026 Workshop',
+  linkedConferenceTitle: null,
+  viewerStatus: 'under_review',
   submittedAt: '2026-04-30T09:00:00.000Z',
-  decision: null,
-  createdAt: '2026-04-30T08:00:00.000Z',
-  updatedAt: '2026-04-30T09:00:00.000Z',
+  releasedDecision: null,
+  nextAction: 'view_submission',
+  postVisitReportStatus: null,
 };
 
 const draftGrantApp: MyApplication = {
   id: 'grant-app-1',
   applicationType: 'grant_application',
   sourceModule: 'M7',
-  status: 'draft',
-  conferenceId: null,
-  conferenceSlug: null,
-  conferenceTitle: null,
-  grantId: 'grant-1',
-  grantSlug: 'asiamath-2026-travel-grant',
-  grantTitle: 'Asiamath 2026 Travel Grant',
-  linkedConferenceId: 'conf-1',
-  linkedConferenceApplicationId: 'conf-app-1',
+  sourceId: 'grant-1',
+  sourceTitle: 'Asiamath 2026 Travel Grant',
+  linkedConferenceTitle: 'Asiamath 2026 Workshop',
+  viewerStatus: 'draft',
   submittedAt: null,
-  decision: null,
-  createdAt: '2026-05-01T08:00:00.000Z',
-  updatedAt: '2026-05-01T08:00:00.000Z',
+  releasedDecision: null,
+  nextAction: 'continue_draft',
+  postVisitReportStatus: null,
+};
+
+const releasedAcceptedApp: MyApplication = {
+  id: 'conf-app-2',
+  applicationType: 'conference_application',
+  sourceModule: 'M2',
+  sourceId: 'conf-2',
+  sourceTitle: 'Asiamath 2025 Conference',
+  linkedConferenceTitle: null,
+  viewerStatus: 'result_released',
+  submittedAt: '2026-04-15T09:00:00.000Z',
+  releasedDecision: {
+    decisionKind: 'conference_admission',
+    finalStatus: 'accepted',
+    displayLabel: 'Accepted',
+    releasedAt: '2026-04-29T12:00:00.000Z',
+  },
+  nextAction: 'view_result',
+  postVisitReportStatus: null,
 };
 
 describe('MyApplications page', () => {
@@ -77,23 +86,20 @@ describe('MyApplications page', () => {
     );
   });
 
-  it('renders submitted conference applications with a view-conference CTA', async () => {
+  it('renders an under-review conference application with source title and next step', async () => {
     localStorage.setItem('token', 'test-token');
-    setDashboardFakeState([baseConferenceApp]);
+    setDashboardFakeState([submittedConferenceApp]);
 
     renderWithRouter(<MyApplications />, '/me/applications', '/me/applications');
 
     expect(
       await screen.findByRole('heading', { name: 'Asiamath 2026 Workshop' })
     ).toBeInTheDocument();
-    expect(screen.getByText('Submitted')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'View conference' })).toHaveAttribute(
-      'href',
-      '/conferences/asiamath-2026'
-    );
+    expect(screen.getByText('Under review')).toBeInTheDocument();
+    expect(screen.getByText(/Next step: View submission/i)).toBeInTheDocument();
   });
 
-  it('renders draft grant applications with a continue-draft CTA', async () => {
+  it('renders a draft grant application with linked conference title and continue-draft next step', async () => {
     localStorage.setItem('token', 'test-token');
     setDashboardFakeState([draftGrantApp]);
 
@@ -103,15 +109,26 @@ describe('MyApplications page', () => {
       await screen.findByRole('heading', { name: 'Asiamath 2026 Travel Grant' })
     ).toBeInTheDocument();
     expect(screen.getByText('Draft')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Continue draft' })).toHaveAttribute(
-      'href',
-      '/grants/asiamath-2026-travel-grant/apply'
-    );
+    expect(screen.getByText(/Linked conference: Asiamath 2026 Workshop/i)).toBeInTheDocument();
+    expect(screen.getByText(/Next step: Continue draft/i)).toBeInTheDocument();
+  });
+
+  it('renders a released accepted conference decision with its display label and view-result next step', async () => {
+    localStorage.setItem('token', 'test-token');
+    setDashboardFakeState([releasedAcceptedApp]);
+
+    renderWithRouter(<MyApplications />, '/me/applications', '/me/applications');
+
+    expect(
+      await screen.findByRole('heading', { name: 'Asiamath 2025 Conference' })
+    ).toBeInTheDocument();
+    expect(screen.getByText('Accepted')).toBeInTheDocument();
+    expect(screen.getByText(/Next step: View result/i)).toBeInTheDocument();
   });
 
   it('splits records into conference and grant sections', async () => {
     localStorage.setItem('token', 'test-token');
-    setDashboardFakeState([baseConferenceApp, draftGrantApp]);
+    setDashboardFakeState([submittedConferenceApp, draftGrantApp]);
 
     renderWithRouter(<MyApplications />, '/me/applications', '/me/applications');
 

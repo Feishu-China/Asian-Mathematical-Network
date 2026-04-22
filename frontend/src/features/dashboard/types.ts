@@ -1,29 +1,34 @@
-export type MyApplicationStatus =
-  | 'draft'
-  | 'submitted'
-  | 'under_review'
-  | 'decided'
-  | 'withdrawn';
+export type ViewerStatus = 'draft' | 'under_review' | 'result_released';
+
+export type NextAction =
+  | 'continue_draft'
+  | 'view_submission'
+  | 'view_result'
+  | 'submit_post_visit_report';
 
 export type MyApplicationKind = 'conference_application' | 'grant_application';
+
+export type ReleasedDecisionFinalStatus = 'accepted' | 'rejected' | 'waitlisted';
+
+export type ReleasedDecision = {
+  decisionKind: string;
+  finalStatus: ReleasedDecisionFinalStatus;
+  displayLabel: string;
+  releasedAt: string | null;
+};
 
 export type MyApplication = {
   id: string;
   applicationType: MyApplicationKind;
   sourceModule: string;
-  status: MyApplicationStatus;
-  conferenceId: string | null;
-  conferenceSlug: string | null;
-  conferenceTitle: string | null;
-  grantId: string | null;
-  grantSlug: string | null;
-  grantTitle: string | null;
-  linkedConferenceId: string | null;
-  linkedConferenceApplicationId: string | null;
+  sourceId: string | null;
+  sourceTitle: string | null;
+  linkedConferenceTitle: string | null;
+  viewerStatus: ViewerStatus;
   submittedAt: string | null;
-  decision: null;
-  createdAt: string;
-  updatedAt: string;
+  releasedDecision: ReleasedDecision | null;
+  nextAction: NextAction;
+  postVisitReportStatus: string | null;
 };
 
 export type DashboardProvider = {
