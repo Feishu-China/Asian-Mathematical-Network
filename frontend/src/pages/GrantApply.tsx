@@ -1,8 +1,20 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { getMe } from '../api/auth';
+import { WorkspaceShell } from '../components/layout/WorkspaceShell';
+import { PageModeBadge } from '../components/ui/PageModeBadge';
+import { RoleBadge } from '../components/ui/RoleBadge';
+import { StatusBadge } from '../components/ui/StatusBadge';
 import { conferenceProvider } from '../features/conference/conferenceProvider';
 import type { ConferenceApplication } from '../features/conference/types';
 import { GrantApplyForm } from '../features/grant/GrantApplyForm';
+import { GrantApplicationStatePanel } from '../features/grant/components/GrantApplicationStatePanel';
+import { GrantApplicationSummaryCard } from '../features/grant/components/GrantApplicationSummaryCard';
+import { GrantReleasedResultCard } from '../features/grant/components/GrantReleasedResultCard';
+import {
+  getDemoReleasedGrantResult,
+  getGrantApplicantVisibleState,
+} from '../features/grant/grantApplicantState';
 import { grantProvider } from '../features/grant/grantProvider';
 import type {
   GrantApplication,
@@ -20,6 +32,7 @@ export default function GrantApply() {
   const [schema, setSchema] = useState<GrantFormSchema>({ fields: [] });
   const [application, setApplication] = useState<GrantApplication | null>(null);
   const [prerequisite, setPrerequisite] = useState<ConferenceApplication | null>(null);
+  const [viewerEmail, setViewerEmail] = useState<string | null>(null);
   const [status, setStatus] = useState<
     'idle' | 'saving' | 'submitting' | 'submitted' | 'conflict' | 'prerequisite' | 'error'
   >('idle');
@@ -31,6 +44,7 @@ export default function GrantApply() {
     setSchema({ fields: [] });
     setApplication(null);
     setPrerequisite(null);
+    setViewerEmail(null);
     setStatus('idle');
 
     grantProvider
@@ -42,20 +56,24 @@ export default function GrantApply() {
 
         setGrant(value);
 
-        if (!value || !localStorage.getItem('token')) {
+        const token = localStorage.getItem('token');
+
+        if (!value || !token) {
           return;
         }
 
-        const [nextSchema, nextApplication, nextPrerequisite] = await Promise.all([
+        const [nextSchema, nextApplication, nextPrerequisite, me] = await Promise.all([
           grantProvider.getGrantApplicationForm(value.id),
           grantProvider.getMyGrantApplication(value.id),
           conferenceProvider.getMyConferenceApplication(value.linkedConferenceId),
+          getMe(token).catch(() => null),
         ]);
 
         if (active) {
           setSchema(nextSchema);
           setApplication(nextApplication);
           setPrerequisite(nextPrerequisite);
+          setViewerEmail(me?.user?.email ?? null);
         }
       })
       .catch(() => {
@@ -78,17 +96,32 @@ export default function GrantApply() {
     return <div className="conference-page">Grant not found.</div>;
   }
 
-  if (!localStorage.getItem('token')) {
+  const isSignedIn = Boolean(localStorage.getItem('token'));
+
+  if (!isSignedIn) {
     return (
-      <div className="conference-page">
-        <div className="conference-detail-card">
-          <h1>Sign in to start a grant application</h1>
-          <p>You need an authenticated session before creating a draft.</p>
-          <Link className="conference-primary-link" to="/login">
-            Go to login
-          </Link>
+      <WorkspaceShell
+        eyebrow="Grant application"
+        title={grant.title}
+        description="Sign in to continue the grant applicant slice in a grant-owned context."
+        badges={
+          <>
+            <RoleBadge role="visitor" />
+            <PageModeBadge mode="hybrid" />
+            <StatusBadge tone="info">Grant applicant slice</StatusBadge>
+          </>
+        }
+      >
+        <div className="conference-page">
+          <div className="conference-detail-card">
+            <h2>Sign in to start a grant application</h2>
+            <p>You need an authenticated session before creating a draft.</p>
+            <Link className="conference-primary-link" to="/login">
+              Go to login
+            </Link>
+          </div>
         </div>
-      </div>
+      </WorkspaceShell>
     );
   }
 
@@ -96,6 +129,24 @@ export default function GrantApply() {
     application?.linkedConferenceApplicationId ??
     (prerequisite?.status === 'submitted' ? prerequisite.id : '');
   const prerequisiteBlocked = !linkedConferenceApplicationId;
+  const releasedResult = getDemoReleasedGrantResult({
+    application,
+    viewerEmail,
+    grantSlug: grant.slug,
+  });
+  const visibleState = getGrantApplicantVisibleState({
+    application,
+    prerequisiteReady: !prerequisiteBlocked,
+    releasedResult,
+  });
+  const shellStatusTone =
+    status === 'error' || status === 'conflict' || status === 'prerequisite'
+      ? 'danger'
+      : visibleState === 'released_result'
+        ? 'success'
+        : visibleState === 'draft_exists'
+          ? 'warning'
+          : 'info';
 
   const saveDraft = async (values: GrantApplicationValues) => {
     if (!linkedConferenceApplicationId) {
@@ -154,43 +205,66 @@ export default function GrantApply() {
   };
 
   return (
-    <div className="conference-page conference-detail-page">
-      <header className="conference-hero">
-        <p className="conference-eyebrow">Grant application</p>
-        <h1>{grant.title}</h1>
-        <p>
-          Request travel support through a dedicated grant application after your conference
-          application has already been submitted.
-        </p>
-      </header>
-
-      {prerequisiteBlocked || status === 'prerequisite' ? (
-        <div className="conference-inline-message error">
-          Submit your conference application before requesting travel support.
+    <WorkspaceShell
+      eyebrow="Grant application"
+      title={grant.title}
+      description="Request travel support through a dedicated grant application after your conference application has already been submitted."
+      badges={
+        <>
+          <RoleBadge role="applicant" />
+          <PageModeBadge mode="hybrid" />
+          <StatusBadge tone={shellStatusTone}>Grant applicant slice</StatusBadge>
+        </>
+      }
+      aside={
+        <div className="conference-page">
+          <GrantApplicationSummaryCard
+            grant={grant}
+            application={application}
+            linkedConferenceApplicationId={linkedConferenceApplicationId}
+            visibleState={visibleState}
+          />
+          <div className="conference-detail-card stack-sm">
+            <h2>Grant snapshot</h2>
+            <p>{grant.coverageSummary || 'Coverage summary pending.'}</p>
+            <p>{grant.eligibilitySummary || 'Eligibility summary pending.'}</p>
+            <p>Deadline: {grant.applicationDeadline || 'Pending'}</p>
+            <Link to={`/grants/${grant.slug}`}>Back to grant detail</Link>
+          </div>
         </div>
-      ) : null}
+      }
+    >
+      <div className="conference-page conference-detail-page">
+        {prerequisiteBlocked || status === 'prerequisite' ? (
+          <div className="conference-inline-message error">
+            Submit your conference application before requesting travel support.
+          </div>
+        ) : null}
 
-      {status === 'conflict' ? (
-        <div className="conference-inline-message error">
-          An application draft already exists for this grant.
-        </div>
-      ) : null}
+        {status === 'conflict' ? (
+          <div className="conference-inline-message error">
+            An application draft already exists for this grant.
+          </div>
+        ) : null}
 
-      {status === 'submitted' ? (
-        <div className="conference-inline-message success">Application submitted.</div>
-      ) : null}
+        {status === 'submitted' ? (
+          <div className="conference-inline-message success">Application submitted.</div>
+        ) : null}
 
-      {status === 'idle' && application ? (
-        <div className="conference-inline-message success">Draft saved.</div>
-      ) : null}
+        {status === 'idle' && application?.status === 'draft' ? (
+          <div className="conference-inline-message success">Draft saved.</div>
+        ) : null}
 
-      {status === 'error' ? (
-        <div className="conference-inline-message error">
-          We could not update the grant application right now.
-        </div>
-      ) : null}
+        {status === 'error' ? (
+          <div className="conference-inline-message error">
+            We could not update the grant application right now.
+          </div>
+        ) : null}
 
-      <section className="conference-detail-grid">
+        <GrantApplicationStatePanel state={visibleState} />
+
+        {releasedResult ? <GrantReleasedResultCard result={releasedResult} /> : null}
+
         <GrantApplyForm
           schema={schema}
           application={application}
@@ -200,15 +274,7 @@ export default function GrantApply() {
           onSave={saveDraft}
           onSubmit={submit}
         />
-
-        <aside className="conference-detail-card conference-cta-card">
-          <h2>Grant snapshot</h2>
-          <p>{grant.coverageSummary || 'Coverage summary pending.'}</p>
-          <p>{grant.eligibilitySummary || 'Eligibility summary pending.'}</p>
-          <p>Deadline: {grant.applicationDeadline || 'Pending'}</p>
-          <Link to={`/grants/${grant.slug}`}>Back to grant detail</Link>
-        </aside>
-      </section>
-    </div>
+      </div>
+    </WorkspaceShell>
   );
 }

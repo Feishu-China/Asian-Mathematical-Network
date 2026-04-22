@@ -1,5 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { PortalShell } from '../components/layout/PortalShell';
+import { PageModeBadge } from '../components/ui/PageModeBadge';
+import { RoleBadge } from '../components/ui/RoleBadge';
+import { StatusBadge } from '../components/ui/StatusBadge';
 import { grantProvider } from '../features/grant/grantProvider';
 import type { GrantDetail as GrantDetailModel } from '../features/grant/types';
 import './Conference.css';
@@ -9,29 +13,79 @@ export const routePath = '/grants/:slug';
 export default function GrantDetail() {
   const { slug = '' } = useParams();
   const [grant, setGrant] = useState<GrantDetailModel | null | undefined>(undefined);
+  const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
-    grantProvider.getGrantBySlug(slug).then(setGrant);
+    let active = true;
+
+    setGrant(undefined);
+    setHasError(false);
+
+    grantProvider
+      .getGrantBySlug(slug)
+      .then((value) => {
+        if (active) {
+          setGrant(value);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setHasError(true);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
   }, [slug]);
 
-  if (grant === undefined) {
+  if (!hasError && grant === undefined) {
     return <div className="conference-page">Loading grant...</div>;
   }
 
-  if (grant === null) {
+  if (hasError) {
+    return <div className="conference-page">We could not load this grant right now.</div>;
+  }
+
+  if (!grant) {
     return <div className="conference-page">Grant not found.</div>;
   }
 
-  return (
-    <div className="conference-page conference-detail-page">
-      <header className="conference-hero">
-        <p className="conference-eyebrow">Grant detail</p>
-        <h1>{grant.title}</h1>
-        <p>{grant.description || 'No description has been published yet.'}</p>
-      </header>
+  const grantDetail = grant;
 
-      <section className="conference-detail-grid">
-        <div className="conference-detail-card">
+  return (
+    <PortalShell
+      eyebrow="Grant detail"
+      title={grantDetail.title}
+      description={grantDetail.description || 'No description has been published yet.'}
+      badges={
+        <>
+          <RoleBadge role="visitor" />
+          <PageModeBadge mode="hybrid" />
+          <StatusBadge tone={grantDetail.isApplicationOpen ? 'success' : 'neutral'}>
+            {grantDetail.isApplicationOpen ? 'Applications open' : 'Applications closed'}
+          </StatusBadge>
+        </>
+      }
+      aside={
+        <div className="conference-detail-card conference-cta-card stack-sm">
+          <h2>Applicant handoff</h2>
+          <p>Conference application required before grant submission.</p>
+          <p className="conference-muted-note">
+            Grant applications stay separate from conference applications, even when they are linked.
+          </p>
+          {grantDetail.isApplicationOpen ? (
+            <Link className="conference-primary-link" to={`/grants/${grantDetail.slug}/apply`}>
+              Start grant application
+            </Link>
+          ) : (
+            <div className="conference-muted-note">This grant is no longer accepting applications.</div>
+          )}
+        </div>
+      }
+    >
+      <div className="conference-page conference-detail-page">
+        <section className="conference-detail-card">
           <h2>Support snapshot</h2>
           <dl>
             <div>
@@ -40,33 +94,19 @@ export default function GrantDetail() {
             </div>
             <div>
               <dt>Deadline</dt>
-              <dd>{grant.applicationDeadline || 'Pending'}</dd>
+              <dd>{grantDetail.applicationDeadline || 'Pending'}</dd>
             </div>
             <div>
               <dt>Coverage</dt>
-              <dd>{grant.coverageSummary || 'Pending'}</dd>
+              <dd>{grantDetail.coverageSummary || 'Pending'}</dd>
             </div>
             <div>
               <dt>Eligibility</dt>
-              <dd>{grant.eligibilitySummary || 'Pending'}</dd>
+              <dd>{grantDetail.eligibilitySummary || 'Pending'}</dd>
             </div>
           </dl>
-        </div>
-
-        <aside className="conference-detail-card conference-cta-card">
-          <span className={grant.isApplicationOpen ? 'conference-chip open' : 'conference-chip closed'}>
-            {grant.isApplicationOpen ? 'Applications open' : 'Applications closed'}
-          </span>
-          <p>Submit your conference application first, then request travel support through a separate grant application.</p>
-          {grant.isApplicationOpen ? (
-            <Link className="conference-primary-link" to={`/grants/${grant.slug}/apply`}>
-              Apply for grant
-            </Link>
-          ) : (
-            <div className="conference-muted-note">This grant is no longer accepting applications.</div>
-          )}
-        </aside>
-      </section>
-    </div>
+        </section>
+      </div>
+    </PortalShell>
   );
 }
