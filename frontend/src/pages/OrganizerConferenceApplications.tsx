@@ -13,12 +13,12 @@ export const routePath = '/organizer/conferences/:id/applications';
 export default function OrganizerConferenceApplications() {
   const { id = '' } = useParams();
   const [items, setItems] = useState<OrganizerApplicationListItem[] | null>(null);
-  const [hasError, setHasError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
 
-    setHasError(false);
+    setErrorMessage(null);
     setItems(null);
 
     reviewProvider
@@ -28,9 +28,9 @@ export default function OrganizerConferenceApplications() {
           setItems(value);
         }
       })
-      .catch(() => {
+      .catch((error) => {
         if (active) {
-          setHasError(true);
+          setErrorMessage(error instanceof Error ? error.message : 'We could not load the organizer queue.');
         }
       });
 
@@ -40,7 +40,7 @@ export default function OrganizerConferenceApplications() {
   }, [id]);
 
   if (items === null) {
-    return <div className="review-page">{hasError ? 'We could not load the organizer queue.' : 'Loading organizer queue...'}</div>;
+    return <div className="review-page">{errorMessage ?? 'Loading organizer queue...'}</div>;
   }
 
   return (

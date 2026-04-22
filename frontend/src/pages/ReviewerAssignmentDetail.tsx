@@ -14,15 +14,20 @@ export const routePath = '/reviewer/assignments/:id';
 export default function ReviewerAssignmentDetailPage() {
   const { id = '' } = useParams();
   const [assignment, setAssignment] = useState<ReviewerAssignmentDetail | null | undefined>(undefined);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [status, setStatus] = useState<'idle' | 'submitting' | 'submitted' | 'error'>('idle');
 
   const load = async () => {
+    setErrorMessage(null);
     const detail = await reviewProvider.getReviewerAssignmentDetail(id);
     setAssignment(detail);
   };
 
   useEffect(() => {
-    load().catch(() => setAssignment(null));
+    load().catch((error) => {
+      setAssignment(null);
+      setErrorMessage(error instanceof Error ? error.message : 'Assignment not found.');
+    });
   }, [id]);
 
   if (assignment === undefined) {
@@ -30,7 +35,7 @@ export default function ReviewerAssignmentDetailPage() {
   }
 
   if (assignment === null) {
-    return <div className="review-page">Assignment not found.</div>;
+    return <div className="review-page">{errorMessage ?? 'Assignment not found.'}</div>;
   }
 
   const isConflictBlocked = assignment.conflictState === 'flagged';

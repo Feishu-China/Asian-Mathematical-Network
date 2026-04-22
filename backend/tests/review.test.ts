@@ -11,9 +11,15 @@ const trackedEmails = [
   'review.flagged.organizer@example.com',
   'review.flagged.applicant@example.com',
   'review.flagged.reviewer@example.com',
+  'review.missing.queue.organizer@example.com',
+  'review.no-role.user@example.com',
 ];
 
-const conferenceSlugs = ['review-loop-conf-2026', 'review-flagged-conf-2026'];
+const conferenceSlugs = [
+  'review-loop-conf-2026',
+  'review-flagged-conf-2026',
+  'review-missing-queue-conf-2026',
+];
 
 const safeExecute = async (sql: string) => {
   try {
@@ -383,6 +389,40 @@ describe('Review API', () => {
         note_external: 'We are pleased to inform you that your application has been accepted.',
       },
     });
+  });
+
+  it('returns 404 when organizer queue is requested for an unknown conference id', async () => {
+    const organizer = await registerUser(
+      'review.missing.queue.organizer@example.com',
+      'Missing Queue Organizer'
+    );
+
+    await createPublishedConference(
+      organizer.token,
+      'review-missing-queue-conf-2026',
+      'Review Missing Queue Conference 2026'
+    );
+
+    const response = await request(app)
+      .get('/api/v1/organizer/conferences/not-a-real-conference/applications')
+      .set('Authorization', `Bearer ${organizer.token}`);
+
+    expect(response.status).toBe(404);
+    expect(response.body.message).toBe('Conference not found');
+  });
+
+  it('rejects reviewer queue access for authenticated users without reviewer role', async () => {
+    const nonReviewer = await registerUser(
+      'review.no-role.user@example.com',
+      'No Reviewer Role User'
+    );
+
+    const response = await request(app)
+      .get('/api/v1/reviewer/assignments')
+      .set('Authorization', `Bearer ${nonReviewer.token}`);
+
+    expect(response.status).toBe(403);
+    expect(response.body.message).toBe('Reviewer role required');
   });
 
   it('creates conflict-flagged assignments but blocks review submission', async () => {

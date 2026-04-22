@@ -15,6 +15,8 @@ import type {
 } from './types';
 
 type UnauthorizedError = Error & { code: 'UNAUTHORIZED' };
+type ForbiddenError = Error & { code: 'FORBIDDEN' };
+type NotFoundError = Error & { code: 'NOT_FOUND' };
 
 const delay = async () => {
   await Promise.resolve();
@@ -31,6 +33,21 @@ const requireToken = () => {
 
   return token;
 };
+
+const createForbiddenError = (message: string) => {
+  const error = new Error(message) as ForbiddenError;
+  error.code = 'FORBIDDEN';
+  return error;
+};
+
+const createNotFoundError = (message: string) => {
+  const error = new Error(message) as NotFoundError;
+  error.code = 'NOT_FOUND';
+  return error;
+};
+
+const hasOrganizerAccess = (token: string) => token === 'organizer-1' || token === 'admin-1';
+const hasReviewerAccess = (token: string) => token === 'reviewer-1' || token === 'admin-1';
 
 const now = () => new Date().toISOString();
 
@@ -241,8 +258,16 @@ const toReviewerAssignmentDetail = (
 
 export const fakeReviewProvider: ReviewProvider = {
   async listOrganizerConferenceApplications(conferenceId) {
-    requireToken();
+    const token = requireToken();
     await delay();
+
+    if (!hasOrganizerAccess(token)) {
+      throw createForbiddenError('Organizer access required');
+    }
+
+    if (!applicationState.some((application) => application.conference_id === conferenceId)) {
+      throw createNotFoundError('Conference not found');
+    }
 
     return applicationState
       .filter((application) => application.conference_id === conferenceId)
@@ -250,20 +275,34 @@ export const fakeReviewProvider: ReviewProvider = {
   },
 
   async getOrganizerApplicationDetail(applicationId) {
-    requireToken();
+    const token = requireToken();
     await delay();
+
+    if (!hasOrganizerAccess(token)) {
+      throw createForbiddenError('Organizer access required');
+    }
+
     return fromTransportOrganizerApplicationDetail(findApplication(applicationId));
   },
 
   async listReviewerCandidates() {
-    requireToken();
+    const token = requireToken();
     await delay();
+
+    if (!hasOrganizerAccess(token)) {
+      throw createForbiddenError('Organizer access required');
+    }
+
     return reviewerCandidateState.map(fromTransportReviewerCandidate);
   },
 
   async assignReviewer(applicationId, values) {
-    requireToken();
+    const token = requireToken();
     await delay();
+
+    if (!hasOrganizerAccess(token)) {
+      throw createForbiddenError('Organizer access required');
+    }
 
     const application = findApplication(applicationId);
     const assignment = createAssignmentRecord({
@@ -286,8 +325,12 @@ export const fakeReviewProvider: ReviewProvider = {
   },
 
   async upsertDecision(applicationId, values) {
-    requireToken();
+    const token = requireToken();
     await delay();
+
+    if (!hasOrganizerAccess(token)) {
+      throw createForbiddenError('Organizer access required');
+    }
 
     const application = findApplication(applicationId);
     const decision: InternalDecisionRecord = {
@@ -315,8 +358,12 @@ export const fakeReviewProvider: ReviewProvider = {
   },
 
   async releaseDecision(applicationId) {
-    requireToken();
+    const token = requireToken();
     await delay();
+
+    if (!hasOrganizerAccess(token)) {
+      throw createForbiddenError('Organizer access required');
+    }
 
     const application = findApplication(applicationId);
     if (!application.decision) {
@@ -336,6 +383,10 @@ export const fakeReviewProvider: ReviewProvider = {
     const reviewerUserId = requireToken();
     await delay();
 
+    if (!hasReviewerAccess(reviewerUserId)) {
+      throw createForbiddenError('Reviewer role required');
+    }
+
     return applicationState.flatMap((application) =>
       application.review_assignments
         .filter((assignment) => assignment.reviewer_user_id === reviewerUserId)
@@ -346,6 +397,10 @@ export const fakeReviewProvider: ReviewProvider = {
   async getReviewerAssignmentDetail(assignmentId) {
     const reviewerUserId = requireToken();
     await delay();
+
+    if (!hasReviewerAccess(reviewerUserId)) {
+      throw createForbiddenError('Reviewer role required');
+    }
 
     for (const application of applicationState) {
       const assignment = application.review_assignments.find(
@@ -363,6 +418,10 @@ export const fakeReviewProvider: ReviewProvider = {
   async submitReviewerReview(assignmentId, values) {
     const reviewerUserId = requireToken();
     await delay();
+
+    if (!hasReviewerAccess(reviewerUserId)) {
+      throw createForbiddenError('Reviewer role required');
+    }
 
     for (const application of applicationState) {
       const assignment = application.review_assignments.find(

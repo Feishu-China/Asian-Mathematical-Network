@@ -12,7 +12,7 @@ export const routePath = '/reviewer';
 
 export default function ReviewerAssignmentsPage() {
   const [items, setItems] = useState<ReviewerQueueItem[] | null>(null);
-  const [hasError, setHasError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -24,9 +24,9 @@ export default function ReviewerAssignmentsPage() {
           setItems(value);
         }
       })
-      .catch(() => {
+      .catch((error) => {
         if (active) {
-          setHasError(true);
+          setErrorMessage(error instanceof Error ? error.message : 'We could not load reviewer assignments.');
         }
       });
 
@@ -36,7 +36,7 @@ export default function ReviewerAssignmentsPage() {
   }, []);
 
   if (items === null) {
-    return <div className="review-page">{hasError ? 'We could not load reviewer assignments.' : 'Loading reviewer queue...'}</div>;
+    return <div className="review-page">{errorMessage ?? 'Loading reviewer queue...'}</div>;
   }
 
   return (

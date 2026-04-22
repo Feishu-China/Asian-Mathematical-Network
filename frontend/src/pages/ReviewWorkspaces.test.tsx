@@ -98,6 +98,28 @@ describe('review workspaces', () => {
     expect(screen.queryByText(/submission blocked/i)).not.toBeInTheDocument();
   });
 
+  it('blocks non-reviewers from opening the reviewer queue shell', async () => {
+    localStorage.setItem('token', 'organizer-1');
+
+    renderWithRouter(<ReviewerAssignments />, '/reviewer', '/reviewer');
+
+    expect(await screen.findByText(/reviewer role required/i)).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /reviewer queue/i })).not.toBeInTheDocument();
+  });
+
+  it('surfaces conference-not-found when the organizer queue target is unknown', async () => {
+    localStorage.setItem('token', 'organizer-1');
+
+    renderWithRouter(
+      <OrganizerConferenceApplications />,
+      '/organizer/conferences/missing-review-conf/applications',
+      '/organizer/conferences/:id/applications'
+    );
+
+    expect(await screen.findByText(/conference not found/i)).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /conference applications/i })).not.toBeInTheDocument();
+  });
+
   it('blocks reviewer submission when the assignment is conflict-flagged', async () => {
     localStorage.setItem('token', 'reviewer-1');
     const assignmentId = seedReviewAssignment({

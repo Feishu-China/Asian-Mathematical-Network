@@ -77,6 +77,9 @@ const isConferenceManager = async (conferenceId: string, userId: string) => {
   return Boolean(membership);
 };
 
+const hasReviewerWorkspaceAccess = async (userId: string) =>
+  hasAnyUserRole(userId, ['reviewer', 'admin']);
+
 const canManageApplication = async (
   application: Pick<ManagedApplicationRecord, 'applicationType' | 'conferenceId' | 'linkedConferenceId'>,
   userId: string
@@ -206,6 +209,16 @@ export const listOrganizerConferenceApplications = async (req: Request, res: Res
   try {
     const userId = requireAuthenticatedUserId(req);
     const conferenceId = readParam(req, 'id');
+
+    const conference = await prisma.conference.findUnique({
+      where: { id: conferenceId },
+      select: { id: true },
+    });
+
+    if (!conference) {
+      res.status(404).json({ message: 'Conference not found' });
+      return;
+    }
 
     if (!(await isConferenceManager(conferenceId, userId))) {
       res.status(403).json({ message: 'Forbidden' });
@@ -612,6 +625,11 @@ export const listReviewerAssignments = async (req: Request, res: Response) => {
     const userId = requireAuthenticatedUserId(req);
     const status = typeof req.query.status === 'string' ? req.query.status : null;
 
+    if (!(await hasReviewerWorkspaceAccess(userId))) {
+      res.status(403).json({ message: 'Reviewer role required' });
+      return;
+    }
+
     const assignments = await prisma.reviewAssignment.findMany({
       where: {
         reviewerUserId: userId,
@@ -646,6 +664,12 @@ export const listReviewerAssignments = async (req: Request, res: Response) => {
 export const getReviewerAssignmentDetail = async (req: Request, res: Response) => {
   try {
     const userId = requireAuthenticatedUserId(req);
+
+    if (!(await hasReviewerWorkspaceAccess(userId))) {
+      res.status(403).json({ message: 'Reviewer role required' });
+      return;
+    }
+
     const assignment = await loadReviewerAssignment(readParam(req, 'id'), userId);
 
     if (!assignment) {
@@ -666,6 +690,12 @@ export const getReviewerAssignmentDetail = async (req: Request, res: Response) =
 export const submitReview = async (req: Request, res: Response) => {
   try {
     const userId = requireAuthenticatedUserId(req);
+
+    if (!(await hasReviewerWorkspaceAccess(userId))) {
+      res.status(403).json({ message: 'Reviewer role required' });
+      return;
+    }
+
     const assignment = await loadReviewerAssignment(readParam(req, 'id'), userId);
 
     if (!assignment) {
