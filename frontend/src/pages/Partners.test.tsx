@@ -20,8 +20,13 @@ describe('partner public pages', () => {
     expect(
       screen.getByText(/Institutional collaboration, applied research pathways, and expertise matching/i)
     ).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /expertise matching teaser/i })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /view matching context/i })).toHaveAttribute(
+    expect(screen.getByRole('heading', { name: /sample matching flow/i })).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /reviewing a scholar's public profile, research areas, and institution before requesting an introduction/i
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /view sample scholar profile/i })).toHaveAttribute(
       'href',
       '/scholars/prof-reviewer'
     );

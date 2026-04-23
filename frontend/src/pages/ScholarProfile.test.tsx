@@ -75,6 +75,11 @@ describe('scholar profile page', () => {
       'href',
       '/partners'
     );
+    expect(
+      screen.getByText(
+        /sample public scholar profile used across the directory, reviewer, and partner-matching demos/i
+      )
+    ).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Prof Reviewer' })).toBeInTheDocument();
     expect(screen.getByText(/review governance, algebraic geometry, and cross-border mathematical collaboration/i)).toBeInTheDocument();
     expect(screen.getByText('/scholars/prof-reviewer')).toBeInTheDocument();

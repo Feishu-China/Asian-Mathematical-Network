@@ -53,7 +53,7 @@ export default function ScholarProfile() {
       <PortalShell
         eyebrow="Academic directory"
         title="Scholar profile"
-        description="Public-facing profile detail used for directory visibility and later reviewer sourcing context."
+        description="A sample public scholar profile used across the directory, reviewer, and partner-matching demos."
         badges={
           <>
             <RoleBadge role="visitor" />
@@ -88,7 +88,7 @@ export default function ScholarProfile() {
     <PortalShell
       eyebrow="Academic directory"
       title="Scholar profile"
-      description="Public-facing profile detail used for directory visibility and later reviewer sourcing context."
+      description="A sample public scholar profile used across the directory, reviewer, and partner-matching demos."
       badges={
         <>
           <RoleBadge role="visitor" />

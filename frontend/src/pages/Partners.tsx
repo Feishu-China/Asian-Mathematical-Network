@@ -45,10 +45,10 @@ export default function Partners() {
       }
       aside={
         <div className="partner-detail-card partner-teaser-card">
-          <h2>Expertise matching teaser</h2>
+          <h2>Sample matching flow</h2>
           <p>
-            A future partner workflow could start from scholar records, research interests, and
-            trusted profile context before expanding into managed introductions.
+            A future partner workflow could start by reviewing a scholar&apos;s public profile,
+            research areas, and institution before requesting an introduction.
           </p>
           <Link
             className="partner-primary-link"
@@ -60,7 +60,7 @@ export default function Partners() {
               },
             }}
           >
-            View matching context
+            View sample scholar profile
           </Link>
         </div>
       }
