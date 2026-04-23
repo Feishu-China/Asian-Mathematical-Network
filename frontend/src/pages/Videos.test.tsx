@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { render } from '@testing-library/react';
 import { screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { renderWithRouter } from '../test/renderWithRouter';
+import Newsletters from './Newsletters';
 import Videos from './Videos';
 import VideoDetail from './VideoDetail';
 
@@ -73,5 +75,26 @@ describe('video preview pages', () => {
     ).toBeInTheDocument();
     expect(screen.getByText('Session recap preview')).toBeInTheDocument();
     expect(screen.getByText('Speaker highlight snippet')).toBeInTheDocument();
+  });
+
+  it('preserves a return link to video detail when moving from a video preview into newsletter', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter initialEntries={['/videos/asiamath-research-school-session-recap']}>
+        <Routes>
+          <Route path="/videos/:slug" element={<VideoDetail />} />
+          <Route path="/newsletter" element={<Newsletters />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await screen.findByRole('link', { name: /continue to editorial layer/i });
+    await user.click(screen.getByRole('link', { name: /continue to editorial layer/i }));
+
+    expect(await screen.findByRole('link', { name: /back to video/i })).toHaveAttribute(
+      'href',
+      '/videos/asiamath-research-school-session-recap'
+    );
   });
 });

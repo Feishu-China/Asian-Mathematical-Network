@@ -44,7 +44,16 @@ export default function NewsletterDetail() {
         <div className="newsletter-detail-card newsletter-teaser-card">
           <h2>Issue focus</h2>
           <p>{issue.issueFocus}</p>
-          <Link className="newsletter-primary-link" to="/conferences">
+          <Link
+            className="newsletter-primary-link"
+            to="/conferences"
+            state={{
+              returnContext: {
+                to: `/newsletter/${issue.slug}`,
+                label: 'Back to newsletter issue',
+              },
+            }}
+          >
             Return to opportunities
           </Link>
         </div>

@@ -44,7 +44,16 @@ export default function VideoDetail() {
         <div className="video-detail-card video-teaser-card">
           <h2>Video focus</h2>
           <p>{video.videoFocus}</p>
-          <Link className="video-primary-link" to="/newsletter">
+          <Link
+            className="video-primary-link"
+            to="/newsletter"
+            state={{
+              returnContext: {
+                to: `/videos/${video.slug}`,
+                label: 'Back to video',
+              },
+            }}
+          >
             Continue to editorial layer
           </Link>
         </div>

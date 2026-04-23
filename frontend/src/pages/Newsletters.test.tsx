@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { render } from '@testing-library/react';
 import { screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import Conferences from './Conferences';
 import { renderWithRouter } from '../test/renderWithRouter';
 import Newsletters from './Newsletters';
 import NewsletterDetail from './NewsletterDetail';
@@ -87,6 +88,27 @@ describe('newsletter preview pages', () => {
     expect(await screen.findByRole('link', { name: /back to school/i })).toHaveAttribute(
       'href',
       '/schools/algebraic-geometry-research-school-2026'
+    );
+  });
+
+  it('preserves a return link to the newsletter issue when moving into conferences', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter initialEntries={['/newsletter/asiamath-monthly-briefing-april-2026']}>
+        <Routes>
+          <Route path="/newsletter/:slug" element={<NewsletterDetail />} />
+          <Route path="/conferences" element={<Conferences />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await screen.findByRole('link', { name: /return to opportunities/i });
+    await user.click(screen.getByRole('link', { name: /return to opportunities/i }));
+
+    expect(await screen.findByRole('link', { name: /back to newsletter issue/i })).toHaveAttribute(
+      'href',
+      '/newsletter/asiamath-monthly-briefing-april-2026'
     );
   });
 });

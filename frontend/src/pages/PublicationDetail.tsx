@@ -44,7 +44,16 @@ export default function PublicationDetail() {
         <div className="publication-detail-card publication-teaser-card">
           <h2>Publication focus</h2>
           <p>{publication.publicationFocus}</p>
-          <Link className="publication-primary-link" to="/newsletter">
+          <Link
+            className="publication-primary-link"
+            to="/newsletter"
+            state={{
+              returnContext: {
+                to: `/publications/${publication.slug}`,
+                label: 'Back to publication',
+              },
+            }}
+          >
             Continue to editorial layer
           </Link>
         </div>

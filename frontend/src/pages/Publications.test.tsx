@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { render } from '@testing-library/react';
 import { screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { renderWithRouter } from '../test/renderWithRouter';
+import Newsletters from './Newsletters';
 import Publications from './Publications';
 import PublicationDetail from './PublicationDetail';
 
@@ -73,5 +75,26 @@ describe('publication preview pages', () => {
     ).toBeInTheDocument();
     expect(screen.getByText('Lecture notes preview')).toBeInTheDocument();
     expect(screen.getByText('Research digest teaser')).toBeInTheDocument();
+  });
+
+  it('preserves a return link to publication detail when moving into newsletter', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter initialEntries={['/publications/asiamath-school-notes-preview']}>
+        <Routes>
+          <Route path="/publications/:slug" element={<PublicationDetail />} />
+          <Route path="/newsletter" element={<Newsletters />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await screen.findByRole('link', { name: /continue to editorial layer/i });
+    await user.click(screen.getByRole('link', { name: /continue to editorial layer/i }));
+
+    expect(await screen.findByRole('link', { name: /back to publication/i })).toHaveAttribute(
+      'href',
+      '/publications/asiamath-school-notes-preview'
+    );
   });
 });
