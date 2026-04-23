@@ -17,6 +17,12 @@ const browseLinks = [
     title: 'Browse travel grants',
     description: 'Travel funding opportunities linked to upcoming conferences.',
   },
+  {
+    to: '/prizes',
+    title: 'Browse prizes',
+    description:
+      'Recognition archives that preview nomination, review, and release surfaces without requiring a live governance workflow in d0.',
+  },
 ];
 
 const accountLinks = [

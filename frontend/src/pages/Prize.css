@@ -1,0 +1,57 @@
+.prize-page {
+  display: grid;
+  gap: var(--space-6);
+  text-align: left;
+}
+
+.prize-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-5);
+}
+
+.prize-card,
+.prize-detail-card {
+  display: grid;
+  gap: var(--space-4);
+  padding: 1.5rem;
+}
+
+.prize-card__meta,
+.prize-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.prize-card__meta {
+  color: var(--color-text-muted);
+  font-size: 0.95rem;
+}
+
+.prize-card__subtitle,
+.prize-card__summary {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.prize-detail-page {
+  grid-template-columns: 1fr;
+}
+
+.prize-signal-list {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.prize-primary-link {
+  font-weight: 600;
+}
+
+.prize-teaser-card {
+  align-content: start;
+}
