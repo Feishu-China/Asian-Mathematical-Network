@@ -117,6 +117,23 @@ type DemoMscCode = {
   code: string;
   isPrimary: boolean;
 };
+type DemoAccountSummary = {
+  key: DemoAccountKey;
+  label: string;
+  loginRole: DemoAccountKey;
+  email: string;
+  password: string;
+  meProfilePath: '/me/profile';
+  scholarSlug: string;
+  scholarPath: string | null;
+  startHere: string;
+  visibility: 'public' | 'private';
+  title: string | null;
+  affiliation: string | null;
+  countryCode: string | null;
+  careerStage: string | null;
+  narrativeFocus: string;
+};
 type ProfileRecord = Prisma.ProfileGetPayload<{
   include: { mscCodes: true };
 }>;
@@ -396,6 +413,138 @@ export const ensureDemoBaseline = async (prisma: PrismaClient) => {
     conference,
     grant,
     demoAccounts: [organizerAccount, reviewerAccount, applicantAccount],
+  };
+};
+
+export const buildDemoBaselineSummary = (
+  fixture: Awaited<ReturnType<typeof ensureDemoBaseline>>
+) => {
+  const demoAccounts: DemoAccountSummary[] = fixture.demoAccounts.map((account) => ({
+    key: account.key,
+    label: account.label,
+    loginRole: account.key,
+    email: account.email,
+    password: account.password,
+    meProfilePath: '/me/profile',
+    scholarSlug: account.profile.slug,
+    scholarPath: account.profile.isProfilePublic ? `/scholars/${account.profile.slug}` : null,
+    startHere:
+      account.key === 'applicant'
+        ? '/me/profile'
+        : account.profile.isProfilePublic
+          ? `/scholars/${account.profile.slug}`
+          : '/me/profile',
+    visibility: account.profile.isProfilePublic ? 'public' : 'private',
+    title: account.profile.title ?? null,
+    affiliation: account.profile.institutionNameRaw ?? null,
+    countryCode: account.profile.countryCode ?? null,
+    careerStage: account.profile.careerStage ?? null,
+    narrativeFocus: account.demoUse,
+  }));
+
+  const applicantAccount = demoAccounts.find((account) => account.key === 'applicant');
+  const reviewerAccount = demoAccounts.find((account) => account.key === 'reviewer');
+  const organizerAccount = demoAccounts.find((account) => account.key === 'organizer');
+
+  if (!applicantAccount || !reviewerAccount || !organizerAccount) {
+    throw new Error('Demo baseline summary requires organizer, reviewer, and applicant accounts.');
+  }
+
+  return {
+    conference: {
+      id: fixture.conference.id,
+      slug: fixture.conference.slug,
+      status: fixture.conference.status,
+    },
+    accounts: {
+      organizer: {
+        email: DEMO_BASELINE_FIXTURE.creatorEmail,
+        password: DEMO_BASELINE_FIXTURE.creatorPassword,
+        role: 'organizer',
+      },
+      reviewer: {
+        email: DEMO_BASELINE_FIXTURE.reviewerEmail,
+        password: DEMO_BASELINE_FIXTURE.reviewerPassword,
+        role: 'reviewer',
+      },
+      applicant: {
+        email: DEMO_BASELINE_FIXTURE.applicantEmail,
+        password: DEMO_BASELINE_FIXTURE.applicantPassword,
+        role: 'applicant',
+      },
+    },
+    grant: {
+      id: fixture.grant.id,
+      slug: fixture.grant.slug,
+      status: fixture.grant.status,
+    },
+    routes: {
+      applicantPrivateProfile: '/me/profile',
+      applicantPublicScholar: applicantAccount.scholarPath,
+      reviewerPublicScholar: reviewerAccount.scholarPath,
+      organizerPrivateProfile: '/me/profile',
+      organizerPublicScholar: organizerAccount.scholarPath,
+    },
+    quickStart: [
+      {
+        step: 1,
+        account: 'applicant',
+        loginRequired: true,
+        open: '/me/profile',
+        focus: 'Explain the private editor surface and the shared scholar record.',
+      },
+      {
+        step: 2,
+        account: 'applicant',
+        loginRequired: false,
+        open: applicantAccount.scholarPath,
+        focus: 'Hand off from the private editor to the public scholar page using the same profile record.',
+      },
+      {
+        step: 3,
+        account: 'reviewer',
+        loginRequired: false,
+        open: reviewerAccount.scholarPath,
+        focus: 'Show reviewer-source context and public expert visibility without entering a portal dashboard.',
+      },
+      {
+        step: 4,
+        account: 'organizer',
+        loginRequired: true,
+        open: '/me/profile',
+        focus: 'Show the organizer private profile state and explain why the public scholar route stays hidden.',
+      },
+    ],
+    storyline: [
+      'Applicant private profile editor',
+      'Applicant public scholar handoff',
+      'Reviewer public scholar page',
+      'Organizer hidden public route',
+    ],
+    demoAccounts: demoAccounts.map((account) => ({
+      key: account.key,
+      label: account.label,
+      login_role: account.loginRole,
+      email: account.email,
+      password: account.password,
+      me_profile_path: account.meProfilePath,
+      scholar_slug: account.scholarSlug,
+      scholar_path: account.scholarPath,
+      start_here: account.startHere,
+      visibility: account.visibility,
+      title: account.title,
+      affiliation: account.affiliation,
+      country_code: account.countryCode,
+      career_stage: account.careerStage,
+      narrative_focus: account.narrativeFocus,
+    })),
+    walkthrough: [
+      '1. Log in as the applicant demo account and open /me/profile to explain the private editor surface.',
+      '2. Use the public scholar handoff from /me/profile to show that the same profile record can be viewed at /scholars/:slug.',
+      '3. Open the reviewer demo scholar page to narrate public expert visibility and reviewer-source context.',
+      '4. Log in as the organizer demo account to explain that the same profile contract also supports internal organizer context while keeping the public route hidden.',
+      '5. Re-run npm run seed:demo to reset the same demo accounts, slugs, and profile content baseline.',
+    ],
   };
 };
 

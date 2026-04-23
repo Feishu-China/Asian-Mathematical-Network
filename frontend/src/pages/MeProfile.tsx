@@ -6,6 +6,7 @@ import { RoleBadge } from '../components/ui/RoleBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
 import { ProfileForm } from '../features/profile/ProfileForm';
 import {
+  buildScholarRoute,
   formatDateTime,
   formatVerificationStatus,
   PRIVATE_ONLY_FIELD_LABELS,
@@ -76,6 +77,9 @@ export default function MeProfile() {
   const visibilityLabel = profile.isProfilePublic
     ? 'Public scholar page is enabled'
     : 'Hidden from visitor route';
+  const publicPreviewLine = [profile.title, profile.institutionNameRaw, profile.countryCode]
+    .filter(Boolean)
+    .join(' · ');
 
   return (
     <WorkspaceShell
@@ -138,6 +142,29 @@ export default function MeProfile() {
               </p>
             )}
           </article>
+
+          {profile.isProfilePublic ? (
+            <article className="surface-card profile-context-card">
+              <p className="profile-section-kicker">Public scholar preview</p>
+              <h2>Public scholar preview</h2>
+              <p className="profile-inline-note">{profile.fullName}</p>
+              <p>{publicPreviewLine || 'Public-facing scholar summary.'}</p>
+              <dl className="profile-definition-list">
+                <div>
+                  <dt>Visitor route</dt>
+                  <dd>{buildScholarRoute(profile.slug)}</dd>
+                </div>
+                <div>
+                  <dt>Public scope</dt>
+                  <dd>Visitors see only the public scholar subset from this same profile record.</dd>
+                </div>
+              </dl>
+              <p className="profile-inline-note">
+                This preview mirrors the visitor-facing route without exposing COI declaration or
+                verification state.
+              </p>
+            </article>
+          ) : null}
 
           <article className="surface-card profile-context-card profile-context-card--wide">
             <p className="profile-section-kicker">Visibility boundary</p>

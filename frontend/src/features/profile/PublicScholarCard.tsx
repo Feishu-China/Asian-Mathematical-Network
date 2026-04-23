@@ -1,4 +1,5 @@
 import {
+  buildScholarRoute,
   formatCareerStage,
   formatCountryCode,
   formatDateTime,
@@ -27,6 +28,10 @@ export function PublicScholarCard({ profile }: Props) {
       <section className="scholar-section">
         <h2>Profile overview</h2>
         <dl className="scholar-facts">
+          <div>
+            <dt>Visitor route</dt>
+            <dd>{buildScholarRoute(profile.slug)}</dd>
+          </div>
           <div>
             <dt>Affiliation</dt>
             <dd>{profile.institutionNameRaw || 'Not provided'}</dd>
@@ -117,6 +122,9 @@ export function PublicScholarCard({ profile }: Props) {
         <p>
           This visitor-facing page intentionally shows only the public subset of the shared
           Asiamath profile record.
+        </p>
+        <p>
+          Directory visibility and reviewer-source context reuse this same public profile surface.
         </p>
         <p>
           Internal COI, verification, and account metadata stay off this page.

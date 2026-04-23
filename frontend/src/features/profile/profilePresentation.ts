@@ -78,3 +78,11 @@ export const formatDateTime = (value: string | null | undefined) => {
     timeStyle: 'short',
   }).format(new Date(value));
 };
+
+export const buildScholarRoute = (slug: string | null | undefined) => {
+  if (!slug) {
+    return 'Not available';
+  }
+
+  return `/scholars/${slug}`;
+};

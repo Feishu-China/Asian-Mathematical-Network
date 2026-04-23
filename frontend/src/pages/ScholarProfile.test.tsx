@@ -23,6 +23,10 @@ describe('scholar profile page', () => {
 
     expect(await screen.findByRole('heading', { name: /scholar profile/i })).toBeInTheDocument();
     expect(screen.getByText(/public profile scope/i)).toBeInTheDocument();
+    expect(screen.getByText('/scholars/alice-chen-demo')).toBeInTheDocument();
+    expect(
+      screen.getByText(/directory visibility and reviewer-source context reuse this same public profile surface/i)
+    ).toBeInTheDocument();
     expect(screen.getByText(/internal coi, verification, and account metadata stay off this page/i)).toBeInTheDocument();
     expect(screen.getByText(/research profile/i)).toBeInTheDocument();
     expect(screen.queryByText(/internal only coi note/i)).not.toBeInTheDocument();

@@ -19,6 +19,8 @@ describe('me profile page', () => {
 
     expect(await screen.findByRole('heading', { name: /profile/i })).toBeInTheDocument();
     expect(screen.getByText(/authenticated \/me surface/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /public scholar preview/i })).toBeInTheDocument();
+    expect(screen.getByText('/scholars/alice-chen-demo')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /open public scholar page/i })).toHaveAttribute(
       'href',
       '/scholars/alice-chen-demo'
@@ -37,6 +39,9 @@ describe('me profile page', () => {
     renderWithRouter(<MeProfile />, '/me/profile');
 
     expect(await screen.findByText(/public scholar page is currently hidden/i)).toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: /public scholar preview/i })
+    ).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /open public scholar page/i })).not.toBeInTheDocument();
   });
 });

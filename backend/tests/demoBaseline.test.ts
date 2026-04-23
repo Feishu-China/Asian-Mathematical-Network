@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import {
+  buildDemoBaselineSummary,
   cleanupDemoBaseline,
   DEMO_BASELINE_FIXTURE,
   ensureDemoBaseline,
@@ -135,5 +136,39 @@ describe('demo baseline fixture', () => {
 
     expect(passwordMatches).toBe(true);
     expect(applicant?.email).toBe(DEMO_BASELINE_FIXTURE.demoAccounts.applicant.email);
+
+    const summary = buildDemoBaselineSummary(fixture);
+    expect(summary.accounts.applicant).toEqual(
+      expect.objectContaining({
+        email: DEMO_BASELINE_FIXTURE.applicantEmail,
+        password: DEMO_BASELINE_FIXTURE.applicantPassword,
+        role: 'applicant',
+      })
+    );
+    expect(summary.routes).toEqual(
+      expect.objectContaining({
+        applicantPrivateProfile: '/me/profile',
+        applicantPublicScholar: '/scholars/aisha-rahman',
+        reviewerPublicScholar: '/scholars/ravi-iyer',
+        organizerPrivateProfile: '/me/profile',
+        organizerPublicScholar: null,
+      })
+    );
+    expect(summary.quickStart).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          step: 1,
+          account: 'applicant',
+          open: '/me/profile',
+          loginRequired: true,
+        }),
+        expect.objectContaining({
+          step: 3,
+          account: 'reviewer',
+          open: '/scholars/ravi-iyer',
+          loginRequired: false,
+        }),
+      ])
+    );
   });
 });
