@@ -87,7 +87,11 @@ export default function GrantDetail() {
             Grant applications stay separate from conference applications, even when they are linked.
           </p>
           {grantDetail.isApplicationOpen ? (
-            <Link className="conference-primary-link" to={`/grants/${grantDetail.slug}/apply`}>
+            <Link
+              className="conference-primary-link"
+              to={`/grants/${grantDetail.slug}/apply`}
+              state={toReturnContextState(returnContext)}
+            >
               Start grant application
             </Link>
           ) : (

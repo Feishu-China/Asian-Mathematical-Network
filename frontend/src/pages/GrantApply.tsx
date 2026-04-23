@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import { getMe } from '../api/auth';
 import { WorkspaceShell } from '../components/layout/WorkspaceShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
@@ -15,6 +15,7 @@ import {
   getDemoReleasedGrantResult,
   getGrantApplicantVisibleState,
 } from '../features/grant/grantApplicantState';
+import { readReturnContext, toReturnContextState } from '../features/navigation/returnContext';
 import { grantProvider } from '../features/grant/grantProvider';
 import type {
   GrantApplication,
@@ -28,6 +29,8 @@ export const routePath = '/grants/:slug/apply';
 
 export default function GrantApply() {
   const { slug = '' } = useParams();
+  const location = useLocation();
+  const returnContext = readReturnContext(location.state);
   const [grant, setGrant] = useState<GrantDetail | null | undefined>(undefined);
   const [schema, setSchema] = useState<GrantFormSchema>({ fields: [] });
   const [application, setApplication] = useState<GrantApplication | null>(null);
@@ -229,7 +232,9 @@ export default function GrantApply() {
             <p>{grant.coverageSummary || 'Coverage summary pending.'}</p>
             <p>{grant.eligibilitySummary || 'Eligibility summary pending.'}</p>
             <p>Deadline: {grant.applicationDeadline || 'Pending'}</p>
-            <Link to={`/grants/${grant.slug}`}>Back to grant detail</Link>
+            <Link to={`/grants/${grant.slug}`} state={toReturnContextState(returnContext)}>
+              Back to grant detail
+            </Link>
           </div>
         </div>
       }

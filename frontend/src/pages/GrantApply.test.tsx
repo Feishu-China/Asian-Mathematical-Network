@@ -2,6 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as authApi from '../api/auth';
+import { render } from '@testing-library/react';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { renderWithRouter } from '../test/renderWithRouter';
 import { conferenceProvider } from '../features/conference/conferenceProvider';
 import {
@@ -10,6 +12,8 @@ import {
 } from '../features/conference/fakeConferenceProvider';
 import { grantProvider } from '../features/grant/grantProvider';
 import { fakeGrantProvider, resetGrantFakeState } from '../features/grant/fakeGrantProvider';
+import Grants from './Grants';
+import GrantDetail from './GrantDetail';
 import GrantApply from './GrantApply';
 
 vi.mock('../api/auth', async () => {
@@ -289,5 +293,55 @@ describe('grant apply page', () => {
     expect(await screen.findByText(/^Released outcome$/)).toBeInTheDocument();
     expect(screen.getByText(/travel grant awarded/i)).toBeInTheDocument();
     expect(screen.getByText('Applicant view: released outcome')).toBeInTheDocument();
+  });
+
+  it('preserves the school-origin return path through grant apply and back out to the list', async () => {
+    await seedSubmittedConferenceApplication('grant-applicant-roundtrip');
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter
+        initialEntries={[
+          {
+            pathname: '/grants',
+            state: {
+              returnContext: {
+                to: '/schools/algebraic-geometry-research-school-2026',
+                label: 'Back to school',
+              },
+            },
+          },
+        ]}
+      >
+        <Routes>
+          <Route path="/grants" element={<Grants />} />
+          <Route path="/grants/:slug" element={<GrantDetail />} />
+          <Route path="/grants/:slug/apply" element={<GrantApply />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByRole('link', { name: /back to school/i })).toHaveAttribute(
+      'href',
+      '/schools/algebraic-geometry-research-school-2026'
+    );
+
+    await user.click(screen.getByRole('link', { name: /view details/i }));
+    expect(await screen.findByRole('link', { name: /start grant application/i })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('link', { name: /start grant application/i }));
+    expect(await screen.findByRole('link', { name: /back to grant detail/i })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('link', { name: /back to grant detail/i }));
+    expect(await screen.findByRole('link', { name: /back to grants/i })).toHaveAttribute(
+      'href',
+      '/grants'
+    );
+
+    await user.click(screen.getByRole('link', { name: /back to grants/i }));
+    expect(await screen.findByRole('link', { name: /back to school/i })).toHaveAttribute(
+      'href',
+      '/schools/algebraic-geometry-research-school-2026'
+    );
   });
 });
