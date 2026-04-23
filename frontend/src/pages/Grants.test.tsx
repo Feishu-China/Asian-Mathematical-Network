@@ -19,6 +19,9 @@ describe('grant public pages', () => {
   it('renders the public grant list and hides draft opportunities', async () => {
     renderWithRouter(<Grants />, '/grants', '/grants');
 
+    expect(await screen.findByText('Role: Visitor')).toBeInTheDocument();
+    expect(screen.getByText('Page mode: Hybrid')).toBeInTheDocument();
+    expect(screen.getByText('Published grants only')).toBeInTheDocument();
     expect(await screen.findByRole('heading', { name: 'Asiamath 2026 Travel Grant' })).toBeInTheDocument();
     expect(screen.queryByText('Asiamath 2026 Draft Grant')).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: /view details/i })).toHaveAttribute(
@@ -30,13 +33,18 @@ describe('grant public pages', () => {
   it('renders grant detail with prerequisite guidance and an apply CTA', async () => {
     renderWithRouter(<GrantDetail />, '/grants/asiamath-2026-travel-grant', '/grants/:slug');
 
+    expect(await screen.findByText('Role: Visitor')).toBeInTheDocument();
+    expect(screen.getByText('Page mode: Hybrid')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /support snapshot/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /applicant handoff/i })).toBeInTheDocument();
     expect(
       await screen.findByText('Partial travel support for accepted participants.')
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/submit your conference application first, then request travel support/i)
+      screen.getByText(/conference application required before grant submission/i)
     ).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /apply for grant/i })).toHaveAttribute(
+    expect(screen.getByText(/grant applications stay separate from conference applications/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /start grant application/i })).toHaveAttribute(
       'href',
       '/grants/asiamath-2026-travel-grant/apply'
     );
@@ -49,5 +57,14 @@ describe('grant public pages', () => {
 
     expect(await screen.findByText('We could not load grants right now.')).toBeInTheDocument();
     expect(screen.queryByText('Loading grants...')).not.toBeInTheDocument();
+  });
+
+  it('renders an error state when the grant detail request fails', async () => {
+    vi.spyOn(grantProvider, 'getGrantBySlug').mockRejectedValueOnce(new Error('Backend unavailable'));
+
+    renderWithRouter(<GrantDetail />, '/grants/asiamath-2026-travel-grant', '/grants/:slug');
+
+    expect(await screen.findByText('We could not load this grant right now.')).toBeInTheDocument();
+    expect(screen.queryByText('Loading grant...')).not.toBeInTheDocument();
   });
 });

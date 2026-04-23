@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { StatusBadge } from '../../components/ui/StatusBadge';
 import type { GrantListItem } from './types';
 
 type Props = {
@@ -25,9 +26,9 @@ export function GrantListCard({ grant }: Props) {
         {grant.reportRequired ? 'Post-visit reporting required' : 'No post-visit report required'}
       </p>
       <div className="conference-card-actions">
-        <span className={grant.isApplicationOpen ? 'conference-chip open' : 'conference-chip closed'}>
+        <StatusBadge tone={grant.isApplicationOpen ? 'success' : 'neutral'}>
           {grant.isApplicationOpen ? 'Applications open' : 'Applications closed'}
-        </span>
+        </StatusBadge>
         <Link to={`/grants/${grant.slug}`}>View details</Link>
       </div>
     </article>
