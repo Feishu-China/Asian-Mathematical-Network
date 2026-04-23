@@ -3,6 +3,7 @@ import { screen, waitFor } from '@testing-library/react';
 import { renderWithRouter } from '../test/renderWithRouter';
 import {
   resetDashboardFakeState,
+  seedDashboardDemoState,
   setDashboardFakeState,
 } from '../features/dashboard/fakeDashboardProvider';
 import type { MyApplication } from '../features/dashboard/types';
@@ -83,6 +84,21 @@ describe('MyApplications page', () => {
     expect(screen.getByRole('link', { name: /browse conferences/i })).toHaveAttribute(
       'href',
       '/conferences'
+    );
+  });
+
+  it('renders the seeded demo application flow when demo state is loaded', async () => {
+    localStorage.setItem('token', 'test-token');
+    seedDashboardDemoState();
+
+    renderWithRouter(<MyApplications />, '/me/applications', '/me/applications');
+
+    expect(
+      await screen.findByRole('heading', { name: 'Review Demo Conference 2026' })
+    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /view submission/i })).toHaveAttribute(
+      'href',
+      '/me/applications/review-application-1'
     );
   });
 

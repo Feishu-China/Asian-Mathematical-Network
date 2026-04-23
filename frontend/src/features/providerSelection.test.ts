@@ -71,10 +71,17 @@ describe('runtime provider selection', () => {
       loadProfileModules(),
     ]);
 
+    vi.resetModules();
+    const [{ reviewProvider }, { fakeReviewProvider }] = await Promise.all([
+      import('./review/reviewProvider'),
+      import('./review/fakeReviewProvider'),
+    ]);
+
     expect(conferenceProvider).toBe(fakeConferenceProvider);
     expect(grantProvider).toBe(fakeGrantProvider);
     expect(dashboardProvider).toBe(fakeDashboardProvider);
     expect(profileProvider).toBe(fakeProfileProvider);
+    expect(reviewProvider).toBe(fakeReviewProvider);
   });
 
   test('uses http providers when VITE_DEMO_MODE is not enabled', async () => {
@@ -92,9 +99,17 @@ describe('runtime provider selection', () => {
       loadProfileModules(),
     ]);
 
+    vi.resetModules();
+    const [{ reviewProvider }, , { httpReviewProvider }] = await Promise.all([
+      import('./review/reviewProvider'),
+      import('./review/fakeReviewProvider'),
+      import('./review/httpReviewProvider'),
+    ]);
+
     expect(conferenceProvider).toBe(httpConferenceProvider);
     expect(grantProvider).toBe(httpGrantProvider);
     expect(dashboardProvider).toBe(httpDashboardProvider);
     expect(profileProvider).toBe(httpProfileProvider);
+    expect(reviewProvider).toBe(httpReviewProvider);
   });
 });
