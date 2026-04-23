@@ -1,0 +1,85 @@
+.my-applications {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.my-applications__section-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.my-applications__section-link {
+  font-weight: 600;
+}
+
+.my-applications__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-3);
+}
+
+.my-applications__row {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-4);
+}
+
+.my-applications__row-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.my-applications__row-meta h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.my-applications__row-timestamp {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.my-applications__row-linked {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.my-applications__row-next-action {
+  margin: 0;
+  font-weight: 600;
+  color: var(--color-navy-800);
+}
+
+.portal-link-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-3);
+}
+
+.portal-link-card {
+  padding: var(--space-4);
+  display: grid;
+  gap: var(--space-2);
+}
+
+.portal-link-card__title {
+  font-weight: 600;
+  color: var(--color-navy-800);
+}
+
+.portal-link-card p {
+  margin: 0;
+  color: var(--color-text-muted);
+}

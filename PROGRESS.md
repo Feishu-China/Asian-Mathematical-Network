@@ -4,11 +4,61 @@
 
 ## 当前项目状态
 *   **最新版本**: V4.0-Optimized
-*   **总览**: `AUTH`、`PROFILE`、`CONF` 与 `GRANT` 四个 Epic 已完成并通过真实联调验证。`PORTAL` Epic 已落地后端聚合接口 `BE-PORTAL-001`，等待 `FE-PORTAL-001`（仪表板 UI）与 `INT-PORTAL-001`（仍依赖未启动的 `REVIEW` Epic 提供 release 语义）。
+*   **总览**: `AUTH`、`PROFILE`、`CONF`、`GRANT` 与 `REVIEW` 五个 Epic 已完成；`PORTAL` Epic 的 `BE-PORTAL-001` 已在 main，`FE-PORTAL-001` 经本轮 contract realignment 后重新对齐到 REVIEW-era 的 applicant-safe 形状，等待 merge；`INT-PORTAL-001` 仍需单独的真实联调验证。
 
 ---
 
 ## 📅 Handoff 历史记录
+
+### 2026-04-22 (Session 25)
+*   **Agent 角色**: Coding Agent (Frontend / Contract Realignment)
+*   **完成 Feature**: `FE-PORTAL-001` 与 `REVIEW` 后端新 contract 对齐（PR #11 follow-up）
+*   **上下文**:
+    *   PR #11 审阅期间，`REVIEW` Epic（PR #13，commits `aca02e7` / `a06f0ff` / `ec76b55`）合并进 main，改写了 `GET /api/v1/me/applications` 的响应为 applicant-safe 形状。
+    *   `feature/portal` fast-forward 合入最新 main 后，原 FE-PORTAL-001 仪表板类型/映射/UI/测试对应的是旧 payload（`status` / `conference_slug` / `grant_slug` / `decision`），与新 applicant-safe 契约不一致 —— 标题回退、status tone、released result 渲染与 CTA 都会在真实数据上漂移。
+    *   同事在 PR #11 评论中点出此问题并明确建议"不要回滚后端，在 `feature/portal` 上小改对齐"；本轮即为该对齐。
+*   **变更记录**:
+    *   `frontend/src/features/dashboard/types.ts` 改为 applicant-safe 域模型：`ViewerStatus`（`draft` / `under_review` / `result_released`）、`NextAction`（`continue_draft` / `view_submission` / `view_result` / `submit_post_visit_report`）、`ReleasedDecision`（`decisionKind` / `finalStatus` / `displayLabel` / `releasedAt`），`MyApplication` 不再包含 `status` / `conference_slug` / `grant_slug` / `decision`，而是 `sourceId` / `sourceTitle` / `linkedConferenceTitle` / `viewerStatus` / `releasedDecision` / `nextAction` / `postVisitReportStatus`。
+    *   `frontend/src/features/dashboard/dashboardMappers.ts` 重写 `TransportMyApplication` 与 `fromTransportMyApplication`，把新 snake_case 响应（含 nested `released_decision`）映射到新域模型。
+    *   `frontend/src/pages/MyApplications.tsx` 重写 row 渲染：badge tone 优先从 `releasedDecision.finalStatus` 推断（accepted → success / waitlisted → warning / rejected → danger），否则按 `viewerStatus` 推断；显示 `sourceTitle`（fallback "Untitled ..."）、grant 行追加 `linkedConferenceTitle`、所有行显示 `Next step: <nextAction>` 文案。
+    *   移除了所有 slug-based CTA（旧 `/conferences/:slug/apply`、`/grants/:slug/apply`、`/conferences/:slug`、`/grants/:slug`）。新 contract 仅暴露 `source_id`、`source_title`，无 slug，因此 dashboard 现在只把 `next_action` 呈现为明确的"下一步"提示，而不是错误的可点链接。"真正的 clickable 目标"需要一个消费 `GET /api/v1/me/applications/:id`（已存在）的专属仪表板详情页（未来独立 PR）。
+    *   `frontend/src/pages/MyApplications.css` 增补 `.my-applications__row-linked` 与 `.my-applications__row-next-action`，仅限页面级样式，未扩展 foundation 全局层。
+    *   新测试覆盖：`dashboardMappers.test.ts` 3 用例（submitted conference、released accepted conference 含 display_label、draft grant with linked_conference_title），`MyApplications.test.tsx` 6 用例（未登录跳转、双空 section、under-review 会议呈现 "Under review" + "Next step: View submission"、draft grant 呈现 Linked conference + "Next step: Continue draft"、released accepted decision 呈现 "Accepted" + "Next step: View result"、混合分组）。
+*   **验证记录**:
+    *   执行通过 `cd frontend && npx vitest run`：`13` 个 test files、`43` 个 tests 全部通过。
+    *   执行通过 `cd frontend && npm run build`（`tsc -b && vite build`），无类型或构建错误。
+    *   执行通过 `cd backend && npx prisma generate`（REVIEW Epic 新增 `Decision` / `UserRole` 等 Prisma 模型后本地 client 未自动再生，backend 套件会因 `Property 'decision' does not exist on PrismaClient` TS 报错而全部失败）。
+    *   执行通过 `cd backend && npm test`（prisma generate 后）：`9` 个 test suites、`39` 个 tests 全部通过；但由于 `feature/portal` 当前还没有 fix `#12`（jest `--runInBand`），并行 SQLite 竞争导致的 flake 依然存在于本分支（5 次抽样中 4 次失败），属于 PR #12 所修；本次改动零后端代码，不新增也不加剧该 flake。
+*   **边界与说明**:
+    *   本轮仅对齐 `frontend/src/features/dashboard/*` 与 `frontend/src/pages/MyApplications.*`。`Portal.tsx`、`Dashboard.tsx`、`App.tsx`、shell 组件与 foundation CSS 均未触碰。
+    *   后端文件零改动，`docs/specs/openapi.yaml` / `docs/planning/` / `backend/prisma/` 均保持只读。
+    *   `next_action` 目前只以文案形式呈现，不绑定 href。给到 clickable 去向需要先落地 `/me/applications/:id` 前端详情页（消费已有的后端 `GET /api/v1/me/applications/:id`）；这属于 `INT-PORTAL-001` 或其前置 FE 补页的范围，不在本轮。
+    *   `released_decision` 的 tone 映射假设前端可以依赖 `finalStatus` 判断 success / warning / danger；`displayLabel` 直接来自后端（例如 grant 的 "Awarded" / "Not awarded"），前端不做二次翻译。
+*   **下一步**: 等 PR #12（`jest --runInBand`）与本轮 PR #11 更新一起 merge，然后在 `feature/portal`（或独立 FE 分支）做两件事：(a) 新建 `/me/applications/:id` 详情页并把 dashboard 的 next step 变成真正的 Link；(b) 补一个 `scripts/me-applications-real-flow-check.mjs` 做真实联调，铺垫 `INT-PORTAL-001`。
+
+### 2026-04-22 (Session 24)
+*   **Agent 角色**: Coding Agent (Frontend)
+*   **完成 Feature**: `FE-PORTAL-001`
+*   **变更记录**:
+    *   新增 `frontend/src/features/dashboard/`：`types.ts`（`MyApplication` 域模型 + `DashboardProvider` 接口）、`dashboardMappers.ts`（snake_case ↔ camelCase）、`httpDashboardProvider.ts`（消费 `GET /me/applications`，复用 localStorage Bearer token）、`fakeDashboardProvider.ts`（提供 `setDashboardFakeState` / `resetDashboardFakeState` 供单测）、`dashboardProvider.ts`（按 `import.meta.env.VITEST` 在 fake/http 之间切换）。
+    *   新增 `frontend/src/api/me.ts` 单一职责 axios wrapper：`fetchMyApplications(token)` → `GET /api/v1/me/applications`。
+    *   新增 `/portal` 公共门户首页（`PortalShell`），列出 conferences / grants 浏览入口和登录/注册/My Applications CTA。
+    *   新增 `/me/applications` Applicant Dashboard 列表页（`WorkspaceShell`），按 conference / grant 双 section 展示当前用户的所有申请，复用 `StatusBadge` 把 `draft / submitted / under_review / decided / withdrawn` 映射到 `neutral / info / warning / success / danger`，并按状态生成 `Continue draft` 或 `View conference / View grant` CTA。
+    *   新增 `frontend/src/pages/MyApplications.css`，仅承载页面级 grid / 间距，所有卡片、徽章、按钮继续复用 foundation `components.css` 中的 `.surface-card`、`.dashboard-widget`、`.conference-primary-link`、`.conference-empty`、`.conference-inline-message`，未引入新的全局视觉层。
+*   **验证记录**:
+    *   新增 `frontend/src/features/dashboard/dashboardMappers.test.ts`（2 用例，覆盖 conference + grant 两种 transport payload 的字段映射），与 `frontend/src/pages/MyApplications.test.tsx`（5 用例：未登录跳转、双空 section、submitted 会议申请呈现 view-conference CTA、draft grant 申请呈现 continue-draft CTA、混合两类 application 时的分组渲染）。
+    *   执行通过 `cd frontend && npx vitest run`，结果为 `12` 个 test files、`35` 个 tests 全部通过。
+    *   执行通过 `cd frontend && npm run build`（`tsc -b && vite build`），无类型或构建错误。
+    *   仓库级 `npm run test:smoke` 在 3 次连续运行中 2 次通过；第 3 次失败为 `tests/grants.test.ts` 后端 flake（详见下方"已知问题"），与本轮前端改动无关（本轮零后端文件改动）。
+*   **边界与说明**:
+    *   未编辑 `frontend/src/App.tsx`（CLAUDE.md 禁止动中央路由），因此公共门户页路由是 `/portal` 而不是 `/`；`/` 仍维持原有 `Navigate to="/login"` 行为。如需把 `/` 改为公共门户入口，应作为独立后续任务由用户决定。
+    *   未触碰 `frontend/src/pages/Dashboard.tsx`：保留其 AUTH-era 占位面板，FE-PORTAL-001 通过新页 `/me/applications` 提供真正的申请列表，二者并存。
+    *   未触碰任何后端代码、数据库迁移、契约文件，本轮改动严格收敛在 `frontend/src/`。
+    *   未触碰 `docs/planning/` 下的 feature-list JSON；保持本仓库 "planning 只读" 约定。
+    *   `INT-PORTAL-001` 依然被阻塞在 `INT-REVIEW-001`：dashboard 上的 `decision` 字段在前后端两侧都按 `null` 处理，`released vs unreleased` 完整语义需要 REVIEW Epic 落地后回头补齐。
+*   **已知问题（pre-existing，与本轮无关）**:
+    *   `cd backend && npm test` 在多次连续运行中存在 ~50% 的 flake（10 次抽样中 5 次失败）：`tests/grants.test.ts` 中 `creates a grant draft only when a submitted linked conference application exists` 与 `updates and submits a grant draft while preserving linked conference rules` 偶发性返回 422 而非预期的 201。失败时根因都指向 `requireEligibleLinkedConferenceApplication` 拒绝 prereq lookup，疑似多 test file 之间通过共享 SQLite 的 cascade-delete 行为产生竞争。该测试在隔离运行（`--runInBand` 单文件）时 100% 通过；本轮前端改动未修改任何后端代码，flake 在 `main` 上即已存在，建议作为独立 BE 修复任务跟进。
+*   **下一步**: 当 `REVIEW` Epic 启动后再回到 `PORTAL`，把 `decision` 字段在 dashboard 上接通 release 语义，并在 `scripts/` 下补一个 `me-applications-real-flow-check.mjs` 真实联调脚本，作为 `INT-PORTAL-001` 的前置铺垫。
 
 ### 2026-04-22 (Session 23)
 *   **Agent 角色**: Coding Agent (Backend)
