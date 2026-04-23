@@ -1,9 +1,17 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { WorkspaceShell } from '../components/layout/WorkspaceShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
 import { ProfileForm } from '../features/profile/ProfileForm';
+import {
+  formatDateTime,
+  formatVerificationStatus,
+  PRIVATE_ONLY_FIELD_LABELS,
+  PROFILE_REUSE_LABELS,
+  PUBLIC_PROFILE_FIELD_LABELS,
+} from '../features/profile/profilePresentation';
 import { profileProvider } from '../features/profile/profileProvider';
 import type { EditableProfile, ProfileFormValues } from '../features/profile/types';
 import './Profile.css';
@@ -17,10 +25,29 @@ export default function MeProfile() {
   );
 
   useEffect(() => {
-    profileProvider.getMyProfile().then((value) => {
-      setProfile(value);
-      setStatus('idle');
-    });
+    let cancelled = false;
+
+    profileProvider
+      .getMyProfile()
+      .then((value) => {
+        if (cancelled) {
+          return;
+        }
+
+        setProfile(value);
+        setStatus('idle');
+      })
+      .catch(() => {
+        if (cancelled) {
+          return;
+        }
+
+        setStatus('error');
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const handleSave = async (values: ProfileFormValues) => {
@@ -36,17 +63,25 @@ export default function MeProfile() {
   };
 
   if (!profile) {
-    return <div className="profile-page">Loading profile...</div>;
+    return (
+      <div className="profile-page">
+        {status === 'error' ? 'Unable to load the profile editor.' : 'Loading profile...'}
+      </div>
+    );
   }
 
   const badgeTone =
     status === 'saved' ? 'success' : status === 'saving' ? 'warning' : status === 'error' ? 'danger' : 'info';
+  const publicScholarHref = `/scholars/${profile.slug}`;
+  const visibilityLabel = profile.isProfilePublic
+    ? 'Public scholar page is enabled'
+    : 'Hidden from visitor route';
 
   return (
     <WorkspaceShell
       eyebrow="Academic directory"
       title="Profile"
-      description="Maintain the private profile record that will later feed directory, reviewer, and application contexts."
+      description="Edit the authenticated scholar record here, explain the public/private boundary clearly, and hand off to the public scholar view without changing the underlying PROFILE contract."
       badges={
         <>
           <RoleBadge role="applicant" />
@@ -56,6 +91,89 @@ export default function MeProfile() {
       }
     >
       <div className="profile-page">
+        <section className="profile-context-grid">
+          <article className="surface-card profile-context-card">
+            <p className="profile-section-kicker">Current demo state</p>
+            <h2>{profile.fullName}</h2>
+            <dl className="profile-definition-list">
+              <div>
+                <dt>Mode</dt>
+                <dd>Authenticated /me surface</dd>
+              </div>
+              <div>
+                <dt>Public visibility</dt>
+                <dd>{visibilityLabel}</dd>
+              </div>
+              <div>
+                <dt>Verification</dt>
+                <dd>{formatVerificationStatus(profile.verificationStatus)}</dd>
+              </div>
+              <div>
+                <dt>Public slug</dt>
+                <dd>{profile.slug}</dd>
+              </div>
+              <div>
+                <dt>Last updated</dt>
+                <dd>{formatDateTime(profile.updatedAt)}</dd>
+              </div>
+            </dl>
+          </article>
+
+          <article className="surface-card profile-context-card">
+            <p className="profile-section-kicker">Demo walkthrough use</p>
+            <p>
+              Start on the private editor, then explain how the same shared fields are reused in
+              application, reviewer, and organizer contexts.
+            </p>
+            {profile.isProfilePublic ? (
+              <div className="profile-link-row">
+                <Link className="conference-primary-link" to={publicScholarHref}>
+                  Open public scholar page
+                </Link>
+              </div>
+            ) : (
+              <p className="profile-inline-note">
+                Public scholar page is currently hidden. Enable visibility here before narrating
+                the visitor-facing route.
+              </p>
+            )}
+          </article>
+
+          <article className="surface-card profile-context-card profile-context-card--wide">
+            <p className="profile-section-kicker">Visibility boundary</p>
+            <div className="profile-boundary-grid">
+              <div>
+                <h3>Public when visible</h3>
+                <ul className="profile-bullet-list">
+                  {PUBLIC_PROFILE_FIELD_LABELS.map((label) => (
+                    <li key={label}>{label}</li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <h3>Private-only</h3>
+                <ul className="profile-bullet-list">
+                  {PRIVATE_ONLY_FIELD_LABELS.map((label) => (
+                    <li key={label}>{label}</li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <h3>Shared downstream uses</h3>
+                <ul className="profile-bullet-list">
+                  {PROFILE_REUSE_LABELS.map((label) => (
+                    <li key={label}>{label}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+            <p className="profile-inline-note">
+              COI declaration, verification state, and internal identifiers stay private even when
+              the public scholar page is enabled.
+            </p>
+          </article>
+        </section>
+
         <ProfileForm
           key={`${profile.userId}:${profile.updatedAt}`}
           profile={profile}

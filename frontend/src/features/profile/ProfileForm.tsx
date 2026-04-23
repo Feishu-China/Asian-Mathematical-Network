@@ -64,8 +64,9 @@ export function ProfileForm({ profile, status, onSave }: Props) {
           <p className="profile-eyebrow">Private profile editor</p>
           <h2>{profile.fullName}</h2>
           <p className="profile-subtitle">
-            Update the profile data that will later be connected to the real API in
-            `INT-PROFILE-001`.
+            Update the shared scholar record on the authenticated `/me` surface. The same
+            field definitions feed the public scholar page and later application summaries,
+            reviewer context, and organizer context without changing the contract.
           </p>
         </div>
         <StatusBadge tone={statusTone[status]}>{statusLabel[status]}</StatusBadge>
@@ -85,7 +86,7 @@ export function ProfileForm({ profile, status, onSave }: Props) {
           <input value={values.title} onChange={(event) => setField('title', event.target.value)} />
         </label>
         <label>
-          Affiliation
+          Affiliation (public-facing)
           <input
             value={values.institutionNameRaw}
             onChange={(event) => setField('institutionNameRaw', event.target.value)}
@@ -93,7 +94,7 @@ export function ProfileForm({ profile, status, onSave }: Props) {
           />
         </label>
         <label>
-          Country code
+          Country / region code
           <input
             value={values.countryCode}
             onChange={(event) => setField('countryCode', event.target.value.toUpperCase())}
@@ -119,7 +120,7 @@ export function ProfileForm({ profile, status, onSave }: Props) {
           </select>
         </label>
         <label>
-          Personal website
+          Personal page
           <input
             value={values.personalWebsite}
             onChange={(event) => setField('personalWebsite', event.target.value)}
@@ -133,7 +134,7 @@ export function ProfileForm({ profile, status, onSave }: Props) {
         <input
           value={values.researchKeywordsText}
           onChange={(event) => setField('researchKeywordsText', event.target.value)}
-          placeholder="algebraic geometry, birational geometry"
+          placeholder="algebraic geometry, birational geometry, mathematical networks"
         />
       </label>
 
@@ -175,13 +176,17 @@ export function ProfileForm({ profile, status, onSave }: Props) {
           />
         </label>
         <label>
-          COI declaration
+          COI declaration (private-only)
           <textarea
             rows={3}
             value={values.coiDeclarationText}
             onChange={(event) => setField('coiDeclarationText', event.target.value)}
           />
         </label>
+      </div>
+
+      <div className="profile-field-note">
+        COI declaration stays on the private record and does not appear on `/scholars/:slug`.
       </div>
 
       <label className="profile-toggle">
@@ -192,6 +197,12 @@ export function ProfileForm({ profile, status, onSave }: Props) {
         />
         Make my scholar profile public
       </label>
+
+      <div className="profile-field-note">
+        Public visibility exposes the scholar subset only: name, affiliation, career stage, bio,
+        keywords, MSC codes, personal page, and ORCID. Verification state and internal metadata
+        stay private.
+      </div>
 
       <div className="profile-cv-note">
         CV upload is intentionally deferred until the shared file integration exists.
