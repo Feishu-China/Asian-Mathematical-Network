@@ -42,6 +42,11 @@ export default function SchoolDetail() {
           </StatusBadge>
         </>
       }
+      actions={
+        <Link to="/schools" className="my-applications__section-link">
+          Back to schools
+        </Link>
+      }
       aside={
         <div className="school-detail-card school-teaser-card">
           <h2>Travel support teaser</h2>

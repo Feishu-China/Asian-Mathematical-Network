@@ -38,6 +38,10 @@ describe('school public pages', () => {
       })
     ).toBeInTheDocument();
     expect(screen.getByText('Travel support available')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /back to schools/i })).toHaveAttribute(
+      'href',
+      '/schools'
+    );
     expect(screen.getByRole('link', { name: /explore travel support/i })).toHaveAttribute(
       'href',
       '/grants'
