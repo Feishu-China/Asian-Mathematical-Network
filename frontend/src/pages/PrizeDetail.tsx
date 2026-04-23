@@ -38,6 +38,11 @@ export default function PrizeDetail() {
           <StatusBadge tone="warning">Selection process preview</StatusBadge>
         </>
       }
+      actions={
+        <Link to="/prizes" className="my-applications__section-link">
+          Back to prizes
+        </Link>
+      }
       aside={
         <div className="prize-detail-card prize-teaser-card">
           <h2>Selection process preview</h2>

@@ -1,14 +1,18 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { PortalShell } from '../components/layout/PortalShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
+import { readReturnContext } from '../features/navigation/returnContext';
 import { newsletterIssues } from '../features/newsletter/staticNewsletterContent';
 import './Newsletter.css';
 
 export const routePath = '/newsletter';
 
 export default function Newsletters() {
+  const location = useLocation();
+  const returnContext = readReturnContext(location.state);
+
   return (
     <PortalShell
       eyebrow="Editorial archive"
@@ -20,6 +24,13 @@ export default function Newsletters() {
           <PageModeBadge mode="static-preview" />
           <StatusBadge tone="info">Newsletter archive</StatusBadge>
         </>
+      }
+      actions={
+        returnContext ? (
+          <Link to={returnContext.to} className="my-applications__section-link">
+            {returnContext.label}
+          </Link>
+        ) : null
       }
     >
       <div className="newsletter-page">

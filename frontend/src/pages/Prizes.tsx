@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { PortalShell } from '../components/layout/PortalShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
+import { readReturnContext } from '../features/navigation/returnContext';
 import { prizeProvider } from '../features/prize/prizeProvider';
 import type { PrizeListItem } from '../features/prize/types';
 import './Prize.css';
@@ -12,6 +13,8 @@ export const routePath = '/prizes';
 
 export default function Prizes() {
   const [items, setItems] = useState<PrizeListItem[] | null>(null);
+  const location = useLocation();
+  const returnContext = readReturnContext(location.state);
 
   useEffect(() => {
     prizeProvider.listPublicPrizes().then(setItems);
@@ -32,6 +35,13 @@ export default function Prizes() {
           <PageModeBadge mode="hybrid" />
           <StatusBadge tone="info">Prize archive</StatusBadge>
         </>
+      }
+      actions={
+        returnContext ? (
+          <Link to={returnContext.to} className="my-applications__section-link">
+            {returnContext.label}
+          </Link>
+        ) : null
       }
     >
       <div className="prize-page">

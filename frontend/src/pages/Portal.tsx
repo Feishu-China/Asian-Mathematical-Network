@@ -3,6 +3,7 @@ import { PortalShell } from '../components/layout/PortalShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
+import type { ReturnContextState } from '../features/navigation/returnContext';
 
 export const routePath = '/portal';
 
@@ -45,6 +46,13 @@ const accountLinks = [
 ];
 
 export default function Portal() {
+  const portalReturnState: ReturnContextState = {
+    returnContext: {
+      to: '/portal',
+      label: 'Back to portal',
+    },
+  };
+
   return (
     <PortalShell
       eyebrow="Asian Mathematical Network"
@@ -63,7 +71,7 @@ export default function Portal() {
         <ul className="portal-link-list">
           {browseLinks.map((link) => (
             <li key={link.to} className="surface-card portal-link-card">
-              <Link to={link.to} className="portal-link-card__title">
+              <Link to={link.to} state={portalReturnState} className="portal-link-card__title">
                 {link.title}
               </Link>
               <p>{link.description}</p>

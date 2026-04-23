@@ -45,7 +45,7 @@ describe('grant public pages', () => {
     );
   });
 
-  it('preserves a school-origin return path through the grant list and detail flow', async () => {
+  it('preserves a school-origin return path on the grant list while keeping detail one level up', async () => {
     const user = userEvent.setup();
 
     render(
@@ -80,10 +80,7 @@ describe('grant public pages', () => {
     expect(
       await screen.findByText('Partial travel support for accepted participants.')
     ).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /back to school/i })).toHaveAttribute(
-      'href',
-      '/schools/algebraic-geometry-research-school-2026'
-    );
+    expect(screen.getByRole('link', { name: /back to grants/i })).toHaveAttribute('href', '/grants');
   });
 
   it('renders grant detail with prerequisite guidance and an apply CTA', async () => {

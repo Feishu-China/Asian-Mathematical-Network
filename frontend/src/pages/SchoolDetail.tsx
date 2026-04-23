@@ -88,7 +88,17 @@ export default function SchoolDetail() {
           <div className="school-output-links">
             <Link to="/videos">Videos</Link>
             <Link to="/publications">Publications</Link>
-            <Link to="/newsletter">Newsletter</Link>
+            <Link
+              to="/newsletter"
+              state={{
+                returnContext: {
+                  to: `/schools/${school.slug}`,
+                  label: 'Back to school',
+                },
+              }}
+            >
+              Newsletter
+            </Link>
           </div>
         </section>
       </div>

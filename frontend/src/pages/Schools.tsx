@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { PortalShell } from '../components/layout/PortalShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
+import { readReturnContext } from '../features/navigation/returnContext';
 import { schoolProvider } from '../features/school/schoolProvider';
 import type { SchoolListItem } from '../features/school/types';
 import './School.css';
@@ -12,6 +13,8 @@ export const routePath = '/schools';
 
 export default function Schools() {
   const [items, setItems] = useState<SchoolListItem[] | null>(null);
+  const location = useLocation();
+  const returnContext = readReturnContext(location.state);
 
   useEffect(() => {
     schoolProvider.listPublicSchools().then(setItems);
@@ -32,6 +35,13 @@ export default function Schools() {
           <PageModeBadge mode="hybrid" />
           <StatusBadge tone="info">School opportunities</StatusBadge>
         </>
+      }
+      actions={
+        returnContext ? (
+          <Link to={returnContext.to} className="my-applications__section-link">
+            {returnContext.label}
+          </Link>
+        ) : null
       }
     >
       <div className="school-page">

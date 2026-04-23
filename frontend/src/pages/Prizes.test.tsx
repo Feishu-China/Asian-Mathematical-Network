@@ -36,6 +36,10 @@ describe('prize public pages', () => {
       await screen.findByRole('heading', { name: 'Asiamath Early Career Prize 2026' })
     ).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /selection process preview/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /back to prizes/i })).toHaveAttribute(
+      'href',
+      '/prizes'
+    );
     expect(screen.getByText(/Nomination intake, confidential review, and committee release remain part of the same platform direction/i)).toBeInTheDocument();
     expect(screen.getByText('Nominations preview')).toBeInTheDocument();
     expect(screen.getByText('Confidential review concept')).toBeInTheDocument();

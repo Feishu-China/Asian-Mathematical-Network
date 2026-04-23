@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { PortalShell } from '../components/layout/PortalShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
 import { ConferenceListCard } from '../features/conference/ConferenceListCard';
+import { readReturnContext } from '../features/navigation/returnContext';
 import { conferenceProvider } from '../features/conference/conferenceProvider';
 import type { ConferenceListItem } from '../features/conference/types';
 import './Conference.css';
@@ -14,6 +15,8 @@ export const routePath = '/conferences';
 export default function Conferences() {
   const [items, setItems] = useState<ConferenceListItem[] | null>(null);
   const hasApplicantSession = Boolean(localStorage.getItem('token'));
+  const location = useLocation();
+  const returnContext = readReturnContext(location.state);
 
   useEffect(() => {
     conferenceProvider.listPublicConferences().then(setItems);
@@ -36,7 +39,11 @@ export default function Conferences() {
         </>
       }
       actions={
-        hasApplicantSession ? (
+        returnContext ? (
+          <Link to={returnContext.to} className="my-applications__section-link">
+            {returnContext.label}
+          </Link>
+        ) : hasApplicantSession ? (
           <Link to="/me/applications" className="my-applications__section-link">
             Back to my applications
           </Link>

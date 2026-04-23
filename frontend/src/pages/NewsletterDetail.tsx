@@ -28,6 +28,11 @@ export default function NewsletterDetail() {
           <StatusBadge tone="info">Issue preview</StatusBadge>
         </>
       }
+      actions={
+        <Link to="/newsletter" className="my-applications__section-link">
+          Back to newsletter
+        </Link>
+      }
       aside={
         <div className="newsletter-detail-card newsletter-teaser-card">
           <h2>Issue focus</h2>

@@ -32,6 +32,10 @@ describe('newsletter preview pages', () => {
       await screen.findByRole('heading', { name: 'Asiamath Monthly Briefing - April 2026' })
     ).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /issue focus/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /back to newsletter/i })).toHaveAttribute(
+      'href',
+      '/newsletter'
+    );
     expect(
       screen.getByText(/Conference deadlines, school cohorts, and partner teasers are framed as one narrative layer/i)
     ).toBeInTheDocument();
