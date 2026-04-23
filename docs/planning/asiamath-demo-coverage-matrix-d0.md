@@ -30,18 +30,31 @@ Track the first full-product-shape demo so every module has an explicit touchpoi
 
 ## Primary Story Freeze
 
-The primary demo path for `d0` is:
+The primary demo path for `d0` is split into a `must-pass` path and an `extended` path.
+
+### Must-pass path for `d0-story`
 
 1. Portal entry
 2. Conference discovery
 3. Conference detail
-4. Scholar context
-5. Login or register
-6. Profile completion
-7. Conference application
-8. Grant application
-9. My applications
-10. Reviewer or organizer sample touchpoint
+4. Login or profile handoff
+5. My applications
+6. Applicant-visible application detail or result surface
+
+### Extended path for `d0`
+
+- Scholar context
+- Profile completion
+- Conference application
+- Grant application
+- Reviewer or organizer sample touchpoint
+
+## Explicit Out-of-Scope for `d0`
+
+- Do not redefine canonical `PORTAL` dashboard semantics during breadth work.
+- Do not require `M5`, `M9`, `M10`, `M12`, or `M13` to gain real backend support for `d0`.
+- Do not deepen reviewer or organizer surfaces into a full new workflow beyond sample touchpoints.
+- Do not pull secondary flows such as post-visit reporting into the `d0` mainline.
 
 ## Breadth Rule
 

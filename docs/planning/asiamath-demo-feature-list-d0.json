@@ -1,6 +1,12 @@
 {
   "project": "Asiamath",
   "baseline": "Demo Baseline d0",
+  "current_target": "d0-shell",
+  "next_target": "d0-story",
+  "baseline_levels": {
+    "d0-shell": "Complete product-shape shell with core routes, navigation, page modes, and controlled fake or static data.",
+    "d0-story": "Stable demo path with at least one applicant-facing story that can be presented without heavy oral recovery."
+  },
   "status": "draft",
   "purpose": "Execution list for the first full-product-shape demo baseline. This file tracks demo breadth work on the shared IA without redefining MVP core semantics.",
   "branching_strategy": {
@@ -32,8 +38,8 @@
       "demo_criticality": "primary",
       "delivery_mode": "shared",
       "depends_on": [],
-      "status": "planned",
-      "passes": false
+      "status": "completed",
+      "passes": true
     },
     {
       "id": "DEMO-FOUNDATION-002",
@@ -43,8 +49,8 @@
       "demo_criticality": "primary",
       "delivery_mode": "shared",
       "depends_on": ["DEMO-FOUNDATION-001"],
-      "status": "planned",
-      "passes": false
+      "status": "completed",
+      "passes": true
     },
     {
       "id": "DEMO-FOUNDATION-003",
@@ -54,8 +60,8 @@
       "demo_criticality": "primary",
       "delivery_mode": "shared",
       "depends_on": ["DEMO-FOUNDATION-001"],
-      "status": "planned",
-      "passes": false
+      "status": "completed",
+      "passes": true
     },
     {
       "id": "DEMO-ENTRY-001",
@@ -65,8 +71,8 @@
       "demo_criticality": "primary",
       "delivery_mode": "hybrid",
       "depends_on": ["DEMO-FOUNDATION-002"],
-      "status": "planned",
-      "passes": false
+      "status": "completed",
+      "passes": true
     },
     {
       "id": "DEMO-STORY-001",
@@ -76,7 +82,7 @@
       "demo_criticality": "primary",
       "delivery_mode": "real-aligned",
       "depends_on": ["DEMO-ENTRY-001"],
-      "status": "planned",
+      "status": "in_progress",
       "passes": false
     },
     {
@@ -87,8 +93,8 @@
       "demo_criticality": "primary",
       "delivery_mode": "hybrid",
       "depends_on": ["DEMO-STORY-001"],
-      "status": "planned",
-      "passes": false
+      "status": "completed",
+      "passes": true
     },
     {
       "id": "DEMO-MODULE-001",

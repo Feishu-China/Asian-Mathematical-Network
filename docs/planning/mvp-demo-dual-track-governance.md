@@ -170,8 +170,9 @@
 - `Milestone A1`: 完成 `INT-GRANT-001`
 - `Milestone A2`: 完成 `INT-REVIEW-001`
 - `Milestone A3`: 完成 `INT-PORTAL-001`
-- `Milestone A4`: 建立首个 `Demo Baseline`
-- `Milestone A5`: 补充 Demo breadth 页面与讲解支撑
+- `Milestone A4`: 建立首个 `Demo Baseline d0-shell`
+- `Milestone A5`: 建立首个 `Demo Baseline d0-story`
+- `Milestone A6`: 补充 Demo breadth 页面与讲解支撑
 
 在 `A4` 之前，所有新工作都应证明自己服务于：
 
@@ -215,19 +216,30 @@
 
 `Demo Baseline` 不是独立产品版本，而是建立在某个 `MVP Core` 基线之上的演示快照。
 
+在当前两周窗口里，`Demo Baseline d0` 再细分为两级：
+
+- `d0-shell`: 完整产品外壳。要求核心页面存在、导航可点通、页面 mode 明确、fake/static 数据不违背 contract 语义。
+- `d0-story`: 稳定主讲版本。要求在 `d0-shell` 之上，至少有一条主故事线可顺畅演示，不需要靠大量口头补救来兜底。
+
 ### 6.3 首个 Demo Baseline 的定义
 
-首个 `Demo Baseline` 只有在以下条件同时满足时才成立：
+首个 `Demo Baseline d0-shell` 在以下条件满足时成立：
 
-- `AUTH` 已真实联调
-- `PROFILE` 已真实联调
-- `CONF` 已真实联调
-- `GRANT` 已真实联调
-- `REVIEW` 已真实联调
-- `PORTAL` 已真实联调
-- 主故事线可以从头到尾顺畅演示
+- 主要演示页面已经存在，并可在共享路由骨架上被访问
+- 主导航和关键跳转不会中断
+- 页面 mode、角色视角与状态语义明确
+- `Hybrid / Static preview` 数据不违背当前 contract 与产品语义
+- 每个演示模块都已有明确 touchpoint、route 或 surface
 
-在此之前，所有“demo 丰富化工作”都不能以牺牲上述主线闭环为代价。
+首个 `Demo Baseline d0-story` 在以下条件满足时成立：
+
+- `d0-shell` 已成立
+- 至少一条主故事线可以从头到尾顺畅演示
+- 主故事线中至少一段保留真实联调能力，而不是完全依赖静态展示
+- 演示过程中不需要依赖大量口头解释来掩盖断链或状态语义缺失
+
+在 `d0-shell` 之前，所有“demo 丰富化工作”都不能以破坏共享骨架、共享语义或主干稳定性为代价。  
+在 `d0-story` 之前，所有新增 breadth 工作都不能以牺牲主讲路径稳定性为代价。
 
 ---
 
@@ -474,6 +486,8 @@ Mock/Fake 数据不是随意填充的视觉素材，必须满足：
 - 空态、进行中、内部结果、对外结果表达一致
 - 若为 `Hybrid` 页面，真实与 mock 的边界清楚
 - 可被纳入演示脚本而不依赖口头补救说明
+
+若该页面只进入 `d0-shell` 而未进入 `d0-story`，可以允许它仍为 `fake provider` 或 `static preview`，但前提是它不会伪造主故事线的核心 contract。
 
 ### 12.3 Demo Freeze
 
