@@ -1,0 +1,259 @@
+{
+  "project": "Asiamath",
+  "baseline": "Demo Baseline d0",
+  "status": "draft",
+  "purpose": "Execution list for the first full-product-shape demo baseline. This file tracks demo breadth work on the shared IA without redefining MVP core semantics.",
+  "branching_strategy": {
+    "integration_branch": "demo/d0",
+    "main_branch_role": "shared and stable baseline",
+    "demo_branch_role": "demo-only integration and polish",
+    "merge_policy": [
+      "Merge shared foundation and reusable UI improvements back to main early.",
+      "Keep demo-only copy, fake CTA behavior, and presentation shortcuts on demo/d0 until post-demo review."
+    ]
+  },
+  "frozen_constraints": {
+    "shared_route_map": true,
+    "shared_object_naming": true,
+    "shared_status_semantics": true,
+    "page_modes": ["real-aligned", "hybrid", "static-preview"],
+    "notes": [
+      "Portal landing and public entry are in scope for Demo Baseline d0.",
+      "Canonical applicant dashboard ownership remains with PORTAL and should not be redefined during breadth work.",
+      "Breadth pages should prefer fake providers or static-preview mode unless they support the primary story."
+    ]
+  },
+  "features": [
+    {
+      "id": "DEMO-FOUNDATION-001",
+      "title": "Freeze shared route map, page modes, and touchpoints",
+      "category": "planning",
+      "priority": "P0",
+      "demo_criticality": "primary",
+      "delivery_mode": "shared",
+      "depends_on": [],
+      "status": "planned",
+      "passes": false
+    },
+    {
+      "id": "DEMO-FOUNDATION-002",
+      "title": "Add runtime demo mode and provider switching strategy",
+      "category": "foundation",
+      "priority": "P0",
+      "demo_criticality": "primary",
+      "delivery_mode": "shared",
+      "depends_on": ["DEMO-FOUNDATION-001"],
+      "status": "planned",
+      "passes": false
+    },
+    {
+      "id": "DEMO-FOUNDATION-003",
+      "title": "Create demo data-source matrix and provider ownership map",
+      "category": "planning",
+      "priority": "P0",
+      "demo_criticality": "primary",
+      "delivery_mode": "shared",
+      "depends_on": ["DEMO-FOUNDATION-001"],
+      "status": "planned",
+      "passes": false
+    },
+    {
+      "id": "DEMO-ENTRY-001",
+      "title": "Establish portal and landing entry for the demo narrative",
+      "category": "page",
+      "priority": "P0",
+      "demo_criticality": "primary",
+      "delivery_mode": "hybrid",
+      "depends_on": ["DEMO-FOUNDATION-002"],
+      "status": "planned",
+      "passes": false
+    },
+    {
+      "id": "DEMO-STORY-001",
+      "title": "Lock the primary applicant story from discovery to submitted records",
+      "category": "story",
+      "priority": "P0",
+      "demo_criticality": "primary",
+      "delivery_mode": "real-aligned",
+      "depends_on": ["DEMO-ENTRY-001"],
+      "status": "planned",
+      "passes": false
+    },
+    {
+      "id": "DEMO-STORY-002",
+      "title": "Add applicant-visible detail and result surfaces without redefining PORTAL ownership",
+      "category": "page",
+      "priority": "P0",
+      "demo_criticality": "primary",
+      "delivery_mode": "hybrid",
+      "depends_on": ["DEMO-STORY-001"],
+      "status": "planned",
+      "passes": false
+    },
+    {
+      "id": "DEMO-MODULE-001",
+      "title": "M1 Public Portal touchpoints",
+      "category": "module-touchpoint",
+      "priority": "P0",
+      "demo_criticality": "primary",
+      "delivery_mode": "hybrid",
+      "depends_on": ["DEMO-ENTRY-001"],
+      "status": "planned",
+      "passes": false
+    },
+    {
+      "id": "DEMO-MODULE-002",
+      "title": "M2 Conference Organisation touchpoints",
+      "category": "module-touchpoint",
+      "priority": "P0",
+      "demo_criticality": "primary",
+      "delivery_mode": "real-aligned",
+      "depends_on": ["DEMO-STORY-001"],
+      "status": "planned",
+      "passes": false
+    },
+    {
+      "id": "DEMO-MODULE-003",
+      "title": "M3 Application System touchpoints",
+      "category": "module-touchpoint",
+      "priority": "P0",
+      "demo_criticality": "primary",
+      "delivery_mode": "hybrid",
+      "depends_on": ["DEMO-STORY-002"],
+      "status": "planned",
+      "passes": false
+    },
+    {
+      "id": "DEMO-MODULE-004",
+      "title": "M4 Academic Directory and Expertise Registry touchpoints",
+      "category": "module-touchpoint",
+      "priority": "P0",
+      "demo_criticality": "primary",
+      "delivery_mode": "hybrid",
+      "depends_on": ["DEMO-STORY-001"],
+      "status": "planned",
+      "passes": false
+    },
+    {
+      "id": "DEMO-MODULE-005",
+      "title": "M5 Newsletter preview surfaces",
+      "category": "module-touchpoint",
+      "priority": "P2",
+      "demo_criticality": "secondary",
+      "delivery_mode": "static-preview",
+      "depends_on": ["DEMO-FOUNDATION-003"],
+      "status": "planned",
+      "passes": false
+    },
+    {
+      "id": "DEMO-MODULE-006",
+      "title": "M6 Prizes and Awards preview surfaces",
+      "category": "module-touchpoint",
+      "priority": "P1",
+      "demo_criticality": "secondary",
+      "delivery_mode": "hybrid",
+      "depends_on": ["DEMO-FOUNDATION-003"],
+      "status": "planned",
+      "passes": false
+    },
+    {
+      "id": "DEMO-MODULE-007",
+      "title": "M7 Travel Grants and Fellowships touchpoints",
+      "category": "module-touchpoint",
+      "priority": "P0",
+      "demo_criticality": "primary",
+      "delivery_mode": "real-aligned",
+      "depends_on": ["DEMO-STORY-001"],
+      "status": "planned",
+      "passes": false
+    },
+    {
+      "id": "DEMO-MODULE-008",
+      "title": "M8 Schools and Training preview surfaces",
+      "category": "module-touchpoint",
+      "priority": "P1",
+      "demo_criticality": "secondary",
+      "delivery_mode": "hybrid",
+      "depends_on": ["DEMO-FOUNDATION-003"],
+      "status": "planned",
+      "passes": false
+    },
+    {
+      "id": "DEMO-MODULE-009",
+      "title": "M9 Video Library preview surfaces",
+      "category": "module-touchpoint",
+      "priority": "P2",
+      "demo_criticality": "secondary",
+      "delivery_mode": "static-preview",
+      "depends_on": ["DEMO-FOUNDATION-003"],
+      "status": "planned",
+      "passes": false
+    },
+    {
+      "id": "DEMO-MODULE-010",
+      "title": "M10 Governance preview surfaces",
+      "category": "module-touchpoint",
+      "priority": "P1",
+      "demo_criticality": "secondary",
+      "delivery_mode": "static-preview",
+      "depends_on": ["DEMO-FOUNDATION-003"],
+      "status": "planned",
+      "passes": false
+    },
+    {
+      "id": "DEMO-MODULE-011",
+      "title": "M12 Publications preview surfaces",
+      "category": "module-touchpoint",
+      "priority": "P2",
+      "demo_criticality": "secondary",
+      "delivery_mode": "static-preview",
+      "depends_on": ["DEMO-FOUNDATION-003"],
+      "status": "planned",
+      "passes": false
+    },
+    {
+      "id": "DEMO-MODULE-012",
+      "title": "M13 Outreach preview surfaces",
+      "category": "module-touchpoint",
+      "priority": "P2",
+      "demo_criticality": "secondary",
+      "delivery_mode": "static-preview",
+      "depends_on": ["DEMO-FOUNDATION-003"],
+      "status": "planned",
+      "passes": false
+    },
+    {
+      "id": "DEMO-MODULE-013",
+      "title": "M14 Industry and Partners preview surfaces",
+      "category": "module-touchpoint",
+      "priority": "P2",
+      "demo_criticality": "secondary",
+      "delivery_mode": "hybrid",
+      "depends_on": ["DEMO-FOUNDATION-003"],
+      "status": "planned",
+      "passes": false
+    },
+    {
+      "id": "DEMO-POLISH-001",
+      "title": "Add consistent loading, empty, success, and error states across demo pages",
+      "category": "polish",
+      "priority": "P1",
+      "demo_criticality": "polish",
+      "delivery_mode": "shared",
+      "depends_on": ["DEMO-STORY-002"],
+      "status": "planned",
+      "passes": false
+    },
+    {
+      "id": "DEMO-POLISH-002",
+      "title": "Prepare demo walkthrough data, click path, and presenter-safe shortcuts",
+      "category": "polish",
+      "priority": "P1",
+      "demo_criticality": "polish",
+      "delivery_mode": "demo-only",
+      "depends_on": ["DEMO-POLISH-001"],
+      "status": "planned",
+      "passes": false
+    }
+  ]
+}
