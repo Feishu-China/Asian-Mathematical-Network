@@ -30,6 +30,18 @@ describe('grant public pages', () => {
     );
   });
 
+  it('shows a return link to my applications on the grant list when an applicant token is present', async () => {
+    localStorage.setItem('token', 'applicant-1');
+
+    renderWithRouter(<Grants />, '/grants', '/grants');
+
+    expect(await screen.findByRole('heading', { name: 'Asiamath 2026 Travel Grant' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /back to my applications/i })).toHaveAttribute(
+      'href',
+      '/me/applications'
+    );
+  });
+
   it('renders grant detail with prerequisite guidance and an apply CTA', async () => {
     renderWithRouter(<GrantDetail />, '/grants/asiamath-2026-travel-grant', '/grants/:slug');
 
@@ -47,6 +59,20 @@ describe('grant public pages', () => {
     expect(screen.getByRole('link', { name: /start grant application/i })).toHaveAttribute(
       'href',
       '/grants/asiamath-2026-travel-grant/apply'
+    );
+  });
+
+  it('shows a return link on grant detail when an applicant token is present', async () => {
+    localStorage.setItem('token', 'applicant-1');
+
+    renderWithRouter(<GrantDetail />, '/grants/asiamath-2026-travel-grant', '/grants/:slug');
+
+    expect(
+      await screen.findByText('Partial travel support for accepted participants.')
+    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /back to my applications/i })).toHaveAttribute(
+      'href',
+      '/me/applications'
     );
   });
 

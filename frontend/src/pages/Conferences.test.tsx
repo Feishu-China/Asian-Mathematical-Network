@@ -22,6 +22,18 @@ describe('conference public pages', () => {
     );
   });
 
+  it('shows a return link to my applications when an applicant token is present', async () => {
+    localStorage.setItem('token', 'applicant-1');
+
+    renderWithRouter(<Conferences />, '/conferences', '/conferences');
+
+    expect(await screen.findByRole('heading', { name: 'Asiamath 2026 Workshop' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /back to my applications/i })).toHaveAttribute(
+      'href',
+      '/me/applications'
+    );
+  });
+
   it('renders conference detail with an apply CTA when applications are open', async () => {
     renderWithRouter(
       <ConferenceDetail />,
@@ -35,6 +47,24 @@ describe('conference public pages', () => {
     expect(screen.getByRole('link', { name: /apply for conference/i })).toHaveAttribute(
       'href',
       '/conferences/asiamath-2026-workshop/apply'
+    );
+  });
+
+  it('shows a return link on conference detail when an applicant token is present', async () => {
+    localStorage.setItem('token', 'applicant-1');
+
+    renderWithRouter(
+      <ConferenceDetail />,
+      '/conferences/asiamath-2026-workshop',
+      '/conferences/:slug'
+    );
+
+    expect(
+      await screen.findByText('An MVP conference entry for algebra and geometry researchers.')
+    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /back to my applications/i })).toHaveAttribute(
+      'href',
+      '/me/applications'
     );
   });
 });

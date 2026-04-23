@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { PortalShell } from '../components/layout/PortalShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
@@ -12,6 +13,7 @@ export const routePath = '/conferences';
 
 export default function Conferences() {
   const [items, setItems] = useState<ConferenceListItem[] | null>(null);
+  const hasApplicantSession = Boolean(localStorage.getItem('token'));
 
   useEffect(() => {
     conferenceProvider.listPublicConferences().then(setItems);
@@ -32,6 +34,13 @@ export default function Conferences() {
           <PageModeBadge mode="hybrid" />
           <StatusBadge tone="info">Portal entry</StatusBadge>
         </>
+      }
+      actions={
+        hasApplicantSession ? (
+          <Link to="/me/applications" className="my-applications__section-link">
+            Back to my applications
+          </Link>
+        ) : null
       }
     >
       <div className="conference-page">

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { PortalShell } from '../components/layout/PortalShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
@@ -13,6 +14,7 @@ export const routePath = '/grants';
 export default function Grants() {
   const [items, setItems] = useState<GrantListItem[] | null>(null);
   const [hasError, setHasError] = useState(false);
+  const hasApplicantSession = Boolean(localStorage.getItem('token'));
 
   useEffect(() => {
     let active = true;
@@ -57,6 +59,13 @@ export default function Grants() {
           <PageModeBadge mode="hybrid" />
           <StatusBadge tone="info">Published grants only</StatusBadge>
         </>
+      }
+      actions={
+        hasApplicantSession ? (
+          <Link to="/me/applications" className="my-applications__section-link">
+            Back to my applications
+          </Link>
+        ) : null
       }
     >
       <div className="conference-page">
