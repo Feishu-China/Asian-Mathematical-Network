@@ -86,7 +86,17 @@ export default function SchoolDetail() {
           <h2>Outputs teaser</h2>
           <p>{school.outputsTeaser}</p>
           <div className="school-output-links">
-            <Link to="/videos">Videos</Link>
+            <Link
+              to="/videos"
+              state={{
+                returnContext: {
+                  to: `/schools/${school.slug}`,
+                  label: 'Back to school',
+                },
+              }}
+            >
+              Videos
+            </Link>
             <Link to="/publications">Publications</Link>
             <Link
               to="/newsletter"

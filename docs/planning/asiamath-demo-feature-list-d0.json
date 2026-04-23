@@ -192,8 +192,8 @@
       "demo_criticality": "secondary",
       "delivery_mode": "static-preview",
       "depends_on": ["DEMO-FOUNDATION-003"],
-      "status": "planned",
-      "passes": false
+      "status": "completed",
+      "passes": true
     },
     {
       "id": "DEMO-MODULE-010",
