@@ -1,6 +1,7 @@
 import { fakeConferenceProvider } from './fakeConferenceProvider';
 import { httpConferenceProvider } from './httpConferenceProvider';
+import { shouldUseFakeProvider } from '../providerMode';
 
-const isTestEnv = import.meta.env.MODE === 'test' || import.meta.env.VITEST;
-
-export const conferenceProvider = isTestEnv ? fakeConferenceProvider : httpConferenceProvider;
+export const conferenceProvider = shouldUseFakeProvider(import.meta.env)
+  ? fakeConferenceProvider
+  : httpConferenceProvider;

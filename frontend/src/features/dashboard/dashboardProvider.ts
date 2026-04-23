@@ -1,6 +1,7 @@
 import { fakeDashboardProvider } from './fakeDashboardProvider';
 import { httpDashboardProvider } from './httpDashboardProvider';
+import { shouldUseFakeProvider } from '../providerMode';
 
-const isTestEnv = import.meta.env.MODE === 'test' || import.meta.env.VITEST;
-
-export const dashboardProvider = isTestEnv ? fakeDashboardProvider : httpDashboardProvider;
+export const dashboardProvider = shouldUseFakeProvider(import.meta.env)
+  ? fakeDashboardProvider
+  : httpDashboardProvider;

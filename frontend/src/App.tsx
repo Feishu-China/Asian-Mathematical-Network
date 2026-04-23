@@ -23,7 +23,7 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/" element={<Navigate to="/portal" replace />} />
         {routes.map((route) => (
           <Route key={route.path} path={route.path} element={<route.Component />} />
         ))}
