@@ -26,8 +26,6 @@ export default function ConferenceDetail() {
     return <div className="conference-page">Conference not found.</div>;
   }
 
-  const hasApplicantSession = Boolean(localStorage.getItem('token'));
-
   return (
     <PortalShell
       eyebrow="Conference detail"
@@ -43,11 +41,9 @@ export default function ConferenceDetail() {
         </>
       }
       actions={
-        hasApplicantSession ? (
-          <Link to="/me/applications" className="my-applications__section-link">
-            Back to my applications
-          </Link>
-        ) : null
+        <Link to="/conferences" className="my-applications__section-link">
+          Back to conferences
+        </Link>
       }
       aside={
         <div className="conference-detail-card conference-cta-card">

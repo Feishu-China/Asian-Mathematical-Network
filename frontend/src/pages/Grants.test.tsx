@@ -62,17 +62,15 @@ describe('grant public pages', () => {
     );
   });
 
-  it('shows a return link on grant detail when an applicant token is present', async () => {
-    localStorage.setItem('token', 'applicant-1');
-
+  it('shows a return link from grant detail back to the grant list', async () => {
     renderWithRouter(<GrantDetail />, '/grants/asiamath-2026-travel-grant', '/grants/:slug');
 
     expect(
       await screen.findByText('Partial travel support for accepted participants.')
     ).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /back to my applications/i })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /back to grants/i })).toHaveAttribute(
       'href',
-      '/me/applications'
+      '/grants'
     );
   });
 

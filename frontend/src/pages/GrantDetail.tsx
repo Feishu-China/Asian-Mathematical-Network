@@ -52,7 +52,6 @@ export default function GrantDetail() {
   }
 
   const grantDetail = grant;
-  const hasApplicantSession = Boolean(localStorage.getItem('token'));
 
   return (
     <PortalShell
@@ -69,11 +68,9 @@ export default function GrantDetail() {
         </>
       }
       actions={
-        hasApplicantSession ? (
-          <Link to="/me/applications" className="my-applications__section-link">
-            Back to my applications
-          </Link>
-        ) : null
+        <Link to="/grants" className="my-applications__section-link">
+          Back to grants
+        </Link>
       }
       aside={
         <div className="conference-detail-card conference-cta-card stack-sm">

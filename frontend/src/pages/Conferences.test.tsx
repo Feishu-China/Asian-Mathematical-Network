@@ -50,9 +50,7 @@ describe('conference public pages', () => {
     );
   });
 
-  it('shows a return link on conference detail when an applicant token is present', async () => {
-    localStorage.setItem('token', 'applicant-1');
-
+  it('shows a return link from conference detail back to the conference list', async () => {
     renderWithRouter(
       <ConferenceDetail />,
       '/conferences/asiamath-2026-workshop',
@@ -62,9 +60,9 @@ describe('conference public pages', () => {
     expect(
       await screen.findByText('An MVP conference entry for algebra and geometry researchers.')
     ).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /back to my applications/i })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /back to conferences/i })).toHaveAttribute(
       'href',
-      '/me/applications'
+      '/conferences'
     );
   });
 });
