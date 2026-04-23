@@ -43,5 +43,9 @@ describe('prize public pages', () => {
     expect(screen.getByText(/Nomination intake, confidential review, and committee release remain part of the same platform direction/i)).toBeInTheDocument();
     expect(screen.getByText('Nominations preview')).toBeInTheDocument();
     expect(screen.getByText('Confidential review concept')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /view governance preview/i })).toHaveAttribute(
+      'href',
+      '/admin/governance'
+    );
   });
 });

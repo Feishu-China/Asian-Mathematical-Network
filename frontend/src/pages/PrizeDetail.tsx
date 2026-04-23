@@ -45,13 +45,25 @@ export default function PrizeDetail() {
       }
       aside={
         <div className="prize-detail-card prize-teaser-card">
-          <h2>Selection process preview</h2>
-          <p>{prize.selectionPreview}</p>
-          <Link className="prize-primary-link" to="/scholars/prof-reviewer">
-            View scholar context
-          </Link>
-        </div>
-      }
+              <h2>Selection process preview</h2>
+              <p>{prize.selectionPreview}</p>
+              <Link
+                className="prize-primary-link"
+                to="/admin/governance"
+                state={{
+                  returnContext: {
+                    to: `/prizes/${prize.slug}`,
+                    label: 'Back to prize',
+                  },
+                }}
+              >
+                View governance preview
+              </Link>
+              <Link className="prize-primary-link" to="/scholars/prof-reviewer">
+                View scholar context
+              </Link>
+            </div>
+          }
     >
       <div className="prize-page prize-detail-page">
         <section className="prize-detail-card">
