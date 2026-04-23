@@ -1,4 +1,8 @@
 import { useEffect, useState } from 'react';
+import { PortalShell } from '../components/layout/PortalShell';
+import { PageModeBadge } from '../components/ui/PageModeBadge';
+import { RoleBadge } from '../components/ui/RoleBadge';
+import { StatusBadge } from '../components/ui/StatusBadge';
 import { GrantListCard } from '../features/grant/GrantListCard';
 import { grantProvider } from '../features/grant/grantProvider';
 import type { GrantListItem } from '../features/grant/types';
@@ -43,22 +47,29 @@ export default function Grants() {
   }
 
   return (
-    <div className="conference-page">
-      <header className="conference-hero">
-        <p className="conference-eyebrow">Public opportunities</p>
-        <h1>Travel grants</h1>
-        <p>Browse the published grant opportunities currently open on the network.</p>
-      </header>
-
-      {items.length === 0 ? (
-        <div className="conference-empty">No published grants yet.</div>
-      ) : (
-        <div className="conference-grid">
-          {items.map((grant) => (
-            <GrantListCard key={grant.id} grant={grant} />
-          ))}
-        </div>
-      )}
-    </div>
+    <PortalShell
+      eyebrow="Public opportunities"
+      title="Travel grants"
+      description="Browse published grant opportunities and open the applicant flow without taking ownership of the future portal dashboard."
+      badges={
+        <>
+          <RoleBadge role="visitor" />
+          <PageModeBadge mode="hybrid" />
+          <StatusBadge tone="info">Published grants only</StatusBadge>
+        </>
+      }
+    >
+      <div className="conference-page">
+        {items.length === 0 ? (
+          <div className="conference-empty">No published grants yet.</div>
+        ) : (
+          <div className="conference-grid">
+            {items.map((grant) => (
+              <GrantListCard key={grant.id} grant={grant} />
+            ))}
+          </div>
+        )}
+      </div>
+    </PortalShell>
   );
 }
