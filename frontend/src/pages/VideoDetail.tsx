@@ -1,8 +1,9 @@
-import { Link, useParams } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import { PortalShell } from '../components/layout/PortalShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
+import { readReturnContext, toReturnContextState } from '../features/navigation/returnContext';
 import { getVideoBySlug } from '../features/video/staticVideoContent';
 import './Video.css';
 
@@ -10,6 +11,8 @@ export const routePath = '/videos/:slug';
 
 export default function VideoDetail() {
   const { slug = '' } = useParams();
+  const location = useLocation();
+  const returnContext = readReturnContext(location.state);
   const video = getVideoBySlug(slug);
 
   if (!video) {
@@ -29,7 +32,11 @@ export default function VideoDetail() {
         </>
       }
       actions={
-        <Link to="/videos" className="my-applications__section-link">
+        <Link
+          to="/videos"
+          state={toReturnContextState(returnContext)}
+          className="my-applications__section-link"
+        >
           Back to videos
         </Link>
       }

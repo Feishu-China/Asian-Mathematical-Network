@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import { PortalShell } from '../components/layout/PortalShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
+import { readReturnContext, toReturnContextState } from '../features/navigation/returnContext';
 import { conferenceProvider } from '../features/conference/conferenceProvider';
 import type { ConferenceDetail as ConferenceDetailModel } from '../features/conference/types';
 import './Conference.css';
@@ -12,6 +13,8 @@ export const routePath = '/conferences/:slug';
 
 export default function ConferenceDetail() {
   const { slug = '' } = useParams();
+  const location = useLocation();
+  const returnContext = readReturnContext(location.state);
   const [conference, setConference] = useState<ConferenceDetailModel | null | undefined>(undefined);
 
   useEffect(() => {
@@ -41,7 +44,11 @@ export default function ConferenceDetail() {
         </>
       }
       actions={
-        <Link to="/conferences" className="my-applications__section-link">
+        <Link
+          to="/conferences"
+          state={toReturnContextState(returnContext)}
+          className="my-applications__section-link"
+        >
           Back to conferences
         </Link>
       }

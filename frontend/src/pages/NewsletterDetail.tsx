@@ -1,8 +1,9 @@
-import { Link, useParams } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import { PortalShell } from '../components/layout/PortalShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
+import { readReturnContext, toReturnContextState } from '../features/navigation/returnContext';
 import { getNewsletterBySlug } from '../features/newsletter/staticNewsletterContent';
 import './Newsletter.css';
 
@@ -10,6 +11,8 @@ export const routePath = '/newsletter/:slug';
 
 export default function NewsletterDetail() {
   const { slug = '' } = useParams();
+  const location = useLocation();
+  const returnContext = readReturnContext(location.state);
   const issue = getNewsletterBySlug(slug);
 
   if (!issue) {
@@ -29,7 +32,11 @@ export default function NewsletterDetail() {
         </>
       }
       actions={
-        <Link to="/newsletter" className="my-applications__section-link">
+        <Link
+          to="/newsletter"
+          state={toReturnContextState(returnContext)}
+          className="my-applications__section-link"
+        >
           Back to newsletter
         </Link>
       }

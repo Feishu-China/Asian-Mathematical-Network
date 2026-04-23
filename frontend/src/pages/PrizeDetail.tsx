@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import { PortalShell } from '../components/layout/PortalShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
+import { readReturnContext, toReturnContextState } from '../features/navigation/returnContext';
 import { prizeProvider } from '../features/prize/prizeProvider';
 import type { PrizeDetail as PrizeDetailModel } from '../features/prize/types';
 import './Prize.css';
@@ -12,6 +13,8 @@ export const routePath = '/prizes/:slug';
 
 export default function PrizeDetail() {
   const { slug = '' } = useParams();
+  const location = useLocation();
+  const returnContext = readReturnContext(location.state);
   const [prize, setPrize] = useState<PrizeDetailModel | null | undefined>(undefined);
 
   useEffect(() => {
@@ -39,7 +42,11 @@ export default function PrizeDetail() {
         </>
       }
       actions={
-        <Link to="/prizes" className="my-applications__section-link">
+        <Link
+          to="/prizes"
+          state={toReturnContextState(returnContext)}
+          className="my-applications__section-link"
+        >
           Back to prizes
         </Link>
       }

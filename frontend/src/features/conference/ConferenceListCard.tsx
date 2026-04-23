@@ -1,12 +1,14 @@
 import { Link } from 'react-router-dom';
 import { StatusBadge } from '../../components/ui/StatusBadge';
+import type { ReturnContextState } from '../navigation/returnContext';
 import type { ConferenceListItem } from './types';
 
 type Props = {
   conference: ConferenceListItem;
+  detailState?: ReturnContextState;
 };
 
-export function ConferenceListCard({ conference }: Props) {
+export function ConferenceListCard({ conference, detailState }: Props) {
   return (
     <article className="conference-card">
       <div className="conference-card-meta">
@@ -19,7 +21,9 @@ export function ConferenceListCard({ conference }: Props) {
         <StatusBadge tone={conference.isApplicationOpen ? 'success' : 'neutral'}>
           {conference.isApplicationOpen ? 'Applications open' : 'Applications closed'}
         </StatusBadge>
-        <Link to={`/conferences/${conference.slug}`}>View details</Link>
+        <Link to={`/conferences/${conference.slug}`} state={detailState}>
+          View details
+        </Link>
       </div>
     </article>
   );

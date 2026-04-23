@@ -3,7 +3,7 @@ import { PortalShell } from '../components/layout/PortalShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
-import { readReturnContext } from '../features/navigation/returnContext';
+import { readReturnContext, toReturnContextState } from '../features/navigation/returnContext';
 import { videoPreviews } from '../features/video/staticVideoContent';
 import './Video.css';
 
@@ -12,6 +12,7 @@ export const routePath = '/videos';
 export default function Videos() {
   const location = useLocation();
   const returnContext = readReturnContext(location.state);
+  const detailState = toReturnContextState(returnContext);
 
   return (
     <PortalShell
@@ -45,7 +46,9 @@ export default function Videos() {
               <p className="video-card__summary">{video.summary}</p>
               <div className="video-card__actions">
                 <StatusBadge tone="neutral">Media layer</StatusBadge>
-                <Link to={`/videos/${video.slug}`}>{video.ctaLabel}</Link>
+                <Link to={`/videos/${video.slug}`} state={detailState}>
+                  {video.ctaLabel}
+                </Link>
               </div>
             </article>
           ))}

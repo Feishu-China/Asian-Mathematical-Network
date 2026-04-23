@@ -4,7 +4,7 @@ import { PortalShell } from '../components/layout/PortalShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
-import { readReturnContext } from '../features/navigation/returnContext';
+import { readReturnContext, toReturnContextState } from '../features/navigation/returnContext';
 import { GrantListCard } from '../features/grant/GrantListCard';
 import { grantProvider } from '../features/grant/grantProvider';
 import type { GrantListItem } from '../features/grant/types';
@@ -18,6 +18,7 @@ export default function Grants() {
   const hasApplicantSession = Boolean(localStorage.getItem('token'));
   const location = useLocation();
   const returnContext = readReturnContext(location.state);
+  const detailState = toReturnContextState(returnContext);
 
   useEffect(() => {
     let active = true;
@@ -81,7 +82,7 @@ export default function Grants() {
         ) : (
           <div className="conference-grid">
             {items.map((grant) => (
-              <GrantListCard key={grant.id} grant={grant} />
+              <GrantListCard key={grant.id} grant={grant} detailState={detailState} />
             ))}
           </div>
         )}

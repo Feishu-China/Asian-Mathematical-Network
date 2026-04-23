@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import { PortalShell } from '../components/layout/PortalShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
+import { readReturnContext, toReturnContextState } from '../features/navigation/returnContext';
 import { grantProvider } from '../features/grant/grantProvider';
 import type { GrantDetail as GrantDetailModel } from '../features/grant/types';
 import './Conference.css';
@@ -12,6 +13,8 @@ export const routePath = '/grants/:slug';
 
 export default function GrantDetail() {
   const { slug = '' } = useParams();
+  const location = useLocation();
+  const returnContext = readReturnContext(location.state);
   const [grant, setGrant] = useState<GrantDetailModel | null | undefined>(undefined);
   const [hasError, setHasError] = useState(false);
 
@@ -68,7 +71,11 @@ export default function GrantDetail() {
         </>
       }
       actions={
-        <Link to="/grants" className="my-applications__section-link">
+        <Link
+          to="/grants"
+          state={toReturnContextState(returnContext)}
+          className="my-applications__section-link"
+        >
           Back to grants
         </Link>
       }

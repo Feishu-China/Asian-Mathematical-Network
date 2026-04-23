@@ -81,6 +81,12 @@ describe('grant public pages', () => {
       await screen.findByText('Partial travel support for accepted participants.')
     ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /back to grants/i })).toHaveAttribute('href', '/grants');
+
+    await user.click(screen.getByRole('link', { name: /back to grants/i }));
+
+    expect(
+      await screen.findByRole('link', { name: /back to school/i })
+    ).toHaveAttribute('href', '/schools/algebraic-geometry-research-school-2026');
   });
 
   it('renders grant detail with prerequisite guidance and an apply CTA', async () => {

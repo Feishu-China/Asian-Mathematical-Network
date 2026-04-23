@@ -5,7 +5,7 @@ import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
 import { ConferenceListCard } from '../features/conference/ConferenceListCard';
-import { readReturnContext } from '../features/navigation/returnContext';
+import { readReturnContext, toReturnContextState } from '../features/navigation/returnContext';
 import { conferenceProvider } from '../features/conference/conferenceProvider';
 import type { ConferenceListItem } from '../features/conference/types';
 import './Conference.css';
@@ -17,6 +17,7 @@ export default function Conferences() {
   const hasApplicantSession = Boolean(localStorage.getItem('token'));
   const location = useLocation();
   const returnContext = readReturnContext(location.state);
+  const detailState = toReturnContextState(returnContext);
 
   useEffect(() => {
     conferenceProvider.listPublicConferences().then(setItems);
@@ -56,7 +57,7 @@ export default function Conferences() {
         ) : (
           <div className="conference-grid">
             {items.map((conference) => (
-              <ConferenceListCard key={conference.id} conference={conference} />
+              <ConferenceListCard key={conference.id} conference={conference} detailState={detailState} />
             ))}
           </div>
         )}

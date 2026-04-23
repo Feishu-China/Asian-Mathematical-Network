@@ -4,7 +4,7 @@ import { PortalShell } from '../components/layout/PortalShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
-import { readReturnContext } from '../features/navigation/returnContext';
+import { readReturnContext, toReturnContextState } from '../features/navigation/returnContext';
 import { prizeProvider } from '../features/prize/prizeProvider';
 import type { PrizeListItem } from '../features/prize/types';
 import './Prize.css';
@@ -15,6 +15,7 @@ export default function Prizes() {
   const [items, setItems] = useState<PrizeListItem[] | null>(null);
   const location = useLocation();
   const returnContext = readReturnContext(location.state);
+  const detailState = toReturnContextState(returnContext);
 
   useEffect(() => {
     prizeProvider.listPublicPrizes().then(setItems);
@@ -60,7 +61,9 @@ export default function Prizes() {
                 <p className="prize-card__summary">{prize.summary}</p>
                 <div className="prize-card__actions">
                   <StatusBadge tone="warning">Governance-oriented preview</StatusBadge>
-                  <Link to={`/prizes/${prize.slug}`}>{prize.ctaLabel}</Link>
+                  <Link to={`/prizes/${prize.slug}`} state={detailState}>
+                    {prize.ctaLabel}
+                  </Link>
                 </div>
               </article>
             ))}

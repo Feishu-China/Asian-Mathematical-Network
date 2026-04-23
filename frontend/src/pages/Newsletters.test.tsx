@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import userEvent from '@testing-library/user-event';
+import { render } from '@testing-library/react';
 import { screen } from '@testing-library/react';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { renderWithRouter } from '../test/renderWithRouter';
 import Newsletters from './Newsletters';
 import NewsletterDetail from './NewsletterDetail';
@@ -41,5 +44,49 @@ describe('newsletter preview pages', () => {
     ).toBeInTheDocument();
     expect(screen.getByText('Program recap preview')).toBeInTheDocument();
     expect(screen.getByText('Call-for-action round-up')).toBeInTheDocument();
+  });
+
+  it('preserves a school-origin return path after opening and leaving an issue detail', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter
+        initialEntries={[
+          {
+            pathname: '/newsletter',
+            state: {
+              returnContext: {
+                to: '/schools/algebraic-geometry-research-school-2026',
+                label: 'Back to school',
+              },
+            },
+          },
+        ]}
+      >
+        <Routes>
+          <Route path="/newsletter" element={<Newsletters />} />
+          <Route path="/newsletter/:slug" element={<NewsletterDetail />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByRole('link', { name: /back to school/i })).toHaveAttribute(
+      'href',
+      '/schools/algebraic-geometry-research-school-2026'
+    );
+
+    await user.click(screen.getByRole('link', { name: /read issue/i }));
+
+    expect(await screen.findByRole('link', { name: /back to newsletter/i })).toHaveAttribute(
+      'href',
+      '/newsletter'
+    );
+
+    await user.click(screen.getByRole('link', { name: /back to newsletter/i }));
+
+    expect(await screen.findByRole('link', { name: /back to school/i })).toHaveAttribute(
+      'href',
+      '/schools/algebraic-geometry-research-school-2026'
+    );
   });
 });

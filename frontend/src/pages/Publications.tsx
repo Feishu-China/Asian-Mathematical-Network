@@ -3,7 +3,7 @@ import { PortalShell } from '../components/layout/PortalShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
-import { readReturnContext } from '../features/navigation/returnContext';
+import { readReturnContext, toReturnContextState } from '../features/navigation/returnContext';
 import { publicationPreviews } from '../features/publication/staticPublicationContent';
 import './Publication.css';
 
@@ -12,6 +12,7 @@ export const routePath = '/publications';
 export default function Publications() {
   const location = useLocation();
   const returnContext = readReturnContext(location.state);
+  const detailState = toReturnContextState(returnContext);
 
   return (
     <PortalShell
@@ -45,7 +46,9 @@ export default function Publications() {
               <p className="publication-card__summary">{publication.summary}</p>
               <div className="publication-card__actions">
                 <StatusBadge tone="neutral">Publication layer</StatusBadge>
-                <Link to={`/publications/${publication.slug}`}>{publication.ctaLabel}</Link>
+                <Link to={`/publications/${publication.slug}`} state={detailState}>
+                  {publication.ctaLabel}
+                </Link>
               </div>
             </article>
           ))}

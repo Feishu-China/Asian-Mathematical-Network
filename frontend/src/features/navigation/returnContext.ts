@@ -25,3 +25,12 @@ export const readReturnContext = (state: unknown): ReturnContext | null => {
 
   return returnContext;
 };
+
+export const toReturnContextState = (
+  returnContext: ReturnContext | null
+): ReturnContextState | undefined =>
+  returnContext
+    ? {
+        returnContext,
+      }
+    : undefined;

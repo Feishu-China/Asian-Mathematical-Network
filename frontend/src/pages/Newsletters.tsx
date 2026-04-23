@@ -3,7 +3,7 @@ import { PortalShell } from '../components/layout/PortalShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
-import { readReturnContext } from '../features/navigation/returnContext';
+import { readReturnContext, toReturnContextState } from '../features/navigation/returnContext';
 import { newsletterIssues } from '../features/newsletter/staticNewsletterContent';
 import './Newsletter.css';
 
@@ -12,6 +12,7 @@ export const routePath = '/newsletter';
 export default function Newsletters() {
   const location = useLocation();
   const returnContext = readReturnContext(location.state);
+  const detailState = toReturnContextState(returnContext);
 
   return (
     <PortalShell
@@ -45,7 +46,9 @@ export default function Newsletters() {
               <p className="newsletter-card__summary">{issue.summary}</p>
                 <div className="newsletter-card__actions">
                   <StatusBadge tone="neutral">Editorial layer</StatusBadge>
-                  <Link to={`/newsletter/${issue.slug}`}>{issue.ctaLabel}</Link>
+                  <Link to={`/newsletter/${issue.slug}`} state={detailState}>
+                    {issue.ctaLabel}
+                  </Link>
                 </div>
               </article>
             ))}

@@ -1,9 +1,11 @@
 import { Link } from 'react-router-dom';
 import { StatusBadge } from '../../components/ui/StatusBadge';
+import type { ReturnContextState } from '../navigation/returnContext';
 import type { GrantListItem } from './types';
 
 type Props = {
   grant: GrantListItem;
+  detailState?: ReturnContextState;
 };
 
 const formatGrantType = (grantType: GrantListItem['grantType']) => {
@@ -14,7 +16,7 @@ const formatGrantType = (grantType: GrantListItem['grantType']) => {
   return grantType;
 };
 
-export function GrantListCard({ grant }: Props) {
+export function GrantListCard({ grant, detailState }: Props) {
   return (
     <article className="conference-card">
       <div className="conference-card-meta">
@@ -29,7 +31,7 @@ export function GrantListCard({ grant }: Props) {
         <StatusBadge tone={grant.isApplicationOpen ? 'success' : 'neutral'}>
           {grant.isApplicationOpen ? 'Applications open' : 'Applications closed'}
         </StatusBadge>
-        <Link to={`/grants/${grant.slug}`}>
+        <Link to={`/grants/${grant.slug}`} state={detailState}>
           View details
         </Link>
       </div>
