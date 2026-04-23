@@ -159,8 +159,8 @@
       "demo_criticality": "secondary",
       "delivery_mode": "hybrid",
       "depends_on": ["DEMO-FOUNDATION-003"],
-      "status": "planned",
-      "passes": false
+      "status": "completed",
+      "passes": true
     },
     {
       "id": "DEMO-MODULE-007",
@@ -181,8 +181,8 @@
       "demo_criticality": "secondary",
       "delivery_mode": "hybrid",
       "depends_on": ["DEMO-FOUNDATION-003"],
-      "status": "planned",
-      "passes": false
+      "status": "completed",
+      "passes": true
     },
     {
       "id": "DEMO-MODULE-009",
@@ -236,8 +236,8 @@
       "demo_criticality": "secondary",
       "delivery_mode": "hybrid",
       "depends_on": ["DEMO-FOUNDATION-003"],
-      "status": "planned",
-      "passes": false
+      "status": "completed",
+      "passes": true
     },
     {
       "id": "DEMO-POLISH-001",
