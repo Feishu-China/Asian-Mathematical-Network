@@ -1,11 +1,15 @@
 import { beforeEach, describe, expect, it } from 'vitest';
+import { render } from '@testing-library/react';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { renderWithRouter } from '../test/renderWithRouter';
 import {
   fakeConferenceProvider,
   resetConferenceFakeState,
 } from '../features/conference/fakeConferenceProvider';
+import Conferences from './Conferences';
+import ConferenceDetail from './ConferenceDetail';
 import ConferenceApply from './ConferenceApply';
 
 describe('conference apply page', () => {
@@ -100,5 +104,55 @@ describe('conference apply page', () => {
 
     expect(await screen.findByText(/draft saved/i)).toBeInTheDocument();
     expect(screen.getByDisplayValue('Updated after reload')).toBeInTheDocument();
+  });
+
+  it('preserves the portal-origin return path through conference apply and back out to the list', async () => {
+    localStorage.setItem('token', 'applicant-1');
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter
+        initialEntries={[
+          {
+            pathname: '/conferences',
+            state: {
+              returnContext: {
+                to: '/portal',
+                label: 'Back to portal',
+              },
+            },
+          },
+        ]}
+      >
+        <Routes>
+          <Route path="/conferences" element={<Conferences />} />
+          <Route path="/conferences/:slug" element={<ConferenceDetail />} />
+          <Route path="/conferences/:slug/apply" element={<ConferenceApply />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByRole('link', { name: /back to portal/i })).toHaveAttribute(
+      'href',
+      '/portal'
+    );
+
+    await user.click(screen.getByRole('link', { name: /view details/i }));
+    expect(await screen.findByRole('link', { name: /apply for conference/i })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('link', { name: /apply for conference/i }));
+    expect(await screen.findByRole('link', { name: /back to conference detail/i })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('link', { name: /back to conference detail/i }));
+    expect(await screen.findByRole('link', { name: /back to conferences/i })).toHaveAttribute(
+      'href',
+      '/conferences'
+    );
+
+    await user.click(screen.getByRole('link', { name: /back to conferences/i }));
+    expect(await screen.findByRole('link', { name: /back to portal/i })).toHaveAttribute(
+      'href',
+      '/portal'
+    );
   });
 });

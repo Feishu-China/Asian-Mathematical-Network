@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import { WorkspaceShell } from '../components/layout/WorkspaceShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
 import { ConferenceApplyForm } from '../features/conference/ConferenceApplyForm';
 import { conferenceProvider } from '../features/conference/conferenceProvider';
+import { readReturnContext, toReturnContextState } from '../features/navigation/returnContext';
 import type {
   ConferenceApplication,
   ConferenceApplicationValues,
@@ -18,6 +19,8 @@ export const routePath = '/conferences/:slug/apply';
 
 export default function ConferenceApply() {
   const { slug = '' } = useParams();
+  const location = useLocation();
+  const returnContext = readReturnContext(location.state);
   const [conference, setConference] = useState<ConferenceDetail | null | undefined>(undefined);
   const [schema, setSchema] = useState<ConferenceFormSchema>({ fields: [] });
   const [application, setApplication] = useState<ConferenceApplication | null>(null);
@@ -148,7 +151,12 @@ export default function ConferenceApply() {
             {conference.startDate || 'Pending'} to {conference.endDate || 'Pending'}
           </p>
           <p>Deadline: {conference.applicationDeadline || 'Pending'}</p>
-          <Link to={`/conferences/${conference.slug}`}>Back to conference detail</Link>
+          <Link
+            to={`/conferences/${conference.slug}`}
+            state={toReturnContextState(returnContext)}
+          >
+            Back to conference detail
+          </Link>
         </div>
       }
     >

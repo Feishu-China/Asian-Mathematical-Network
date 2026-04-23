@@ -66,7 +66,16 @@ export default function PrizeDetail() {
               >
                 View governance preview
               </Link>
-              <Link className="prize-primary-link" to="/scholars/prof-reviewer">
+              <Link
+                className="prize-primary-link"
+                to="/scholars/prof-reviewer"
+                state={{
+                  returnContext: {
+                    to: `/prizes/${prize.slug}`,
+                    label: 'Back to prize',
+                  },
+                }}
+              >
                 View scholar context
               </Link>
             </div>

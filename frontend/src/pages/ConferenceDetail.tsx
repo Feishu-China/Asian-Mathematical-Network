@@ -58,7 +58,11 @@ export default function ConferenceDetail() {
             Conference applications remain separate from travel-grant applications in the MVP.
           </p>
           {conference.isApplicationOpen ? (
-            <Link className="conference-primary-link" to={`/conferences/${conference.slug}/apply`}>
+            <Link
+              className="conference-primary-link"
+              to={`/conferences/${conference.slug}/apply`}
+              state={toReturnContextState(returnContext)}
+            >
               Apply for conference
             </Link>
           ) : (

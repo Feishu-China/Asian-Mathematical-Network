@@ -85,4 +85,31 @@ describe('scholar profile page', () => {
     expect(screen.getByText('/scholars/prof-reviewer')).toBeInTheDocument();
     expect(screen.queryByText(/profile unavailable/i)).not.toBeInTheDocument();
   });
+
+  it('preserves a return link from prize detail when scholar context is opened there', async () => {
+    render(
+      <MemoryRouter
+        initialEntries={[
+          {
+            pathname: '/scholars/prof-reviewer',
+            state: {
+              returnContext: {
+                to: '/prizes/asiamath-early-career-prize-2026',
+                label: 'Back to prize',
+              },
+            },
+          },
+        ]}
+      >
+        <Routes>
+          <Route path="/scholars/:slug" element={<ScholarProfile />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByRole('link', { name: /back to prize/i })).toHaveAttribute(
+      'href',
+      '/prizes/asiamath-early-career-prize-2026'
+    );
+  });
 });
