@@ -23,6 +23,12 @@ const browseLinks = [
     description:
       'Recognition archives that preview nomination, review, and release surfaces without requiring a live governance workflow in d0.',
   },
+  {
+    to: '/partners',
+    title: 'Browse partners',
+    description:
+      'Applied collaboration teasers and expertise-matching pathways for future partner-facing surfaces.',
+  },
 ];
 
 const accountLinks = [
