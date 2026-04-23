@@ -4,29 +4,48 @@ import type {
   PublicScholarProfile,
 } from './types';
 
-let profileState: EditableProfile = {
+const initialProfileState: EditableProfile = {
   userId: 'local-user',
   slug: 'alice-chen-demo',
   fullName: 'Alice Chen',
-  title: 'Dr',
+  title: 'Associate Professor',
   institutionId: null,
   institutionNameRaw: 'National University of Singapore',
   countryCode: 'SG',
   careerStage: 'faculty',
-  bio: 'Interested in algebraic geometry.',
-  personalWebsite: 'https://example.org',
-  researchKeywords: ['algebraic geometry', 'birational geometry'],
-  mscCodes: [{ code: '14J60', isPrimary: true }],
-  orcidId: null,
-  coiDeclarationText: '',
+  bio: 'Builds a demo-ready scholar profile that can be explained consistently across private editing, public scholar display, and downstream application context.',
+  personalWebsite: 'https://example.org/scholars/alice-chen',
+  researchKeywords: ['algebraic geometry', 'birational geometry', 'mathematical networks'],
+  mscCodes: [
+    { code: '14J60', isPrimary: true },
+    { code: '14E05', isPrimary: false },
+  ],
+  orcidId: '0000-0002-5100-0001',
+  coiDeclarationText: 'Private demo-only COI note for the shared scholar profile.',
   isProfilePublic: true,
-  verificationStatus: 'unverified',
-  verifiedAt: null,
+  verificationStatus: 'verified',
+  verifiedAt: new Date('2026-04-18T09:00:00Z').toISOString(),
   createdAt: new Date('2026-04-14T10:00:00Z').toISOString(),
   updatedAt: new Date('2026-04-14T10:06:00Z').toISOString(),
 };
 
 const clone = <T,>(value: T): T => structuredClone(value);
+let profileState: EditableProfile = clone(initialProfileState);
+
+export const resetProfileFakeState = () => {
+  profileState = clone(initialProfileState);
+};
+
+export const seedProfileFakeState = (partial: Partial<EditableProfile>) => {
+  profileState = {
+    ...profileState,
+    ...clone(partial),
+    researchKeywords: partial.researchKeywords
+      ? clone(partial.researchKeywords)
+      : clone(profileState.researchKeywords),
+    mscCodes: partial.mscCodes ? clone(partial.mscCodes) : clone(profileState.mscCodes),
+  };
+};
 
 const toPublicProfile = (profile: EditableProfile): PublicScholarProfile | null => {
   if (!profile.isProfilePublic) {

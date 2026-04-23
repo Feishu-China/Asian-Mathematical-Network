@@ -13,9 +13,32 @@ export const routePath = '/scholars/:slug';
 export default function ScholarProfile() {
   const { slug = '' } = useParams();
   const [profile, setProfile] = useState<PublicScholarProfile | null | undefined>(undefined);
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
-    profileProvider.getScholarProfile(slug).then(setProfile);
+    let cancelled = false;
+
+    profileProvider
+      .getScholarProfile(slug)
+      .then((value) => {
+        if (cancelled) {
+          return;
+        }
+
+        setProfile(value);
+      })
+      .catch(() => {
+        if (cancelled) {
+          return;
+        }
+
+        setLoadError(true);
+        setProfile(null);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [slug]);
 
   if (profile === undefined) {
@@ -23,7 +46,32 @@ export default function ScholarProfile() {
   }
 
   if (profile === null) {
-    return <div className="profile-page">This scholar profile is not public.</div>;
+    return (
+      <PortalShell
+        eyebrow="Academic directory"
+        title="Scholar profile"
+        description="Public-facing profile detail used for directory visibility and later reviewer sourcing context."
+        badges={
+          <>
+            <RoleBadge role="visitor" />
+            <PageModeBadge mode="real-aligned" />
+          </>
+        }
+      >
+        <div className="profile-page">
+          <div className="surface-card profile-empty-card">
+            <p className="profile-section-kicker">Public scholar route</p>
+            <h2>{loadError ? 'Profile failed to load' : 'Profile unavailable'}</h2>
+            <p>
+              {loadError
+                ? 'The public scholar profile could not be loaded right now.'
+                : 'This scholar profile is not public or is unavailable.'}
+            </p>
+            <p>Only profiles with public visibility enabled appear on this route.</p>
+          </div>
+        </div>
+      </PortalShell>
+    );
   }
 
   return (
