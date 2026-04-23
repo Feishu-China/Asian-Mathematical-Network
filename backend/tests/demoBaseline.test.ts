@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 import {
   cleanupDemoBaseline,
   DEMO_BASELINE_FIXTURE,
@@ -37,35 +38,102 @@ describe('demo baseline fixture', () => {
     expect(publishedGrant?.status).toBe('published');
   });
 
-  it('provisions login-capable organizer and reviewer baseline accounts', async () => {
+  it('creates stable demo accounts, public/private scholar-profile baselines, and role-capable organizer/reviewer accounts', async () => {
     const fixture = await ensureDemoBaseline(prisma);
 
-    const organizer = await prisma.user.findUnique({
-      where: { id: fixture.creator.id },
+    expect(fixture.demoAccounts.map((account) => account.key)).toEqual([
+      'organizer',
+      'reviewer',
+      'applicant',
+    ]);
+
+    expect(fixture.demoAccounts).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          key: 'organizer',
+          email: DEMO_BASELINE_FIXTURE.demoAccounts.organizer.email,
+          profile: expect.objectContaining({
+            slug: DEMO_BASELINE_FIXTURE.demoAccounts.organizer.slug,
+            isProfilePublic: false,
+          }),
+        }),
+        expect.objectContaining({
+          key: 'reviewer',
+          email: DEMO_BASELINE_FIXTURE.demoAccounts.reviewer.email,
+          profile: expect.objectContaining({
+            slug: DEMO_BASELINE_FIXTURE.demoAccounts.reviewer.slug,
+            isProfilePublic: true,
+          }),
+        }),
+        expect.objectContaining({
+          key: 'applicant',
+          email: DEMO_BASELINE_FIXTURE.demoAccounts.applicant.email,
+          profile: expect.objectContaining({
+            slug: DEMO_BASELINE_FIXTURE.demoAccounts.applicant.slug,
+            isProfilePublic: true,
+          }),
+        }),
+      ])
+    );
+
+    const organizer = fixture.demoAccounts.find((account) => account.key === 'organizer');
+    const reviewer = fixture.demoAccounts.find((account) => account.key === 'reviewer');
+    const applicant = fixture.demoAccounts.find((account) => account.key === 'applicant');
+
+    expect(organizer).toBeDefined();
+    expect(reviewer).toBeDefined();
+    expect(applicant).toBeDefined();
+
+    const organizerUser = await prisma.user.findUnique({
+      where: { id: organizer!.user.id },
       include: {
         profile: true,
         userRoles: true,
       },
     });
 
-    const reviewer = await prisma.user.findUnique({
-      where: { email: DEMO_BASELINE_FIXTURE.reviewerEmail },
+    const reviewerUser = await prisma.user.findUnique({
+      where: { id: reviewer!.user.id },
       include: {
         profile: true,
         userRoles: true,
       },
     });
 
-    expect(organizer?.passwordHash).not.toBe('hash');
-    expect(organizer?.profile?.fullName).toBe(DEMO_BASELINE_FIXTURE.creatorFullName);
-    expect(organizer?.userRoles.map((item) => item.role)).toEqual(
+    expect(organizerUser?.profile?.fullName).toBe(DEMO_BASELINE_FIXTURE.creatorFullName);
+    expect(organizerUser?.userRoles.map((item) => item.role)).toEqual(
       expect.arrayContaining(['applicant', 'organizer'])
     );
 
-    expect(reviewer?.passwordHash).toBeTruthy();
-    expect(reviewer?.profile?.fullName).toBe(DEMO_BASELINE_FIXTURE.reviewerFullName);
-    expect(reviewer?.userRoles.map((item) => item.role)).toEqual(
+    expect(reviewerUser?.profile?.fullName).toBe(DEMO_BASELINE_FIXTURE.reviewerFullName);
+    expect(reviewerUser?.userRoles.map((item) => item.role)).toEqual(
       expect.arrayContaining(['applicant', 'reviewer'])
     );
+
+    const organizerStaff = await prisma.conferenceStaff.findUnique({
+      where: {
+        conferenceId_userId: {
+          conferenceId: fixture.conference.id,
+          userId: organizer!.user.id,
+        },
+      },
+    });
+
+    expect(organizerStaff?.staffRole).toBe('owner');
+
+    const reviewerProfileRecord = await prisma.profile.findUnique({
+      where: { userId: reviewer!.user.id },
+    });
+
+    expect(reviewerProfileRecord?.slug).toBe(DEMO_BASELINE_FIXTURE.demoAccounts.reviewer.slug);
+    expect(reviewerProfileRecord?.isProfilePublic).toBe(true);
+
+    const passwordMatches = await bcrypt.compare(
+      DEMO_BASELINE_FIXTURE.demoPassword,
+      applicant!.user.passwordHash
+    );
+
+    expect(passwordMatches).toBe(true);
+    expect(applicant?.email).toBe(DEMO_BASELINE_FIXTURE.demoAccounts.applicant.email);
   });
 });
