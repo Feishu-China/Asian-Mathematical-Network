@@ -97,4 +97,45 @@ describe('publication preview pages', () => {
       '/publications/asiamath-school-notes-preview'
     );
   });
+
+  it('restores the school return path after going from publication detail into newsletter and back out', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter
+        initialEntries={[
+          {
+            pathname: '/publications',
+            state: {
+              returnContext: {
+                to: '/schools/algebraic-geometry-research-school-2026',
+                label: 'Back to school',
+              },
+            },
+          },
+        ]}
+      >
+        <Routes>
+          <Route path="/publications" element={<Publications />} />
+          <Route path="/publications/:slug" element={<PublicationDetail />} />
+          <Route path="/newsletter" element={<Newsletters />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByRole('link', { name: /back to school/i })).toHaveAttribute(
+      'href',
+      '/schools/algebraic-geometry-research-school-2026'
+    );
+
+    await user.click(screen.getByRole('link', { name: /read preview/i }));
+    await user.click(await screen.findByRole('link', { name: /continue to editorial layer/i }));
+    await user.click(await screen.findByRole('link', { name: /back to publication/i }));
+    await user.click(await screen.findByRole('link', { name: /back to publications/i }));
+
+    expect(await screen.findByRole('link', { name: /back to school/i })).toHaveAttribute(
+      'href',
+      '/schools/algebraic-geometry-research-school-2026'
+    );
+  });
 });

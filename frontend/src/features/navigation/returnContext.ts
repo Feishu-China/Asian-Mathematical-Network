@@ -1,6 +1,7 @@
 export type ReturnContext = {
   to: string;
   label: string;
+  state?: unknown;
 };
 
 export type ReturnContextState = {

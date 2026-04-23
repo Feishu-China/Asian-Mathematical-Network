@@ -61,6 +61,7 @@ export default function PrizeDetail() {
                   returnContext: {
                     to: `/prizes/${prize.slug}`,
                     label: 'Back to prize',
+                    state: toReturnContextState(returnContext),
                   },
                 }}
               >
@@ -73,6 +74,7 @@ export default function PrizeDetail() {
                   returnContext: {
                     to: `/prizes/${prize.slug}`,
                     label: 'Back to prize',
+                    state: toReturnContextState(returnContext),
                   },
                 }}
               >

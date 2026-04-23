@@ -51,6 +51,7 @@ export default function VideoDetail() {
               returnContext: {
                 to: `/videos/${video.slug}`,
                 label: 'Back to video',
+                state: toReturnContextState(returnContext),
               },
             }}
           >

@@ -97,4 +97,45 @@ describe('video preview pages', () => {
       '/videos/asiamath-research-school-session-recap'
     );
   });
+
+  it('restores the school return path after going from video detail into newsletter and back out', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter
+        initialEntries={[
+          {
+            pathname: '/videos',
+            state: {
+              returnContext: {
+                to: '/schools/algebraic-geometry-research-school-2026',
+                label: 'Back to school',
+              },
+            },
+          },
+        ]}
+      >
+        <Routes>
+          <Route path="/videos" element={<Videos />} />
+          <Route path="/videos/:slug" element={<VideoDetail />} />
+          <Route path="/newsletter" element={<Newsletters />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByRole('link', { name: /back to school/i })).toHaveAttribute(
+      'href',
+      '/schools/algebraic-geometry-research-school-2026'
+    );
+
+    await user.click(screen.getByRole('link', { name: /watch preview/i }));
+    await user.click(await screen.findByRole('link', { name: /continue to editorial layer/i }));
+    await user.click(await screen.findByRole('link', { name: /back to video/i }));
+    await user.click(await screen.findByRole('link', { name: /back to videos/i }));
+
+    expect(await screen.findByRole('link', { name: /back to school/i })).toHaveAttribute(
+      'href',
+      '/schools/algebraic-geometry-research-school-2026'
+    );
+  });
 });

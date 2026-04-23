@@ -4,7 +4,7 @@ import { PortalShell } from '../components/layout/PortalShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
-import { readReturnContext } from '../features/navigation/returnContext';
+import { readReturnContext, toReturnContextState } from '../features/navigation/returnContext';
 import { partnerProvider } from '../features/partner/partnerProvider';
 import type { PartnerListItem } from '../features/partner/types';
 import './Partner.css';
@@ -38,7 +38,11 @@ export default function Partners() {
       }
       actions={
         returnContext ? (
-          <Link to={returnContext.to} className="my-applications__section-link">
+          <Link
+            to={returnContext.to}
+            state={returnContext.state}
+            className="my-applications__section-link"
+          >
             {returnContext.label}
           </Link>
         ) : null
@@ -57,6 +61,7 @@ export default function Partners() {
               returnContext: {
                 to: '/partners',
                 label: 'Back to partners',
+                state: toReturnContextState(returnContext),
               },
             }}
           >

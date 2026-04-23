@@ -51,6 +51,7 @@ export default function PublicationDetail() {
               returnContext: {
                 to: `/publications/${publication.slug}`,
                 label: 'Back to publication',
+                state: toReturnContextState(returnContext),
               },
             }}
           >

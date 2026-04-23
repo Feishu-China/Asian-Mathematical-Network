@@ -51,6 +51,7 @@ export default function NewsletterDetail() {
               returnContext: {
                 to: `/newsletter/${issue.slug}`,
                 label: 'Back to newsletter issue',
+                state: toReturnContextState(returnContext),
               },
             }}
           >

@@ -66,7 +66,11 @@ export default function Grants() {
       }
       actions={
         returnContext ? (
-          <Link to={returnContext.to} className="my-applications__section-link">
+          <Link
+            to={returnContext.to}
+            state={returnContext.state}
+            className="my-applications__section-link"
+          >
             {returnContext.label}
           </Link>
         ) : hasApplicantSession ? (
