@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { StatusBadge } from '../../components/ui/StatusBadge';
 import type { GrantListItem } from './types';
 
@@ -15,6 +15,8 @@ const formatGrantType = (grantType: GrantListItem['grantType']) => {
 };
 
 export function GrantListCard({ grant }: Props) {
+  const location = useLocation();
+
   return (
     <article className="conference-card">
       <div className="conference-card-meta">
@@ -29,7 +31,9 @@ export function GrantListCard({ grant }: Props) {
         <StatusBadge tone={grant.isApplicationOpen ? 'success' : 'neutral'}>
           {grant.isApplicationOpen ? 'Applications open' : 'Applications closed'}
         </StatusBadge>
-        <Link to={`/grants/${grant.slug}`}>View details</Link>
+        <Link to={`/grants/${grant.slug}`} state={location.state}>
+          View details
+        </Link>
       </div>
     </article>
   );

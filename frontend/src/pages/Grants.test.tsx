@@ -1,5 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import userEvent from '@testing-library/user-event';
+import { render } from '@testing-library/react';
 import { screen } from '@testing-library/react';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { renderWithRouter } from '../test/renderWithRouter';
 import { resetGrantFakeState } from '../features/grant/fakeGrantProvider';
 import { grantProvider } from '../features/grant/grantProvider';
@@ -39,6 +42,47 @@ describe('grant public pages', () => {
     expect(screen.getByRole('link', { name: /back to my applications/i })).toHaveAttribute(
       'href',
       '/me/applications'
+    );
+  });
+
+  it('preserves a school-origin return path through the grant list and detail flow', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter
+        initialEntries={[
+          {
+            pathname: '/grants',
+            state: {
+              returnContext: {
+                to: '/schools/algebraic-geometry-research-school-2026',
+                label: 'Back to school',
+              },
+            },
+          },
+        ]}
+      >
+        <Routes>
+          <Route path="/grants" element={<Grants />} />
+          <Route path="/grants/:slug" element={<GrantDetail />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByRole('heading', { name: 'Asiamath 2026 Travel Grant' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /back to school/i })).toHaveAttribute(
+      'href',
+      '/schools/algebraic-geometry-research-school-2026'
+    );
+
+    await user.click(screen.getByRole('link', { name: /view details/i }));
+
+    expect(
+      await screen.findByText('Partial travel support for accepted participants.')
+    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /back to school/i })).toHaveAttribute(
+      'href',
+      '/schools/algebraic-geometry-research-school-2026'
     );
   });
 

@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { PortalShell } from '../components/layout/PortalShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
+import { readReturnContext } from '../features/navigation/returnContext';
 import { GrantListCard } from '../features/grant/GrantListCard';
 import { grantProvider } from '../features/grant/grantProvider';
 import type { GrantListItem } from '../features/grant/types';
@@ -15,6 +16,8 @@ export default function Grants() {
   const [items, setItems] = useState<GrantListItem[] | null>(null);
   const [hasError, setHasError] = useState(false);
   const hasApplicantSession = Boolean(localStorage.getItem('token'));
+  const location = useLocation();
+  const returnContext = readReturnContext(location.state);
 
   useEffect(() => {
     let active = true;
@@ -61,7 +64,11 @@ export default function Grants() {
         </>
       }
       actions={
-        hasApplicantSession ? (
+        returnContext ? (
+          <Link to={returnContext.to} className="my-applications__section-link">
+            {returnContext.label}
+          </Link>
+        ) : hasApplicantSession ? (
           <Link to="/me/applications" className="my-applications__section-link">
             Back to my applications
           </Link>

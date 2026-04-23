@@ -51,7 +51,16 @@ export default function SchoolDetail() {
         <div className="school-detail-card school-teaser-card">
           <h2>Travel support teaser</h2>
           <p>{school.travelSupportTeaser}</p>
-          <Link className="school-primary-link" to="/grants">
+          <Link
+            className="school-primary-link"
+            to="/grants"
+            state={{
+              returnContext: {
+                to: `/schools/${school.slug}`,
+                label: 'Back to school',
+              },
+            }}
+          >
             Explore travel support
           </Link>
         </div>
