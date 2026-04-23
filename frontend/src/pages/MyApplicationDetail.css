@@ -1,0 +1,13 @@
+.application-detail__aside {
+  gap: var(--space-3);
+}
+
+.application-detail__back-link {
+  font-weight: 600;
+}
+
+.application-detail__result-note {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.6;
+}

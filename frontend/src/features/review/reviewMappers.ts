@@ -142,7 +142,19 @@ type TransportApplicantApplicationDetail = {
   source_module: string;
   conference_id: string | null;
   conference_title: string | null;
+  grant_id: string | null;
+  grant_title: string | null;
+  linked_conference_id: string | null;
+  linked_conference_title: string | null;
+  linked_conference_application_id: string | null;
   viewer_status: ApplicantApplicationDetail['viewerStatus'];
+  statement: string | null;
+  travel_plan_summary: string | null;
+  funding_need_summary: string | null;
+  extra_answers: Record<string, unknown>;
+  applicant_profile_snapshot: TransportProfileSnapshot;
+  files: ApplicantApplicationDetail['files'];
+  submitted_at: string | null;
   released_decision: {
     decision_kind: string;
     final_status: InternalDecision['finalStatus'];
@@ -150,6 +162,7 @@ type TransportApplicantApplicationDetail = {
     note_external: string | null;
     released_at: string | null;
   } | null;
+  post_visit_report_status: string | null;
 };
 
 const fromTransportProfileSnapshot = (
@@ -304,7 +317,19 @@ export const fromTransportApplicantApplicationDetail = (
   sourceModule: detail.source_module,
   conferenceId: detail.conference_id,
   conferenceTitle: detail.conference_title,
+  grantId: detail.grant_id,
+  grantTitle: detail.grant_title,
+  linkedConferenceId: detail.linked_conference_id,
+  linkedConferenceTitle: detail.linked_conference_title,
+  linkedConferenceApplicationId: detail.linked_conference_application_id,
   viewerStatus: detail.viewer_status,
+  statement: detail.statement,
+  travelPlanSummary: detail.travel_plan_summary,
+  fundingNeedSummary: detail.funding_need_summary,
+  extraAnswers: detail.extra_answers,
+  applicantProfileSnapshot: fromTransportProfileSnapshot(detail.applicant_profile_snapshot),
+  files: detail.files,
+  submittedAt: detail.submitted_at,
   releasedDecision: detail.released_decision
     ? {
         decisionKind: detail.released_decision.decision_kind,
@@ -314,6 +339,7 @@ export const fromTransportApplicantApplicationDetail = (
         releasedAt: detail.released_decision.released_at,
       }
     : null,
+  postVisitReportStatus: detail.post_visit_report_status,
 });
 
 export const toTransportAssignReviewerPayload = (values: AssignReviewerValues) => ({

@@ -134,7 +134,19 @@ export type ApplicantApplicationDetail = {
   sourceModule: string;
   conferenceId: string | null;
   conferenceTitle: string | null;
+  grantId: string | null;
+  grantTitle: string | null;
+  linkedConferenceId: string | null;
+  linkedConferenceTitle: string | null;
+  linkedConferenceApplicationId: string | null;
   viewerStatus: ViewerStatus;
+  statement: string | null;
+  travelPlanSummary: string | null;
+  fundingNeedSummary: string | null;
+  extraAnswers: Record<string, unknown>;
+  applicantProfileSnapshot: ProfileSnapshot;
+  files: Array<{ id: string; fileRole?: string; originalName?: string }>;
+  submittedAt: string | null;
   releasedDecision: {
     decisionKind: string;
     finalStatus: DecisionFinalStatus;
@@ -142,6 +154,7 @@ export type ApplicantApplicationDetail = {
     noteExternal: string | null;
     releasedAt: string | null;
   } | null;
+  postVisitReportStatus: string | null;
 };
 
 export type AssignReviewerValues = {

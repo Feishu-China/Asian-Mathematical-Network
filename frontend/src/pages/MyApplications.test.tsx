@@ -96,7 +96,10 @@ describe('MyApplications page', () => {
       await screen.findByRole('heading', { name: 'Asiamath 2026 Workshop' })
     ).toBeInTheDocument();
     expect(screen.getByText('Under review')).toBeInTheDocument();
-    expect(screen.getByText(/Next step: View submission/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /view submission/i })).toHaveAttribute(
+      'href',
+      '/me/applications/conf-app-1'
+    );
   });
 
   it('renders a draft grant application with linked conference title and continue-draft next step', async () => {
@@ -123,7 +126,10 @@ describe('MyApplications page', () => {
       await screen.findByRole('heading', { name: 'Asiamath 2025 Conference' })
     ).toBeInTheDocument();
     expect(screen.getByText('Accepted')).toBeInTheDocument();
-    expect(screen.getByText(/Next step: View result/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /view result/i })).toHaveAttribute(
+      'href',
+      '/me/applications/conf-app-2'
+    );
   });
 
   it('splits records into conference and grant sections', async () => {

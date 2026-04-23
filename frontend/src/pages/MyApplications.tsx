@@ -202,7 +202,13 @@ function ApplicationSection({
                 </p>
               ) : null}
               <p className="my-applications__row-next-action" aria-label="Next step">
-                Next step: {NEXT_ACTION_LABELS[item.nextAction]}
+                <Link
+                  to={`/me/applications/${item.id}`}
+                  className="my-applications__row-next-action-link"
+                  aria-label={NEXT_ACTION_LABELS[item.nextAction]}
+                >
+                  Next step: {NEXT_ACTION_LABELS[item.nextAction]}
+                </Link>
               </p>
             </li>
           ))}
