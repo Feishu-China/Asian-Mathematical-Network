@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
+import { render } from '@testing-library/react';
 import { screen } from '@testing-library/react';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { renderWithRouter } from '../test/renderWithRouter';
 import ScholarProfile from './ScholarProfile';
 import {
@@ -45,5 +47,37 @@ describe('scholar profile page', () => {
     expect(
       screen.getByText(/only profiles with public visibility enabled appear on this route/i)
     ).toBeInTheDocument();
+  });
+
+  it('renders the demo reviewer profile and preserves a return link from partners', async () => {
+    render(
+      <MemoryRouter
+        initialEntries={[
+          {
+            pathname: '/scholars/prof-reviewer',
+            state: {
+              returnContext: {
+                to: '/partners',
+                label: 'Back to partners',
+              },
+            },
+          },
+        ]}
+      >
+        <Routes>
+          <Route path="/scholars/:slug" element={<ScholarProfile />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByText('Back to partners')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /back to partners/i })).toHaveAttribute(
+      'href',
+      '/partners'
+    );
+    expect(screen.getByRole('heading', { name: 'Prof Reviewer' })).toBeInTheDocument();
+    expect(screen.getByText(/review governance, algebraic geometry, and cross-border mathematical collaboration/i)).toBeInTheDocument();
+    expect(screen.getByText('/scholars/prof-reviewer')).toBeInTheDocument();
+    expect(screen.queryByText(/profile unavailable/i)).not.toBeInTheDocument();
   });
 });

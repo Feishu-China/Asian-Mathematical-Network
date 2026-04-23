@@ -4,6 +4,29 @@ import type {
   PublicScholarProfile,
 } from './types';
 
+const demoReviewerProfile: PublicScholarProfile = {
+  slug: 'prof-reviewer',
+  fullName: 'Prof Reviewer',
+  title: 'Professor',
+  institutionId: null,
+  institutionNameRaw: 'University of Tokyo',
+  countryCode: 'JP',
+  careerStage: 'faculty',
+  bio: 'Supports review governance, algebraic geometry, and cross-border mathematical collaboration through public-facing scholarly context.',
+  personalWebsite: 'https://example.org/scholars/prof-reviewer',
+  researchKeywords: [
+    'review governance',
+    'algebraic geometry',
+    'cross-border mathematical collaboration',
+  ],
+  mscCodes: [
+    { code: '14J60', isPrimary: true },
+    { code: '14E05', isPrimary: false },
+  ],
+  orcidId: '0000-0003-5100-0042',
+  updatedAt: new Date('2026-04-21T09:15:00Z').toISOString(),
+};
+
 const initialProfileState: EditableProfile = {
   userId: 'local-user',
   slug: 'alice-chen-demo',
@@ -104,10 +127,14 @@ export const fakeProfileProvider: ProfileProvider = {
   },
 
   async getScholarProfile(slug) {
-    if (slug !== profileState.slug) {
-      return null;
+    if (slug === demoReviewerProfile.slug) {
+      return clone(demoReviewerProfile);
     }
 
-    return clone(toPublicProfile(profileState));
+    if (slug === profileState.slug) {
+      return clone(toPublicProfile(profileState));
+    }
+
+    return null;
   },
 };

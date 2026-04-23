@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import { PortalShell } from '../components/layout/PortalShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
+import { readReturnContext } from '../features/navigation/returnContext';
 import { PublicScholarCard } from '../features/profile/PublicScholarCard';
 import { profileProvider } from '../features/profile/profileProvider';
 import type { PublicScholarProfile } from '../features/profile/types';
@@ -14,6 +15,8 @@ export default function ScholarProfile() {
   const { slug = '' } = useParams();
   const [profile, setProfile] = useState<PublicScholarProfile | null | undefined>(undefined);
   const [loadError, setLoadError] = useState(false);
+  const location = useLocation();
+  const returnContext = readReturnContext(location.state);
 
   useEffect(() => {
     let cancelled = false;
@@ -57,6 +60,13 @@ export default function ScholarProfile() {
             <PageModeBadge mode="real-aligned" />
           </>
         }
+        actions={
+          returnContext ? (
+            <Link to={returnContext.to} className="my-applications__section-link">
+              {returnContext.label}
+            </Link>
+          ) : null
+        }
       >
         <div className="profile-page">
           <div className="surface-card profile-empty-card">
@@ -84,6 +94,13 @@ export default function ScholarProfile() {
           <RoleBadge role="visitor" />
           <PageModeBadge mode="real-aligned" />
         </>
+      }
+      actions={
+        returnContext ? (
+          <Link to={returnContext.to} className="my-applications__section-link">
+            {returnContext.label}
+          </Link>
+        ) : null
       }
     >
       <div className="profile-page">

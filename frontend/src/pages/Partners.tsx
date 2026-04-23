@@ -50,7 +50,16 @@ export default function Partners() {
             A future partner workflow could start from scholar records, research interests, and
             trusted profile context before expanding into managed introductions.
           </p>
-          <Link className="partner-primary-link" to="/scholars/prof-reviewer">
+          <Link
+            className="partner-primary-link"
+            to="/scholars/prof-reviewer"
+            state={{
+              returnContext: {
+                to: '/partners',
+                label: 'Back to partners',
+              },
+            }}
+          >
             View matching context
           </Link>
         </div>
