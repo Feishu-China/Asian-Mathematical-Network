@@ -97,7 +97,17 @@ export default function SchoolDetail() {
             >
               Videos
             </Link>
-            <Link to="/publications">Publications</Link>
+            <Link
+              to="/publications"
+              state={{
+                returnContext: {
+                  to: `/schools/${school.slug}`,
+                  label: 'Back to school',
+                },
+              }}
+            >
+              Publications
+            </Link>
             <Link
               to="/newsletter"
               state={{

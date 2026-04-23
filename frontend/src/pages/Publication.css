@@ -1,0 +1,70 @@
+.publication-page {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.publication-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.publication-card,
+.publication-detail-card {
+  background: var(--surface-bg, #fff);
+  border: 1px solid var(--surface-border, #d7dbe7);
+  border-radius: 18px;
+  padding: 1.25rem;
+  display: grid;
+  gap: 0.9rem;
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.08);
+}
+
+.publication-card__meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  color: var(--text-muted, #52607a);
+  font-size: 0.92rem;
+}
+
+.publication-card h2,
+.publication-detail-card h2 {
+  margin: 0;
+}
+
+.publication-card__summary,
+.publication-detail-card p,
+.publication-highlight-list {
+  margin: 0;
+  color: var(--text-default, #1f2937);
+  line-height: 1.55;
+}
+
+.publication-card__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.publication-highlight-list {
+  padding-left: 1.2rem;
+}
+
+.publication-teaser-card {
+  align-content: start;
+}
+
+.publication-primary-link {
+  width: fit-content;
+  color: var(--brand-strong, #14532d);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.publication-primary-link:hover {
+  text-decoration: underline;
+}
