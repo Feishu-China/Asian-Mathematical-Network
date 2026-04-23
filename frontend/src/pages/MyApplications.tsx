@@ -1,0 +1,213 @@
+import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { WorkspaceShell } from '../components/layout/WorkspaceShell';
+import { PageModeBadge } from '../components/ui/PageModeBadge';
+import { RoleBadge } from '../components/ui/RoleBadge';
+import { StatusBadge } from '../components/ui/StatusBadge';
+import { dashboardProvider } from '../features/dashboard/dashboardProvider';
+import type {
+  MyApplication,
+  NextAction,
+  ReleasedDecisionFinalStatus,
+  ViewerStatus,
+} from '../features/dashboard/types';
+import './MyApplications.css';
+
+export const routePath = '/me/applications';
+
+type Bucket = {
+  conference: MyApplication[];
+  grant: MyApplication[];
+};
+
+type BadgeTone = 'neutral' | 'info' | 'success' | 'warning' | 'danger';
+
+const VIEWER_STATUS_TONES: Record<ViewerStatus, BadgeTone> = {
+  draft: 'neutral',
+  under_review: 'warning',
+  result_released: 'info',
+};
+
+const VIEWER_STATUS_LABELS: Record<ViewerStatus, string> = {
+  draft: 'Draft',
+  under_review: 'Under review',
+  result_released: 'Result released',
+};
+
+const FINAL_STATUS_TONES: Record<ReleasedDecisionFinalStatus, BadgeTone> = {
+  accepted: 'success',
+  waitlisted: 'warning',
+  rejected: 'danger',
+};
+
+const NEXT_ACTION_LABELS: Record<NextAction, string> = {
+  continue_draft: 'Continue draft',
+  view_submission: 'View submission',
+  view_result: 'View result',
+  submit_post_visit_report: 'Submit post-visit report',
+};
+
+const splitByKind = (items: MyApplication[]): Bucket =>
+  items.reduce<Bucket>(
+    (acc, item) => {
+      if (item.applicationType === 'conference_application') {
+        acc.conference.push(item);
+      } else {
+        acc.grant.push(item);
+      }
+      return acc;
+    },
+    { conference: [], grant: [] }
+  );
+
+const renderStatusBadge = (item: MyApplication) => {
+  if (item.viewerStatus === 'result_released' && item.releasedDecision) {
+    return (
+      <StatusBadge tone={FINAL_STATUS_TONES[item.releasedDecision.finalStatus]}>
+        {item.releasedDecision.displayLabel}
+      </StatusBadge>
+    );
+  }
+
+  return (
+    <StatusBadge tone={VIEWER_STATUS_TONES[item.viewerStatus]}>
+      {VIEWER_STATUS_LABELS[item.viewerStatus]}
+    </StatusBadge>
+  );
+};
+
+export default function MyApplications() {
+  const navigate = useNavigate();
+  const [items, setItems] = useState<MyApplication[] | null>(null);
+  const [hasError, setHasError] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+
+    if (!localStorage.getItem('token')) {
+      navigate('/login');
+      return;
+    }
+
+    setHasError(false);
+    setItems(null);
+
+    dashboardProvider
+      .listMyApplications()
+      .then((value) => {
+        if (active) {
+          setItems(value);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setHasError(true);
+          setItems([]);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [navigate]);
+
+  const buckets = items ? splitByKind(items) : null;
+
+  return (
+    <WorkspaceShell
+      eyebrow="Applicant workspace"
+      title="My applications"
+      description="Conference and travel grant applications you've started or submitted."
+      badges={
+        <>
+          <RoleBadge role="applicant" />
+          <PageModeBadge mode="real-aligned" />
+          <StatusBadge tone="info">My applications</StatusBadge>
+        </>
+      }
+    >
+      {items === null ? (
+        <div className="conference-empty">Loading your applications...</div>
+      ) : (
+        <div className="my-applications">
+          {hasError ? (
+            <div className="conference-inline-message error">
+              We could not load your applications right now.
+            </div>
+          ) : null}
+
+          <ApplicationSection
+            heading="Conference applications"
+            items={buckets?.conference ?? []}
+            emptyHint="You have no conference applications yet."
+            browseLink={{ to: '/conferences', label: 'Browse conferences' }}
+            untitledFallback="Untitled conference"
+          />
+
+          <ApplicationSection
+            heading="Travel grant applications"
+            items={buckets?.grant ?? []}
+            emptyHint="You have no travel grant applications yet."
+            browseLink={{ to: '/grants', label: 'Browse grants' }}
+            untitledFallback="Untitled grant"
+          />
+        </div>
+      )}
+    </WorkspaceShell>
+  );
+}
+
+type ApplicationSectionProps = {
+  heading: string;
+  items: MyApplication[];
+  emptyHint: string;
+  browseLink: { to: string; label: string };
+  untitledFallback: string;
+};
+
+function ApplicationSection({
+  heading,
+  items,
+  emptyHint,
+  browseLink,
+  untitledFallback,
+}: ApplicationSectionProps) {
+  return (
+    <section className="dashboard-widget" aria-labelledby={`section-${heading}`}>
+      <header className="my-applications__section-header">
+        <h2 id={`section-${heading}`}>{heading}</h2>
+        <Link to={browseLink.to} className="my-applications__section-link">
+          {browseLink.label}
+        </Link>
+      </header>
+
+      {items.length === 0 ? (
+        <p className="conference-empty">{emptyHint}</p>
+      ) : (
+        <ul className="my-applications__list">
+          {items.map((item) => (
+            <li key={item.id} className="surface-card my-applications__row">
+              <div className="my-applications__row-meta">
+                <h3>{item.sourceTitle ?? untitledFallback}</h3>
+                {renderStatusBadge(item)}
+              </div>
+              {item.linkedConferenceTitle ? (
+                <p className="my-applications__row-linked">
+                  Linked conference: {item.linkedConferenceTitle}
+                </p>
+              ) : null}
+              {item.submittedAt ? (
+                <p className="my-applications__row-timestamp">
+                  Submitted {new Date(item.submittedAt).toLocaleDateString()}
+                </p>
+              ) : null}
+              <p className="my-applications__row-next-action" aria-label="Next step">
+                Next step: {NEXT_ACTION_LABELS[item.nextAction]}
+              </p>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}

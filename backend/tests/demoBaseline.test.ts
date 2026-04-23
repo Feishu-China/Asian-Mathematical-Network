@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import {
   cleanupDemoBaseline,
+  DEMO_BASELINE_FIXTURE,
   ensureDemoBaseline,
 } from '../src/lib/demoBaseline';
 
@@ -34,5 +35,37 @@ describe('demo baseline fixture', () => {
     });
 
     expect(publishedGrant?.status).toBe('published');
+  });
+
+  it('provisions login-capable organizer and reviewer baseline accounts', async () => {
+    const fixture = await ensureDemoBaseline(prisma);
+
+    const organizer = await prisma.user.findUnique({
+      where: { id: fixture.creator.id },
+      include: {
+        profile: true,
+        userRoles: true,
+      },
+    });
+
+    const reviewer = await prisma.user.findUnique({
+      where: { email: DEMO_BASELINE_FIXTURE.reviewerEmail },
+      include: {
+        profile: true,
+        userRoles: true,
+      },
+    });
+
+    expect(organizer?.passwordHash).not.toBe('hash');
+    expect(organizer?.profile?.fullName).toBe(DEMO_BASELINE_FIXTURE.creatorFullName);
+    expect(organizer?.userRoles.map((item) => item.role)).toEqual(
+      expect.arrayContaining(['applicant', 'organizer'])
+    );
+
+    expect(reviewer?.passwordHash).toBeTruthy();
+    expect(reviewer?.profile?.fullName).toBe(DEMO_BASELINE_FIXTURE.reviewerFullName);
+    expect(reviewer?.userRoles.map((item) => item.role)).toEqual(
+      expect.arrayContaining(['applicant', 'reviewer'])
+    );
   });
 });

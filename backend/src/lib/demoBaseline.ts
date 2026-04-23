@@ -1,7 +1,15 @@
+import bcrypt from 'bcryptjs';
 import type { PrismaClient } from '@prisma/client';
+import { buildStarterProfile } from './profile';
+import { ensureUserRole } from './userRoles';
 
 export const DEMO_BASELINE_FIXTURE = {
   creatorEmail: 'grant.integration.creator@example.com',
+  creatorFullName: 'Demo Organizer',
+  creatorPassword: 'organizer123',
+  reviewerEmail: 'grant.integration.reviewer@example.com',
+  reviewerFullName: 'Demo Reviewer',
+  reviewerPassword: 'reviewer123',
   conferenceSlug: 'integration-grant-conf-2026',
   grantSlug: 'integration-grant-2026-travel-support',
   conferenceTitle: 'Integration Grant Conference 2026',
@@ -22,15 +30,86 @@ export const DEMO_BASELINE_FIXTURE = {
 } as const;
 
 export const ensureDemoBaseline = async (prisma: PrismaClient) => {
+  const [creatorPasswordHash, reviewerPasswordHash] = await Promise.all([
+    bcrypt.hash(DEMO_BASELINE_FIXTURE.creatorPassword, 10),
+    bcrypt.hash(DEMO_BASELINE_FIXTURE.reviewerPassword, 10),
+  ]);
+
   const creator = await prisma.user.upsert({
     where: { email: DEMO_BASELINE_FIXTURE.creatorEmail },
-    update: {},
+    update: {
+      passwordHash: creatorPasswordHash,
+      status: 'active',
+    },
     create: {
       email: DEMO_BASELINE_FIXTURE.creatorEmail,
-      passwordHash: 'hash',
+      passwordHash: creatorPasswordHash,
       status: 'active',
     },
   });
+
+  await prisma.profile.upsert({
+    where: { userId: creator.id },
+    update: {
+      fullName: DEMO_BASELINE_FIXTURE.creatorFullName,
+      institutionNameRaw: 'Asian Mathematical Network',
+      countryCode: 'SG',
+      careerStage: 'faculty',
+      researchKeywordsJson: JSON.stringify(['governance', 'conference operations']),
+      isProfilePublic: true,
+    },
+    create: {
+      ...buildStarterProfile(creator.id, DEMO_BASELINE_FIXTURE.creatorFullName),
+      institutionNameRaw: 'Asian Mathematical Network',
+      countryCode: 'SG',
+      careerStage: 'faculty',
+      researchKeywordsJson: JSON.stringify(['governance', 'conference operations']),
+      isProfilePublic: true,
+    },
+  });
+
+  await Promise.all([
+    ensureUserRole(creator.id, 'applicant', prisma, true),
+    ensureUserRole(creator.id, 'organizer', prisma),
+  ]);
+
+  const reviewer = await prisma.user.upsert({
+    where: { email: DEMO_BASELINE_FIXTURE.reviewerEmail },
+    update: {
+      passwordHash: reviewerPasswordHash,
+      status: 'active',
+    },
+    create: {
+      email: DEMO_BASELINE_FIXTURE.reviewerEmail,
+      passwordHash: reviewerPasswordHash,
+      status: 'active',
+    },
+  });
+
+  await prisma.profile.upsert({
+    where: { userId: reviewer.id },
+    update: {
+      fullName: DEMO_BASELINE_FIXTURE.reviewerFullName,
+      institutionNameRaw: 'National University of Singapore',
+      countryCode: 'SG',
+      careerStage: 'faculty',
+      researchKeywordsJson: JSON.stringify(['algebra', 'geometry']),
+      isProfilePublic: true,
+    },
+    create: {
+      ...buildStarterProfile(reviewer.id, DEMO_BASELINE_FIXTURE.reviewerFullName),
+      institutionNameRaw: 'National University of Singapore',
+      countryCode: 'SG',
+      careerStage: 'faculty',
+      researchKeywordsJson: JSON.stringify(['algebra', 'geometry']),
+      isProfilePublic: true,
+    },
+  });
+
+  await Promise.all([
+    ensureUserRole(reviewer.id, 'applicant', prisma, true),
+    ensureUserRole(reviewer.id, 'reviewer', prisma),
+  ]);
 
   const conference = await prisma.conference.upsert({
     where: { slug: DEMO_BASELINE_FIXTURE.conferenceSlug },
@@ -135,6 +214,7 @@ export const ensureDemoBaseline = async (prisma: PrismaClient) => {
 
   return {
     creator,
+    reviewer,
     conference,
     grant,
   };
@@ -170,6 +250,10 @@ export const cleanupDemoBaseline = async (prisma: PrismaClient) => {
   });
 
   await prisma.user.deleteMany({
-    where: { email: DEMO_BASELINE_FIXTURE.creatorEmail },
+    where: {
+      email: {
+        in: [DEMO_BASELINE_FIXTURE.creatorEmail, DEMO_BASELINE_FIXTURE.reviewerEmail],
+      },
+    },
   });
 };
