@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { LogOut, User } from 'lucide-react';
 import { WorkspaceShell } from '../components/layout/WorkspaceShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
 import { getMe } from '../api/auth';
+import { dashboardProvider } from '../features/dashboard/dashboardProvider';
+import type { MyApplication, ViewerStatus } from '../features/dashboard/types';
 import './Dashboard.css';
 
 type DashboardRole = 'visitor' | 'applicant' | 'reviewer' | 'organizer' | 'admin';
@@ -16,6 +18,20 @@ type DashboardData = {
     status?: string | null;
     role?: string | null;
   };
+};
+
+type BadgeTone = 'neutral' | 'info' | 'success' | 'warning' | 'danger';
+
+const VIEWER_STATUS_TONES: Record<ViewerStatus, BadgeTone> = {
+  draft: 'neutral',
+  under_review: 'warning',
+  result_released: 'info',
+};
+
+const VIEWER_STATUS_LABELS: Record<ViewerStatus, string> = {
+  draft: 'Draft',
+  under_review: 'Under review',
+  result_released: 'Result released',
 };
 
 const toRole = (role?: string | null): DashboardRole =>
@@ -30,6 +46,8 @@ const toRole = (role?: string | null): DashboardRole =>
 export default function Dashboard() {
   const navigate = useNavigate();
   const [userData, setUserData] = useState<DashboardData | null>(null);
+  const [applications, setApplications] = useState<MyApplication[]>([]);
+  const [applicationsError, setApplicationsError] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -40,8 +58,24 @@ export default function Dashboard() {
         return;
       }
       try {
-        const data = await getMe(token);
-        setUserData(data);
+        const [meResult, applicationsResult] = await Promise.allSettled([
+          getMe(token),
+          dashboardProvider.listMyApplications(),
+        ]);
+
+        if (meResult.status === 'rejected') {
+          throw meResult.reason;
+        }
+
+        setUserData(meResult.value);
+
+        if (applicationsResult.status === 'fulfilled') {
+          setApplications(applicationsResult.value);
+          setApplicationsError(false);
+        } else {
+          setApplications([]);
+          setApplicationsError(true);
+        }
       } catch {
         localStorage.removeItem('token');
         navigate('/login');
@@ -60,6 +94,12 @@ export default function Dashboard() {
   if (loading) {
     return <div className="loading">Loading dashboard...</div>;
   }
+
+  const latestApplication = applications[0] ?? null;
+  const applicationCountLabel =
+    applications.length === 1
+      ? '1 active application in your workspace.'
+      : `${applications.length} active applications in your workspace.`;
 
   return (
     <WorkspaceShell
@@ -95,7 +135,26 @@ export default function Dashboard() {
         <div className="dashboard-grid">
           <div className="dashboard-widget">
             <h3>My Applications</h3>
-            <p>You have no pending applications.</p>
+            {latestApplication ? (
+              <>
+                <p className="dashboard-widget__summary">{applicationCountLabel}</p>
+                <div className="dashboard-widget__record">
+                  <p className="dashboard-widget__record-title">
+                    {latestApplication.sourceTitle ?? 'Application record'}
+                  </p>
+                  <StatusBadge tone={VIEWER_STATUS_TONES[latestApplication.viewerStatus]}>
+                    {VIEWER_STATUS_LABELS[latestApplication.viewerStatus]}
+                  </StatusBadge>
+                </div>
+              </>
+            ) : applicationsError ? (
+              <p>Open your application workspace to reload your current records.</p>
+            ) : (
+              <p>Open your application workspace to review records or start a submission.</p>
+            )}
+            <Link to="/me/applications" className="dashboard-widget__link">
+              Open my applications
+            </Link>
           </div>
           <div className="dashboard-widget">
             <h3>Upcoming Conferences</h3>
