@@ -1,12 +1,15 @@
 import { StatusBadge } from '../../../components/ui/StatusBadge';
+import { getLinkedOpportunityCopy } from '../linkedOpportunity';
 import type { GrantApplicantVisibleState } from '../grantApplicantState';
+import type { LinkedOpportunityType } from '../types';
 
 type Props = {
   state: GrantApplicantVisibleState;
+  linkedOpportunityType: LinkedOpportunityType;
 };
 
-const panelCopy: Record<
-  GrantApplicantVisibleState,
+const staticPanelCopy: Record<
+  Exclude<GrantApplicantVisibleState, 'prerequisite_blocked'>,
   {
     tone: 'info' | 'warning' | 'success';
     badge: string;
@@ -15,20 +18,12 @@ const panelCopy: Record<
     hint: string;
   }
 > = {
-  prerequisite_blocked: {
-    tone: 'warning',
-    badge: 'Conference prerequisite',
-    title: 'Conference application required first',
-    description:
-      'Submit your conference application before starting a separate grant application record.',
-    hint: 'This grant page stays grant-owned. It does not replace the future applicant dashboard.',
-  },
   no_application: {
     tone: 'info',
     badge: 'Applicant state',
     title: 'No grant application yet',
     description: 'You can start a separate grant application for this opportunity.',
-    hint: 'The grant record remains separate from the linked conference application record.',
+    hint: 'The grant record remains separate from the linked opportunity participation record.',
   },
   draft_exists: {
     tone: 'warning',
@@ -56,8 +51,19 @@ const panelCopy: Record<
   },
 };
 
-export function GrantApplicationStatePanel({ state }: Props) {
-  const copy = panelCopy[state];
+export function GrantApplicationStatePanel({ state, linkedOpportunityType }: Props) {
+  const linkedOpportunityCopy = getLinkedOpportunityCopy(linkedOpportunityType);
+  const copy =
+    state === 'prerequisite_blocked'
+      ? {
+          tone: 'warning' as const,
+          badge:
+            linkedOpportunityType === 'school' ? 'School prerequisite' : 'Conference prerequisite',
+          title: linkedOpportunityCopy.prerequisiteTitle,
+          description: linkedOpportunityCopy.prerequisiteDescription,
+          hint: 'This grant page stays grant-owned. It does not replace the future applicant dashboard.',
+        }
+      : staticPanelCopy[state];
 
   return (
     <section className="conference-detail-card stack-sm">

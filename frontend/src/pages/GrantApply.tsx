@@ -6,7 +6,6 @@ import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
 import { conferenceProvider } from '../features/conference/conferenceProvider';
-import type { ConferenceApplication } from '../features/conference/types';
 import { GrantApplyForm } from '../features/grant/GrantApplyForm';
 import { GrantApplicationStatePanel } from '../features/grant/components/GrantApplicationStatePanel';
 import { GrantApplicationSummaryCard } from '../features/grant/components/GrantApplicationSummaryCard';
@@ -15,6 +14,10 @@ import {
   getDemoReleasedGrantResult,
   getGrantApplicantVisibleState,
 } from '../features/grant/grantApplicantState';
+import {
+  buildSyntheticSchoolParticipation,
+  getLinkedOpportunityCopy,
+} from '../features/grant/linkedOpportunity';
 import { readReturnContext, toReturnContextState } from '../features/navigation/returnContext';
 import { grantProvider } from '../features/grant/grantProvider';
 import type {
@@ -22,10 +25,18 @@ import type {
   GrantApplicationValues,
   GrantDetail,
   GrantFormSchema,
+  LinkedOpportunityType,
 } from '../features/grant/types';
 import './Conference.css';
 
 export const routePath = '/grants/:slug/apply';
+
+type GrantPrerequisite = {
+  id: string;
+  title: string | null;
+  type: LinkedOpportunityType;
+  status: 'draft' | 'submitted' | 'ready';
+};
 
 export default function GrantApply() {
   const { slug = '' } = useParams();
@@ -34,7 +45,7 @@ export default function GrantApply() {
   const [grant, setGrant] = useState<GrantDetail | null | undefined>(undefined);
   const [schema, setSchema] = useState<GrantFormSchema>({ fields: [] });
   const [application, setApplication] = useState<GrantApplication | null>(null);
-  const [prerequisite, setPrerequisite] = useState<ConferenceApplication | null>(null);
+  const [prerequisite, setPrerequisite] = useState<GrantPrerequisite | null>(null);
   const [viewerEmail, setViewerEmail] = useState<string | null>(null);
   const [status, setStatus] = useState<
     'idle' | 'saving' | 'submitting' | 'submitted' | 'conflict' | 'prerequisite' | 'error'
@@ -68,7 +79,7 @@ export default function GrantApply() {
         const [nextSchema, nextApplication, nextPrerequisite, me] = await Promise.all([
           grantProvider.getGrantApplicationForm(value.id),
           grantProvider.getMyGrantApplication(value.id),
-          conferenceProvider.getMyConferenceApplication(value.linkedConferenceId),
+          readGrantPrerequisite(value, token),
           getMe(token).catch(() => null),
         ]);
 
@@ -100,6 +111,7 @@ export default function GrantApply() {
   }
 
   const isSignedIn = Boolean(localStorage.getItem('token'));
+  const linkedOpportunityCopy = getLinkedOpportunityCopy(grant.linkedOpportunityType);
 
   if (!isSignedIn) {
     return (
@@ -128,10 +140,10 @@ export default function GrantApply() {
     );
   }
 
-  const linkedConferenceApplicationId =
-    application?.linkedConferenceApplicationId ??
-    (prerequisite?.status === 'submitted' ? prerequisite.id : '');
-  const prerequisiteBlocked = !linkedConferenceApplicationId;
+  const prerequisiteReady = prerequisite?.status === 'submitted' || prerequisite?.status === 'ready';
+  const linkedOpportunityApplicationId =
+    application?.linkedOpportunityApplicationId ?? (prerequisiteReady ? prerequisite?.id ?? '' : '');
+  const prerequisiteBlocked = !linkedOpportunityApplicationId;
   const releasedResult = getDemoReleasedGrantResult({
     application,
     viewerEmail,
@@ -152,7 +164,7 @@ export default function GrantApply() {
           : 'info';
 
   const saveDraft = async (values: GrantApplicationValues) => {
-    if (!linkedConferenceApplicationId) {
+    if (!linkedOpportunityApplicationId) {
       setStatus('prerequisite');
       return;
     }
@@ -162,7 +174,7 @@ export default function GrantApply() {
 
       const payload = {
         ...values,
-        linkedConferenceApplicationId,
+        linkedOpportunityApplicationId,
       };
       const nextApplication = application
         ? await grantProvider.updateGrantApplication(application.id, payload)
@@ -211,7 +223,7 @@ export default function GrantApply() {
     <WorkspaceShell
       eyebrow="Grant application"
       title={grant.title}
-      description="Request travel support through a dedicated grant application after your conference application has already been submitted."
+      description={linkedOpportunityCopy.shellDescription}
       badges={
         <>
           <RoleBadge role="applicant" />
@@ -224,7 +236,7 @@ export default function GrantApply() {
           <GrantApplicationSummaryCard
             grant={grant}
             application={application}
-            linkedConferenceApplicationId={linkedConferenceApplicationId}
+            linkedOpportunityApplicationId={linkedOpportunityApplicationId}
             visibleState={visibleState}
           />
           <div className="conference-detail-card stack-sm">
@@ -242,7 +254,7 @@ export default function GrantApply() {
       <div className="conference-page conference-detail-page">
         {prerequisiteBlocked || status === 'prerequisite' ? (
           <div className="conference-inline-message error">
-            Submit your conference application before requesting travel support.
+            {linkedOpportunityCopy.blockedMessage}
           </div>
         ) : null}
 
@@ -266,14 +278,18 @@ export default function GrantApply() {
           </div>
         ) : null}
 
-        <GrantApplicationStatePanel state={visibleState} />
+        <GrantApplicationStatePanel
+          state={visibleState}
+          linkedOpportunityType={grant.linkedOpportunityType}
+        />
 
         {releasedResult ? <GrantReleasedResultCard result={releasedResult} /> : null}
 
         <GrantApplyForm
           schema={schema}
           application={application}
-          linkedConferenceApplicationId={linkedConferenceApplicationId}
+          linkedOpportunityType={grant.linkedOpportunityType}
+          linkedOpportunityApplicationId={linkedOpportunityApplicationId}
           visibleState={visibleState}
           status={status}
           blocked={prerequisiteBlocked}
@@ -284,3 +300,31 @@ export default function GrantApply() {
     </WorkspaceShell>
   );
 }
+
+const readGrantPrerequisite = async (
+  grant: GrantDetail,
+  token: string
+): Promise<GrantPrerequisite | null> => {
+  if (grant.linkedOpportunityType === 'school') {
+    return buildSyntheticSchoolParticipation(
+      grant.linkedOpportunityId,
+      grant.linkedOpportunityTitle,
+      token
+    );
+  }
+
+  const conferenceApplication = await conferenceProvider.getMyConferenceApplication(
+    grant.linkedOpportunityId
+  );
+
+  if (!conferenceApplication) {
+    return null;
+  }
+
+  return {
+    id: conferenceApplication.id,
+    title: conferenceApplication.conferenceTitle,
+    type: 'conference',
+    status: conferenceApplication.status,
+  };
+};

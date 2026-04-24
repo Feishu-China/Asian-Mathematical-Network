@@ -115,6 +115,31 @@ describe('grant apply page', () => {
     expect(screen.getByRole('button', { name: /save draft/i })).toBeEnabled();
   });
 
+  it('shows school-linked prerequisite copy and a ready school participation state', async () => {
+    localStorage.setItem('token', 'grant-applicant-school');
+
+    renderWithRouter(
+      <GrantApply />,
+      '/grants/asia-pacific-research-school-mobility-grant-2026/apply',
+      '/grants/:slug/apply'
+    );
+
+    expect(
+      await screen.findByText(
+        /request mobility support through a dedicated grant application after your linked school participation is already in place/i
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /grant applications stay separate from school participation records, even when school participation is required first/i
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByText(/linked school participation:/i)).toBeInTheDocument();
+    expect(screen.getByText(/no grant application yet/i)).toBeInTheDocument();
+    expect(screen.queryByText(/submit your conference application before requesting travel support/i)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /save draft/i })).toBeEnabled();
+  });
+
   it('creates a draft and submits it for an eligible applicant', async () => {
     await seedSubmittedConferenceApplication('grant-applicant-eligible');
     const user = userEvent.setup();
@@ -152,12 +177,12 @@ describe('grant apply page', () => {
   });
 
   it('hydrates an existing grant draft when the page reloads', async () => {
-    const linkedConferenceApplicationId = await seedSubmittedConferenceApplication(
+    const linkedOpportunityApplicationId = await seedSubmittedConferenceApplication(
       'grant-applicant-existing'
     );
 
     await fakeGrantProvider.createGrantApplication('grant-published-001', {
-      linkedConferenceApplicationId,
+      linkedOpportunityApplicationId,
       statement: 'Saved funding request',
       travelPlanSummary: 'Saved travel plan',
       fundingNeedSummary: 'Saved funding need',
@@ -178,7 +203,7 @@ describe('grant apply page', () => {
   });
 
   it('shows a viewer-safe released result sample for a runtime viewer email mapped to the demo account', async () => {
-    const linkedConferenceApplicationId = await seedSubmittedConferenceApplication(
+    const linkedOpportunityApplicationId = await seedSubmittedConferenceApplication(
       'grant-runtime-release-token'
     );
     mockedGetMe.mockResolvedValueOnce({
@@ -188,7 +213,7 @@ describe('grant apply page', () => {
     });
 
     const draft = await fakeGrantProvider.createGrantApplication('grant-published-001', {
-      linkedConferenceApplicationId,
+      linkedOpportunityApplicationId,
       statement: 'Submitted request for released result sample',
       travelPlanSummary: 'Sample travel plan',
       fundingNeedSummary: 'Sample funding need',
@@ -225,7 +250,9 @@ describe('grant apply page', () => {
       slug: 'integration-grant-2026-travel-support',
       title: 'Integration Grant 2026 Travel Support',
       grantType: 'conference_travel_grant',
-      linkedConferenceId: '64af0291-cd91-4420-a6ee-9a9d2ca2f9cc',
+      linkedOpportunityType: 'conference',
+      linkedOpportunityId: '64af0291-cd91-4420-a6ee-9a9d2ca2f9cc',
+      linkedOpportunityTitle: 'Integration Grant Conference 2026',
       description: 'Partial travel support for accepted participants.',
       eligibilitySummary: 'Open to eligible conference applicants.',
       coverageSummary: 'Partial airfare and accommodation support.',
@@ -249,8 +276,10 @@ describe('grant apply page', () => {
       sourceModule: 'M7',
       grantId: '4cb012a0-ca16-428b-9a22-913ad4c018a0',
       grantTitle: 'Integration Grant 2026 Travel Support',
-      linkedConferenceId: '64af0291-cd91-4420-a6ee-9a9d2ca2f9cc',
-      linkedConferenceApplicationId: '8cd9e4b3-e8e5-439c-ad14-82739ca9c56e',
+      linkedOpportunityType: 'conference',
+      linkedOpportunityId: '64af0291-cd91-4420-a6ee-9a9d2ca2f9cc',
+      linkedOpportunityTitle: 'Integration Grant Conference 2026',
+      linkedOpportunityApplicationId: '8cd9e4b3-e8e5-439c-ad14-82739ca9c56e',
       applicantUserId: 'bf9d7496-637e-4260-ac5b-e9c969903bb3',
       status: 'submitted',
       statement: 'Released-result smoke applicant requesting travel support.',
@@ -326,7 +355,15 @@ describe('grant apply page', () => {
       '/schools/algebraic-geometry-research-school-2026'
     );
 
-    await user.click(screen.getByRole('link', { name: /view details/i }));
+    const schoolDetailLink = screen
+      .getAllByRole('link', { name: /view details/i })
+      .find(
+        (link) =>
+          link.getAttribute('href') === '/grants/asia-pacific-research-school-mobility-grant-2026'
+      );
+
+    expect(schoolDetailLink).toBeTruthy();
+    await user.click(schoolDetailLink!);
     expect(await screen.findByRole('link', { name: /start grant application/i })).toBeInTheDocument();
 
     await user.click(screen.getByRole('link', { name: /start grant application/i }));

@@ -1,4 +1,5 @@
 import { fakeConferenceProvider } from '../conference/fakeConferenceProvider';
+import { buildSyntheticSchoolParticipation } from './linkedOpportunity';
 import {
   fromTransportGrantApplication,
   fromTransportGrantApplicationForm,
@@ -37,6 +38,9 @@ const publishedGrantSeed: PublicGrantRecord = {
   title: 'Asiamath 2026 Travel Grant',
   grant_type: 'conference_travel_grant',
   linked_conference_id: 'conf-published-001',
+  linked_opportunity_type: 'conference',
+  linked_opportunity_id: 'conf-published-001',
+  linked_opportunity_title: 'Asiamath 2026 Workshop',
   description: 'Partial travel support for accepted participants.',
   eligibility_summary: 'Open to eligible conference applicants.',
   coverage_summary: 'Partial airfare and accommodation support.',
@@ -47,12 +51,35 @@ const publishedGrantSeed: PublicGrantRecord = {
   is_application_open: true,
 };
 
+const publishedSchoolGrantSeed: PublicGrantRecord = {
+  id: 'grant-school-001',
+  slug: 'asia-pacific-research-school-mobility-grant-2026',
+  title: 'Asia-Pacific Research School Mobility Grant 2026',
+  grant_type: 'conference_travel_grant',
+  linked_conference_id: null,
+  linked_opportunity_type: 'school',
+  linked_opportunity_id: 'school-001',
+  linked_opportunity_title: 'Asia-Pacific Research School in Algebraic Geometry',
+  description:
+    'Mobility support for selected participants in the Asia-Pacific Research School in Algebraic Geometry.',
+  eligibility_summary: 'Open to eligible school participants in the linked training program.',
+  coverage_summary: 'Regional travel and accommodation support for the linked school cohort.',
+  application_deadline: '2026-06-18T23:59:59.000Z',
+  status: 'published',
+  report_required: false,
+  published_at: '2026-04-22T12:30:00.000Z',
+  is_application_open: true,
+};
+
 const draftGrantSeed: PublicGrantRecord = {
   id: 'grant-draft-001',
   slug: 'asiamath-2026-draft-grant',
   title: 'Asiamath 2026 Draft Grant',
   grant_type: 'conference_travel_grant',
   linked_conference_id: 'conf-published-001',
+  linked_opportunity_type: 'conference',
+  linked_opportunity_id: 'conf-published-001',
+  linked_opportunity_title: 'Asiamath 2026 Workshop',
   description: 'Draft grant should not appear on public pages.',
   eligibility_summary: 'Draft only.',
   coverage_summary: 'Draft only.',
@@ -67,7 +94,7 @@ const grantSchema = fromTransportGrantApplicationForm({
   grant_id: publishedGrantSeed.id,
   schema: {
     fields: [
-      { key: 'linked_conference_application_id', type: 'select', required: true },
+      { key: 'linked_opportunity_application_id', type: 'select', required: true },
       { key: 'statement', type: 'textarea', required: true },
       { key: 'travel_plan_summary', type: 'textarea', required: true },
       { key: 'funding_need_summary', type: 'textarea', required: true },
@@ -75,24 +102,44 @@ const grantSchema = fromTransportGrantApplicationForm({
   },
 });
 
-let publicGrantState: PublicGrantRecord[] = [publishedGrantSeed, draftGrantSeed];
+let publicGrantState: PublicGrantRecord[] = [publishedGrantSeed, publishedSchoolGrantSeed, draftGrantSeed];
 let applicationState: GrantApplication[] = [];
 
 export const resetGrantFakeState = () => {
-  publicGrantState = [publishedGrantSeed, draftGrantSeed];
+  publicGrantState = [publishedGrantSeed, publishedSchoolGrantSeed, draftGrantSeed];
   applicationState = [];
 };
 
-const findEligibleConferenceApplication = async (
-  linkedConferenceId: string,
-  linkedConferenceApplicationId: string
+const findEligibleLinkedOpportunity = async (
+  grant: PublicGrantRecord,
+  linkedOpportunityApplicationId: string,
+  userId: string
 ) => {
-  const linkedConferenceApplication =
-    await fakeConferenceProvider.getMyConferenceApplication(linkedConferenceId);
+  if (grant.linked_opportunity_type === 'school') {
+    const participation = buildSyntheticSchoolParticipation(
+      grant.linked_opportunity_id ?? '',
+      grant.linked_opportunity_title ?? null,
+      userId
+    );
+
+    if (linkedOpportunityApplicationId && linkedOpportunityApplicationId !== participation.id) {
+      const error = new Error(
+        'A linked school participation is required before requesting travel support.'
+      ) as PrerequisiteError;
+      error.code = 'PREREQUISITE';
+      throw error;
+    }
+
+    return participation;
+  }
+
+  const linkedConferenceApplication = await fakeConferenceProvider.getMyConferenceApplication(
+    grant.linked_conference_id ?? ''
+  );
 
   if (
     !linkedConferenceApplication ||
-    linkedConferenceApplication.id !== linkedConferenceApplicationId ||
+    linkedConferenceApplication.id !== linkedOpportunityApplicationId ||
     linkedConferenceApplication.status !== 'submitted'
   ) {
     const error = new Error(
@@ -161,10 +208,7 @@ export const fakeGrantProvider: GrantProvider = {
       throw new Error('Grant not found');
     }
 
-    await findEligibleConferenceApplication(
-      grant.linked_conference_id,
-      values.linkedConferenceApplicationId
-    );
+    await findEligibleLinkedOpportunity(grant, values.linkedOpportunityApplicationId, userId);
 
     const created = fromTransportGrantApplication({
       id: `grant-application-${applicationState.length + 1}`,
@@ -173,7 +217,14 @@ export const fakeGrantProvider: GrantProvider = {
       grant_id: grant.id,
       grant_title: grant.title,
       linked_conference_id: grant.linked_conference_id,
-      linked_conference_application_id: values.linkedConferenceApplicationId,
+      linked_conference_application_id:
+        grant.linked_opportunity_type === 'conference'
+          ? values.linkedOpportunityApplicationId
+          : null,
+      linked_opportunity_type: grant.linked_opportunity_type,
+      linked_opportunity_id: grant.linked_opportunity_id,
+      linked_opportunity_title: grant.linked_opportunity_title,
+      linked_opportunity_application_id: values.linkedOpportunityApplicationId,
       applicant_user_id: userId,
       status: 'draft',
       statement: values.statement,
@@ -207,16 +258,19 @@ export const fakeGrantProvider: GrantProvider = {
       throw new Error('Only draft applications can be edited');
     }
 
-    await findEligibleConferenceApplication(
-      existing.linkedConferenceId,
-      values.linkedConferenceApplicationId
-    );
+    const grant = publicGrantState.find((item) => item.id === existing.grantId);
+
+    if (!grant) {
+      throw new Error('Grant not found');
+    }
+
+    await findEligibleLinkedOpportunity(grant, values.linkedOpportunityApplicationId, userId);
 
     applicationState = applicationState.map((item) =>
       item.id === applicationId
         ? {
             ...item,
-            linkedConferenceApplicationId: values.linkedConferenceApplicationId,
+            linkedOpportunityApplicationId: values.linkedOpportunityApplicationId,
             statement: values.statement,
             travelPlanSummary: values.travelPlanSummary,
             fundingNeedSummary: values.fundingNeedSummary,
@@ -250,10 +304,13 @@ export const fakeGrantProvider: GrantProvider = {
       throw new Error('Only draft applications can be submitted');
     }
 
-    await findEligibleConferenceApplication(
-      existing.linkedConferenceId,
-      existing.linkedConferenceApplicationId
-    );
+    const grant = publicGrantState.find((item) => item.id === existing.grantId);
+
+    if (!grant) {
+      throw new Error('Grant not found');
+    }
+
+    await findEligibleLinkedOpportunity(grant, existing.linkedOpportunityApplicationId, userId);
 
     applicationState = applicationState.map((item) =>
       item.id === applicationId

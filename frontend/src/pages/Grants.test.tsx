@@ -27,9 +27,15 @@ describe('grant public pages', () => {
     expect(screen.getByText('Published grants only')).toBeInTheDocument();
     expect(await screen.findByRole('heading', { name: 'Asiamath 2026 Travel Grant' })).toBeInTheDocument();
     expect(screen.queryByText('Asiamath 2026 Draft Grant')).not.toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /view details/i })).toHaveAttribute(
-      'href',
-      '/grants/asiamath-2026-travel-grant'
+    expect(screen.getAllByRole('link', { name: /view details/i })).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ href: expect.stringContaining('/grants/asiamath-2026-travel-grant') }),
+        expect.objectContaining({
+          href: expect.stringContaining(
+            '/grants/asia-pacific-research-school-mobility-grant-2026'
+          ),
+        }),
+      ])
     );
   });
 
@@ -75,10 +81,20 @@ describe('grant public pages', () => {
       '/schools/algebraic-geometry-research-school-2026'
     );
 
-    await user.click(screen.getByRole('link', { name: /view details/i }));
+    const schoolDetailLink = screen
+      .getAllByRole('link', { name: /view details/i })
+      .find(
+        (link) =>
+          link.getAttribute('href') === '/grants/asia-pacific-research-school-mobility-grant-2026'
+      );
+
+    expect(schoolDetailLink).toBeTruthy();
+    await user.click(schoolDetailLink!);
 
     expect(
-      await screen.findByText('Partial travel support for accepted participants.')
+      await screen.findByText(
+        'Mobility support for selected participants in the Asia-Pacific Research School in Algebraic Geometry.'
+      )
     ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /back to grants/i })).toHaveAttribute('href', '/grants');
 
@@ -107,6 +123,21 @@ describe('grant public pages', () => {
       'href',
       '/grants/asiamath-2026-travel-grant/apply'
     );
+  });
+
+  it('renders school-linked grant detail with school prerequisite guidance', async () => {
+    renderWithRouter(
+      <GrantDetail />,
+      '/grants/asia-pacific-research-school-mobility-grant-2026',
+      '/grants/:slug'
+    );
+
+    expect(
+      await screen.findByText(/mobility support for selected participants in the asia-pacific research school in algebraic geometry/i)
+    ).toBeInTheDocument();
+    expect(screen.getByText(/school participation required before grant submission/i)).toBeInTheDocument();
+    expect(screen.getByText(/grant applications stay separate from school participation records/i)).toBeInTheDocument();
+    expect(screen.getByText('School mobility grant')).toBeInTheDocument();
   });
 
   it('shows a return link from grant detail back to the grant list', async () => {

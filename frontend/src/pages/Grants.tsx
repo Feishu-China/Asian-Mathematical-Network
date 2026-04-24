@@ -7,7 +7,7 @@ import { StatusBadge } from '../components/ui/StatusBadge';
 import { readReturnContext, toReturnContextState } from '../features/navigation/returnContext';
 import { GrantListCard } from '../features/grant/GrantListCard';
 import { grantProvider } from '../features/grant/grantProvider';
-import type { GrantListItem } from '../features/grant/types';
+import type { GrantListItem, LinkedOpportunityType } from '../features/grant/types';
 import './Conference.css';
 
 export const routePath = '/grants';
@@ -19,6 +19,7 @@ export default function Grants() {
   const location = useLocation();
   const returnContext = readReturnContext(location.state);
   const detailState = toReturnContextState(returnContext);
+  const preferredOpportunityType = readPreferredOpportunityType(returnContext?.to);
 
   useEffect(() => {
     let active = true;
@@ -85,7 +86,7 @@ export default function Grants() {
           <div className="conference-empty">No published grants yet.</div>
         ) : (
           <div className="conference-grid">
-            {items.map((grant) => (
+            {sortByPreferredOpportunity(items, preferredOpportunityType).map((grant) => (
               <GrantListCard key={grant.id} grant={grant} detailState={detailState} />
             ))}
           </div>
@@ -94,3 +95,34 @@ export default function Grants() {
     </PortalShell>
   );
 }
+
+const readPreferredOpportunityType = (path?: string): LinkedOpportunityType | null => {
+  if (!path) {
+    return null;
+  }
+
+  if (path.startsWith('/schools/')) {
+    return 'school';
+  }
+
+  if (path.startsWith('/conferences/')) {
+    return 'conference';
+  }
+
+  return null;
+};
+
+const sortByPreferredOpportunity = (
+  items: GrantListItem[],
+  preferredOpportunityType: LinkedOpportunityType | null
+) => {
+  if (!preferredOpportunityType) {
+    return items;
+  }
+
+  return [...items].sort((left, right) => {
+    const leftScore = left.linkedOpportunityType === preferredOpportunityType ? 0 : 1;
+    const rightScore = right.linkedOpportunityType === preferredOpportunityType ? 0 : 1;
+    return leftScore - rightScore;
+  });
+};

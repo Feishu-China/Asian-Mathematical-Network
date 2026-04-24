@@ -289,11 +289,11 @@
       "id": "DEMO-GAP-001",
       "title": "Grant prerequisite ownership remains conference-first",
       "severity": "known-semantic-gap",
-      "status": "open",
+      "status": "resolved",
       "notes": [
-        "The current grant application model assumes a conference prerequisite even when the discovery path starts from schools.",
-        "This is acceptable for the current d0 shell as a teaser linkage, but it should not be presented as final product semantics.",
-        "Preferred follow-up direction: generalize prerequisite ownership from conference-only fields to a linked opportunity or event model."
+        "The demo-facing frontend grant contract now uses linked opportunity fields and supports both conference and school prerequisite types.",
+        "Grant list, detail, and apply surfaces now render opportunity-aware copy instead of assuming conference-only ownership.",
+        "HTTP transport remains backward-compatible with the current backend conference fields; backend schema generalization can happen later without rewriting the demo pages."
       ]
     }
   ]

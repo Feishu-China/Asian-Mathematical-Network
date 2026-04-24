@@ -4,6 +4,7 @@ import { PortalShell } from '../components/layout/PortalShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
+import { getLinkedOpportunityCopy } from '../features/grant/linkedOpportunity';
 import { readReturnContext, toReturnContextState } from '../features/navigation/returnContext';
 import { grantProvider } from '../features/grant/grantProvider';
 import type { GrantDetail as GrantDetailModel } from '../features/grant/types';
@@ -55,6 +56,7 @@ export default function GrantDetail() {
   }
 
   const grantDetail = grant;
+  const linkedOpportunityCopy = getLinkedOpportunityCopy(grantDetail.linkedOpportunityType);
 
   return (
     <PortalShell
@@ -82,9 +84,9 @@ export default function GrantDetail() {
       aside={
         <div className="conference-detail-card conference-cta-card stack-sm">
           <h2>Applicant handoff</h2>
-          <p>Conference application required before grant submission.</p>
+          <p>{linkedOpportunityCopy.handoffSummary}</p>
           <p className="conference-muted-note">
-            Grant applications stay separate from conference applications, even when they are linked.
+            {linkedOpportunityCopy.handoffHint}
           </p>
           {grantDetail.isApplicationOpen ? (
             <Link
@@ -106,8 +108,14 @@ export default function GrantDetail() {
           <dl>
             <div>
               <dt>Grant type</dt>
-              <dd>Conference travel grant</dd>
+              <dd>{linkedOpportunityCopy.grantTypeLabel}</dd>
             </div>
+            {grantDetail.linkedOpportunityTitle ? (
+              <div>
+                <dt>Linked opportunity</dt>
+                <dd>{grantDetail.linkedOpportunityTitle}</dd>
+              </div>
+            ) : null}
             <div>
               <dt>Deadline</dt>
               <dd>{grantDetail.applicationDeadline || 'Pending'}</dd>
