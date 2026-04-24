@@ -258,8 +258,8 @@
       "demo_criticality": "polish",
       "delivery_mode": "demo-only",
       "depends_on": ["DEMO-POLISH-001"],
-      "status": "planned",
-      "passes": false
+      "status": "completed",
+      "passes": true
     },
     {
       "id": "DEMO-POLISH-003",

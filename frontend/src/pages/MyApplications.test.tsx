@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
+import { render } from '@testing-library/react';
 import { screen, waitFor } from '@testing-library/react';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { renderWithRouter } from '../test/renderWithRouter';
 import {
   resetDashboardFakeState,
@@ -97,6 +99,41 @@ describe('MyApplications page', () => {
       await screen.findByRole('heading', { name: 'Review Demo Conference 2026' })
     ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /view submission/i })).toHaveAttribute(
+      'href',
+      '/me/applications/review-application-1'
+    );
+  });
+
+  it('shows presenter-safe walkthrough shortcuts and preserves a caller return link', async () => {
+    localStorage.setItem('token', 'test-token');
+    seedDashboardDemoState();
+
+    render(
+      <MemoryRouter
+        initialEntries={[
+          {
+            pathname: '/me/applications',
+            state: {
+              returnContext: {
+                to: '/dashboard',
+                label: 'Back to dashboard',
+              },
+            },
+          },
+        ]}
+      >
+        <Routes>
+          <Route path="/me/applications" element={<MyApplications />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByRole('heading', { name: /presenter-safe walkthrough/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /back to dashboard/i })).toHaveAttribute(
+      'href',
+      '/dashboard'
+    );
+    expect(screen.getByRole('link', { name: /open seeded walkthrough record/i })).toHaveAttribute(
       'href',
       '/me/applications/review-application-1'
     );

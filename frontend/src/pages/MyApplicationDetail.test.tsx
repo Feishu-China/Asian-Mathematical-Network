@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { screen } from '@testing-library/react';
-import { renderWithRouter } from '../test/renderWithRouter';
+import { render, screen } from '@testing-library/react';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { resetReviewFakeState } from '../features/review/fakeReviewProvider';
 import { reviewProvider } from '../features/review/reviewProvider';
 import MyApplicationDetail from './MyApplicationDetail';
@@ -22,10 +22,24 @@ describe('MyApplicationDetail page', () => {
 
     localStorage.setItem('token', 'applicant-1');
 
-    renderWithRouter(
-      <MyApplicationDetail />,
-      '/me/applications/review-application-1',
-      '/me/applications/:id'
+    render(
+      <MemoryRouter
+        initialEntries={[
+          {
+            pathname: '/me/applications/review-application-1',
+            state: {
+              returnContext: {
+                to: '/me/applications',
+                label: 'Back to applicant overview',
+              },
+            },
+          },
+        ]}
+      >
+        <Routes>
+          <Route path="/me/applications/:id" element={<MyApplicationDetail />} />
+        </Routes>
+      </MemoryRouter>
     );
 
     expect(
@@ -35,6 +49,15 @@ describe('MyApplicationDetail page', () => {
     expect(screen.getByText('Page mode: Hybrid')).toBeInTheDocument();
     expect(screen.getByText('Result released')).toBeInTheDocument();
     expect(screen.getByText('Accepted')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /back to applicant overview/i })).toHaveAttribute(
+      'href',
+      '/me/applications'
+    );
+    expect(screen.getByRole('heading', { name: /presenter shortcuts/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /restart from portal/i })).toHaveAttribute(
+      'href',
+      '/portal'
+    );
     expect(
       screen.getByText('We are pleased to inform you that your application has been accepted.')
     ).toBeInTheDocument();

@@ -1,3 +1,8 @@
+.application-detail__aside-stack {
+  display: grid;
+  gap: var(--space-4);
+}
+
 .application-detail__aside {
   gap: var(--space-3);
 }

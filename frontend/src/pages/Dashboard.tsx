@@ -8,6 +8,13 @@ import { StatusBadge } from '../components/ui/StatusBadge';
 import { getMe } from '../api/auth';
 import { dashboardProvider } from '../features/dashboard/dashboardProvider';
 import type { MyApplication, ViewerStatus } from '../features/dashboard/types';
+import { DemoShortcutPanel } from '../features/demo/DemoShortcutPanel';
+import {
+  buildChainedReturnState,
+  DASHBOARD_RETURN_CONTEXT,
+  demoWalkthroughCopy,
+  MY_APPLICATIONS_RETURN_CONTEXT,
+} from '../features/demo/demoWalkthrough';
 import './Dashboard.css';
 
 type DashboardRole = 'visitor' | 'applicant' | 'reviewer' | 'organizer' | 'admin';
@@ -152,10 +159,33 @@ export default function Dashboard() {
             ) : (
               <p>Open your application workspace to review records or start a submission.</p>
             )}
-            <Link to="/me/applications" className="dashboard-widget__link">
+            <Link
+              to="/me/applications"
+              state={buildChainedReturnState(MY_APPLICATIONS_RETURN_CONTEXT, DASHBOARD_RETURN_CONTEXT)}
+              className="dashboard-widget__link"
+            >
               Open my applications
             </Link>
           </div>
+          <DemoShortcutPanel
+            className="dashboard-widget"
+            headingLevel="h3"
+            title={demoWalkthroughCopy.dashboard.title}
+            intro={demoWalkthroughCopy.dashboard.intro}
+            shortcuts={[
+              {
+                to: '/me/applications',
+                state: buildChainedReturnState(MY_APPLICATIONS_RETURN_CONTEXT, DASHBOARD_RETURN_CONTEXT),
+                label: 'Continue in My applications',
+                description: 'Move into the seeded applicant record list without losing your dashboard return link.',
+              },
+              {
+                to: '/portal',
+                label: 'Restart from portal',
+                description: 'Reset the demo story at the public entry if you need to replay the whole click path.',
+              },
+            ]}
+          />
           <div className="dashboard-widget">
             <h3>Upcoming Conferences</h3>
             <p>Explore latest mathematical conferences in Asia.</p>

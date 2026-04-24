@@ -68,4 +68,21 @@ describe('Dashboard page', () => {
       '/me/applications'
     );
   });
+
+  it('shows presenter-safe continuation shortcuts for the demo flow', async () => {
+    localStorage.setItem('token', 'dashboard-token');
+    seedDashboardDemoState();
+
+    renderWithRouter(<Dashboard />, '/dashboard', '/dashboard');
+
+    expect(await screen.findByRole('heading', { name: /presenter-safe walkthrough/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /continue in my applications/i })).toHaveAttribute(
+      'href',
+      '/me/applications'
+    );
+    expect(screen.getByRole('link', { name: /restart from portal/i })).toHaveAttribute(
+      'href',
+      '/portal'
+    );
+  });
 });

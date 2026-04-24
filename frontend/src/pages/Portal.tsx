@@ -3,6 +3,13 @@ import { PortalShell } from '../components/layout/PortalShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
+import { DemoShortcutPanel } from '../features/demo/DemoShortcutPanel';
+import {
+  buildChainedReturnState,
+  demoWalkthroughCopy,
+  MY_APPLICATIONS_RETURN_CONTEXT,
+  PORTAL_RETURN_CONTEXT,
+} from '../features/demo/demoWalkthrough';
 import type { ReturnContextState } from '../features/navigation/returnContext';
 
 export const routePath = '/portal';
@@ -47,10 +54,7 @@ const accountLinks = [
 
 export default function Portal() {
   const portalReturnState: ReturnContextState = {
-    returnContext: {
-      to: '/portal',
-      label: 'Back to portal',
-    },
+    returnContext: PORTAL_RETURN_CONTEXT,
   };
 
   return (
@@ -66,6 +70,32 @@ export default function Portal() {
         </>
       }
     >
+      <DemoShortcutPanel
+        className="dashboard-widget"
+        title={demoWalkthroughCopy.portal.title}
+        intro={demoWalkthroughCopy.portal.intro}
+        shortcuts={[
+          {
+            to: '/conferences',
+            state: portalReturnState,
+            label: 'Start with published conferences',
+            description: 'Open the public conference list and keep a direct return path back to the portal.',
+          },
+          {
+            to: '/login',
+            label: 'Continue to sign in',
+            description: 'Move into the authenticated applicant workspace when you are ready to leave the public entry.',
+            note: 'Use the seeded demo account before continuing to Dashboard or My applications.',
+          },
+          {
+            to: '/me/applications',
+            state: buildChainedReturnState(MY_APPLICATIONS_RETURN_CONTEXT, PORTAL_RETURN_CONTEXT),
+            label: 'Jump to My applications',
+            description: 'Skip directly to the stable applicant control point when the walkthrough needs a shorter route.',
+          },
+        ]}
+      />
+
       <section className="dashboard-widget" aria-labelledby="portal-browse-heading">
         <h2 id="portal-browse-heading">Browse opportunities</h2>
         <ul className="portal-link-list">
@@ -92,10 +122,14 @@ export default function Portal() {
             </li>
           ))}
           <li className="surface-card portal-link-card">
-            <Link to="/me/applications" className="portal-link-card__title">
+            <Link
+              to="/me/applications"
+              state={buildChainedReturnState(MY_APPLICATIONS_RETURN_CONTEXT, PORTAL_RETURN_CONTEXT)}
+              className="portal-link-card__title"
+            >
               My applications
             </Link>
-            <p>Review your conference and grant applications in one place.</p>
+            <p>Review seeded conference and grant records with a presenter-safe way back to the portal.</p>
           </li>
         </ul>
       </section>

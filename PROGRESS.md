@@ -10,6 +10,26 @@
 
 ## 📅 Handoff 历史记录
 
+### 2026-04-24 (Session 26)
+*   **Agent 角色**: Coding Agent (Demo polish)
+*   **完成 Feature**: `DEMO-POLISH-002`
+*   **变更记录**:
+    *   在前端新增共享 `demoWalkthrough` / `DemoShortcutPanel`，把 demo-only walkthrough 文案、稳定入口和 presenter-safe shortcut 数据集中到一个前端 helper 层，避免 portal、dashboard、applications、detail 各自漂移。
+    *   `Portal.tsx` 新增 “Presenter-safe demo flow” 区块，补了从 public conferences → sign-in → my applications 的稳定演示起点，并把 portal → my applications 的返回链显式化。
+    *   `Dashboard.tsx` 新增 “Presenter-safe walkthrough” 区块，并让 “Open my applications” 带上返回上下文，确保从 applicant workspace 进入列表页后仍能稳定回到 dashboard。
+    *   `MyApplications.tsx` 现在会读取调用方 `returnContext`，在页头显示可追溯返回入口，新增 seeded walkthrough record shortcut，并把 browse/detail 链路统一挂上返回状态，减少演示时的导航恢复成本。
+    *   `MyApplicationDetail.tsx` 现在支持调用方自定义返回文案，同时新增 “Presenter shortcuts” 侧栏，提供 dashboard / portal 快捷跳转，形成稳定的“开始、继续、重启”演示链。
+    *   补充并通过了 `Portal`、`Dashboard`、`MyApplications`、`MyApplicationDetail` 的测试，覆盖 walkthrough helper、shortcut CTA 与 return-context 文案。
+*   **验证记录**:
+    *   改动前执行通过 `cd frontend && npm run test:run -- src/pages/Portal.test.tsx src/pages/Dashboard.test.tsx src/pages/MyApplications.test.tsx src/pages/MyApplicationDetail.test.tsx`，确认相关页面起始状态干净。
+    *   按 TDD 先补失败测试，再执行同一组 targeted tests，`4` 个 test files、`15` 个 tests 全部通过。
+    *   执行通过 `cd frontend && npm run test:run`：`28` 个 test files、`97` 个 tests 全部通过。
+    *   执行通过 `cd frontend && npm run build`（`tsc -b && vite build`），无类型或构建错误。
+*   **边界与说明**:
+    *   本轮只处理 demo-only walkthrough data、click path、presenter-safe shortcuts 与返回链，不调整后端 schema、不扩展新模块、不顺手做 `DEMO-POLISH-001`。
+    *   本地未跟踪文件 `docs/planning/asiamath-demo-manual-test-checkpoints-d0.md` 按要求保持不提交。
+*   **下一步**: `DEMO-POLISH-001`
+
 ### 2026-04-22 (Session 25)
 *   **Agent 角色**: Coding Agent (Frontend / Contract Realignment)
 *   **完成 Feature**: `FE-PORTAL-001` 与 `REVIEW` 后端新 contract 对齐（PR #11 follow-up）

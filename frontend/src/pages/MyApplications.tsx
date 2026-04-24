@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { WorkspaceShell } from '../components/layout/WorkspaceShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
@@ -11,6 +11,15 @@ import type {
   ReleasedDecisionFinalStatus,
   ViewerStatus,
 } from '../features/dashboard/types';
+import { DemoShortcutPanel } from '../features/demo/DemoShortcutPanel';
+import {
+  buildChainedReturnState,
+  DASHBOARD_RETURN_CONTEXT,
+  demoWalkthroughCopy,
+  DEMO_PRIMARY_APPLICATION_PATH,
+  MY_APPLICATIONS_RETURN_CONTEXT,
+} from '../features/demo/demoWalkthrough';
+import { readReturnContext, type ReturnContextState } from '../features/navigation/returnContext';
 import './MyApplications.css';
 
 export const routePath = '/me/applications';
@@ -78,8 +87,11 @@ const renderStatusBadge = (item: MyApplication) => {
 
 export default function MyApplications() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [items, setItems] = useState<MyApplication[] | null>(null);
   const [hasError, setHasError] = useState(false);
+  const returnContext = readReturnContext(location.state);
+  const sectionReturnState = buildChainedReturnState(MY_APPLICATIONS_RETURN_CONTEXT, returnContext);
 
   useEffect(() => {
     let active = true;
@@ -125,6 +137,15 @@ export default function MyApplications() {
           <StatusBadge tone="info">My applications</StatusBadge>
         </>
       }
+      actions={
+        <Link
+          to={returnContext?.to ?? DASHBOARD_RETURN_CONTEXT.to}
+          state={returnContext?.state}
+          className="my-applications__section-link"
+        >
+          {returnContext?.label ?? DASHBOARD_RETURN_CONTEXT.label}
+        </Link>
+      }
     >
       {items === null ? (
         <div className="conference-empty">Loading your applications...</div>
@@ -136,20 +157,49 @@ export default function MyApplications() {
             </div>
           ) : null}
 
+          <DemoShortcutPanel
+            className="dashboard-widget"
+            title={demoWalkthroughCopy.applications.title}
+            intro={demoWalkthroughCopy.applications.intro}
+            shortcuts={[
+              {
+                to: DEMO_PRIMARY_APPLICATION_PATH,
+                state: sectionReturnState,
+                label: 'Open seeded walkthrough record',
+                description: 'Jump directly into the seeded applicant-safe detail page used for the demo rehearsal.',
+              },
+              {
+                to: '/portal',
+                label: 'Restart from portal',
+                description: 'Return to the public entry if you need to re-run the demo from the beginning.',
+              },
+            ]}
+          />
+
           <ApplicationSection
             heading="Conference applications"
             items={buckets?.conference ?? []}
             emptyHint="You have no conference applications yet."
-            browseLink={{ to: '/conferences', label: 'Browse conferences' }}
+            browseLink={{
+              to: '/conferences',
+              label: 'Browse conferences',
+              state: sectionReturnState,
+            }}
             untitledFallback="Untitled conference"
+            detailState={sectionReturnState}
           />
 
           <ApplicationSection
             heading="Travel grant applications"
             items={buckets?.grant ?? []}
             emptyHint="You have no travel grant applications yet."
-            browseLink={{ to: '/grants', label: 'Browse grants' }}
+            browseLink={{
+              to: '/grants',
+              label: 'Browse grants',
+              state: sectionReturnState,
+            }}
             untitledFallback="Untitled grant"
+            detailState={sectionReturnState}
           />
         </div>
       )}
@@ -161,8 +211,9 @@ type ApplicationSectionProps = {
   heading: string;
   items: MyApplication[];
   emptyHint: string;
-  browseLink: { to: string; label: string };
+  browseLink: { to: string; label: string; state?: ReturnContextState };
   untitledFallback: string;
+  detailState?: ReturnContextState;
 };
 
 function ApplicationSection({
@@ -171,12 +222,13 @@ function ApplicationSection({
   emptyHint,
   browseLink,
   untitledFallback,
+  detailState,
 }: ApplicationSectionProps) {
   return (
     <section className="dashboard-widget" aria-labelledby={`section-${heading}`}>
       <header className="my-applications__section-header">
         <h2 id={`section-${heading}`}>{heading}</h2>
-        <Link to={browseLink.to} className="my-applications__section-link">
+        <Link to={browseLink.to} state={browseLink.state} className="my-applications__section-link">
           {browseLink.label}
         </Link>
       </header>
@@ -204,6 +256,7 @@ function ApplicationSection({
               <p className="my-applications__row-next-action" aria-label="Next step">
                 <Link
                   to={`/me/applications/${item.id}`}
+                  state={detailState}
                   className="my-applications__row-next-action-link"
                   aria-label={NEXT_ACTION_LABELS[item.nextAction]}
                 >

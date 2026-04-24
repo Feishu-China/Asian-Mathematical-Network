@@ -1,9 +1,16 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { WorkspaceShell } from '../components/layout/WorkspaceShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
+import { DemoShortcutPanel } from '../features/demo/DemoShortcutPanel';
+import {
+  DASHBOARD_RETURN_CONTEXT,
+  demoWalkthroughCopy,
+  PORTAL_RETURN_CONTEXT,
+} from '../features/demo/demoWalkthrough';
+import { readReturnContext } from '../features/navigation/returnContext';
 import { reviewProvider } from '../features/review/reviewProvider';
 import type {
   ApplicantApplicationDetail,
@@ -52,9 +59,15 @@ const readSourceTitle = (application: ApplicantApplicationDetail) => {
 export default function MyApplicationDetail() {
   const { id = '' } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [application, setApplication] = useState<ApplicantApplicationDetail | null | undefined>(
     undefined
   );
+  const returnContext = readReturnContext(location.state);
+  const backLink = returnContext ?? {
+    to: '/me/applications',
+    label: 'Back to my applications',
+  };
 
   useEffect(() => {
     let active = true;
@@ -114,43 +127,64 @@ export default function MyApplicationDetail() {
         </>
       }
       actions={
-        <Link to="/me/applications" className="application-detail__back-link">
-          Back to my applications
+        <Link to={backLink.to} state={backLink.state} className="application-detail__back-link">
+          {backLink.label}
         </Link>
       }
       aside={
-        <div className="surface-card review-sidebar application-detail__aside">
-          <h3>Application snapshot</h3>
-          <div className="review-stack">
-            <p>
-              <strong>Type:</strong> {APPLICATION_TYPE_LABELS[application.applicationType]}
-            </p>
-            <p>
-              <strong>Module:</strong> {application.sourceModule}
-            </p>
-            <p>
-              <strong>Submitted:</strong>{' '}
-              {application.submittedAt
-                ? new Date(application.submittedAt).toLocaleString()
-                : 'Not submitted'}
-            </p>
-            {application.linkedConferenceTitle ? (
+        <div className="application-detail__aside-stack">
+          <div className="surface-card review-sidebar application-detail__aside">
+            <h3>Application snapshot</h3>
+            <div className="review-stack">
               <p>
-                <strong>Linked conference:</strong> {application.linkedConferenceTitle}
+                <strong>Type:</strong> {APPLICATION_TYPE_LABELS[application.applicationType]}
               </p>
-            ) : null}
-            {application.applicantProfileSnapshot.fullName ? (
               <p>
-                <strong>Profile snapshot:</strong> {application.applicantProfileSnapshot.fullName}
+                <strong>Module:</strong> {application.sourceModule}
               </p>
-            ) : null}
-            {application.applicantProfileSnapshot.institutionNameRaw ? (
               <p>
-                <strong>Institution:</strong>{' '}
-                {application.applicantProfileSnapshot.institutionNameRaw}
+                <strong>Submitted:</strong>{' '}
+                {application.submittedAt
+                  ? new Date(application.submittedAt).toLocaleString()
+                  : 'Not submitted'}
               </p>
-            ) : null}
+              {application.linkedConferenceTitle ? (
+                <p>
+                  <strong>Linked conference:</strong> {application.linkedConferenceTitle}
+                </p>
+              ) : null}
+              {application.applicantProfileSnapshot.fullName ? (
+                <p>
+                  <strong>Profile snapshot:</strong> {application.applicantProfileSnapshot.fullName}
+                </p>
+              ) : null}
+              {application.applicantProfileSnapshot.institutionNameRaw ? (
+                <p>
+                  <strong>Institution:</strong>{' '}
+                  {application.applicantProfileSnapshot.institutionNameRaw}
+                </p>
+              ) : null}
+            </div>
           </div>
+
+          <DemoShortcutPanel
+            className="surface-card review-sidebar application-detail__aside"
+            headingLevel="h3"
+            title={demoWalkthroughCopy.detail.title}
+            intro={demoWalkthroughCopy.detail.intro}
+            shortcuts={[
+              {
+                to: DASHBOARD_RETURN_CONTEXT.to,
+                label: DASHBOARD_RETURN_CONTEXT.label,
+                description: 'Return to the authenticated workspace summary after narrating this application detail.',
+              },
+              {
+                to: PORTAL_RETURN_CONTEXT.to,
+                label: 'Restart from portal',
+                description: 'Replay the story from the public entry when the rehearsal needs a clean reset.',
+              },
+            ]}
+          />
         </div>
       }
     >
