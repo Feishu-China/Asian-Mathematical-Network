@@ -64,11 +64,14 @@ export default function Prizes() {
                 <p className="prize-card__subtitle">{prize.shortLabel}</p>
                 <p className="prize-card__summary">{prize.summary}</p>
                 <div className="prize-card__actions">
-                  <StatusBadge tone="warning">Governance-oriented preview</StatusBadge>
+                  <StatusBadge tone="warning">Governance signals included</StatusBadge>
                   <Link to={`/prizes/${prize.slug}`} state={detailState}>
                     {prize.ctaLabel}
                   </Link>
                 </div>
+                <p className="prize-card__teaser">
+                  Open the detail view to see the governance and selection-process preview.
+                </p>
               </article>
             ))}
           </div>

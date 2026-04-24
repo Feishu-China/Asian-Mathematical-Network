@@ -280,8 +280,8 @@
       "demo_criticality": "polish",
       "delivery_mode": "demo-only",
       "depends_on": ["DEMO-MODULE-006", "DEMO-MODULE-010"],
-      "status": "planned",
-      "passes": false
+      "status": "completed",
+      "passes": true
     }
   ],
   "known_gaps": [

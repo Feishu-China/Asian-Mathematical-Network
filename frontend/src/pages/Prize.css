@@ -37,6 +37,12 @@
   color: var(--color-text-muted);
 }
 
+.prize-card__teaser {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.95rem;
+}
+
 .prize-detail-page {
   grid-template-columns: 1fr;
 }

@@ -1,7 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { PortalShell } from '../components/layout/PortalShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
-import { RoleBadge } from '../components/ui/RoleBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
 import { readReturnContext } from '../features/navigation/returnContext';
 import { governancePreviewSections } from '../features/governance/staticGovernanceContent';
@@ -17,11 +16,11 @@ export default function Governance() {
     <PortalShell
       eyebrow="Governance preview"
       title="Governance"
-      description="An admin-side preview for governance checkpoints, reviewer boundaries, and release controls that stay static in d0."
+      description="A static preview of how a future admin governance layer could frame committee boundaries, reviewer checkpoints, and release controls in d0."
       badges={
         <>
-          <RoleBadge role="admin" />
           <PageModeBadge mode="static-preview" />
+          <StatusBadge tone="neutral">Admin preview perspective</StatusBadge>
           <StatusBadge tone="warning">Governance preview</StatusBadge>
         </>
       }
@@ -40,8 +39,9 @@ export default function Governance() {
         <div className="governance-card governance-teaser-card">
           <h2>Preview scope</h2>
           <p>
-            This surface shows what a future admin governance layer could clarify around release
-            timing, committee boundaries, and public archive readiness.
+            This surface stays public in the demo, but it represents what a future admin-facing
+            governance layer could clarify around release timing, committee boundaries, and public
+            archive readiness.
           </p>
           <StatusBadge tone="neutral">Static preview only</StatusBadge>
         </div>

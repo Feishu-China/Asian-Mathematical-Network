@@ -23,6 +23,9 @@ describe('prize public pages', () => {
       'href',
       '/prizes/asiamath-early-career-prize-2026'
     );
+    expect(
+      screen.getAllByText(/open the detail view to see the governance and selection-process preview/i)
+    ).toHaveLength(2);
   });
 
   it('renders prize detail with nomination and review concept preview', async () => {

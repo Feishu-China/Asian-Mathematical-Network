@@ -5,7 +5,7 @@ import { renderWithRouter } from '../test/renderWithRouter';
 import Governance from './Governance';
 
 describe('governance preview page', () => {
-  it('renders the governance preview surface with admin framing and a return link', async () => {
+  it('renders the governance preview surface with preview-perspective framing and a return link', async () => {
     renderWithRouter(
       <Governance />,
       '/admin/governance',
@@ -14,8 +14,10 @@ describe('governance preview page', () => {
 
     expect(await screen.findByRole('heading', { name: 'Governance' })).toBeInTheDocument();
     expect(screen.getAllByText('Governance preview')).toHaveLength(2);
-    expect(screen.getByText(/admin-side preview for governance checkpoints/i)).toBeInTheDocument();
-    expect(screen.getByText('Role: Admin')).toBeInTheDocument();
+    expect(
+      screen.getByText(/static preview of how a future admin governance layer could frame committee boundaries/i)
+    ).toBeInTheDocument();
+    expect(screen.getByText('Admin preview perspective')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /committee workflow preview/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /decision release controls/i })).toBeInTheDocument();
   });
