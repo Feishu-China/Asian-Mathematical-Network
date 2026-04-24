@@ -195,7 +195,10 @@ describe('grant apply page', () => {
       '/grants/:slug/apply'
     );
 
-    expect(await screen.findByText(/draft saved/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/this grant application draft is already on file/i)
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/^Draft saved$/i)).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /draft in progress/i })).toBeInTheDocument();
     expect(screen.getByDisplayValue('Saved funding request')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Saved travel plan')).toBeInTheDocument();

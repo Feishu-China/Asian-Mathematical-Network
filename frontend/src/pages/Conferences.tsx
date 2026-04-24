@@ -5,6 +5,7 @@ import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
 import { ConferenceListCard } from '../features/conference/ConferenceListCard';
+import { DemoStatePanel } from '../features/demo/DemoStatePanel';
 import { readReturnContext, toReturnContextState } from '../features/navigation/returnContext';
 import { conferenceProvider } from '../features/conference/conferenceProvider';
 import type { ConferenceListItem } from '../features/conference/types';
@@ -14,18 +15,35 @@ export const routePath = '/conferences';
 
 export default function Conferences() {
   const [items, setItems] = useState<ConferenceListItem[] | null>(null);
+  const [hasError, setHasError] = useState(false);
   const hasApplicantSession = Boolean(localStorage.getItem('token'));
   const location = useLocation();
   const returnContext = readReturnContext(location.state);
   const detailState = toReturnContextState(returnContext);
 
   useEffect(() => {
-    conferenceProvider.listPublicConferences().then(setItems);
-  }, []);
+    let active = true;
 
-  if (items === null) {
-    return <div className="conference-page">Loading conferences...</div>;
-  }
+    setHasError(false);
+    setItems(null);
+
+    conferenceProvider
+      .listPublicConferences()
+      .then((value) => {
+        if (active) {
+          setItems(value);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setHasError(true);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   return (
     <PortalShell
@@ -56,8 +74,24 @@ export default function Conferences() {
       }
     >
       <div className="conference-page">
-        {items.length === 0 ? (
-          <div className="conference-empty">No published conferences yet.</div>
+        {items === null ? (
+          <DemoStatePanel
+            badgeLabel={hasError ? 'Error' : 'Loading'}
+            title={hasError ? 'Conference list unavailable' : 'Loading conferences'}
+            description={
+              hasError
+                ? 'We could not load the published conference list right now.'
+                : 'Preparing the published conference opportunities used in the demo.'
+            }
+            tone={hasError ? 'danger' : 'info'}
+          />
+        ) : items.length === 0 ? (
+          <DemoStatePanel
+            badgeLabel="Empty"
+            title="No published conferences yet"
+            description="Published conference opportunities will appear here once organizers release them."
+            tone="neutral"
+          />
         ) : (
           <div className="conference-grid">
             {items.map((conference) => (

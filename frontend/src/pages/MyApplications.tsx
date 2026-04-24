@@ -5,6 +5,7 @@ import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
 import { dashboardProvider } from '../features/dashboard/dashboardProvider';
+import { DemoStatePanel } from '../features/demo/DemoStatePanel';
 import type {
   MyApplication,
   NextAction,
@@ -148,15 +149,28 @@ export default function MyApplications() {
       }
     >
       {items === null ? (
-        <div className="conference-empty">Loading your applications...</div>
+        <DemoStatePanel
+          className="dashboard-widget"
+          badgeLabel="Loading"
+          title="Loading your applications"
+          description="Preparing the applicant record list used as the main demo control point."
+          tone="info"
+        />
+      ) : hasError ? (
+        <DemoStatePanel
+          className="dashboard-widget"
+          badgeLabel="Error"
+          title="My applications unavailable"
+          description="We could not load your application records right now."
+          tone="danger"
+          actions={
+            <Link to="/portal" className="my-applications__section-link">
+              Restart from portal
+            </Link>
+          }
+        />
       ) : (
         <div className="my-applications">
-          {hasError ? (
-            <div className="conference-inline-message error">
-              We could not load your applications right now.
-            </div>
-          ) : null}
-
           <DemoShortcutPanel
             className="dashboard-widget"
             title={demoWalkthroughCopy.applications.title}
@@ -234,7 +248,13 @@ function ApplicationSection({
       </header>
 
       {items.length === 0 ? (
-        <p className="conference-empty">{emptyHint}</p>
+        <DemoStatePanel
+          badgeLabel="Empty"
+          title={emptyHint}
+          description="Use the browse link in this section to start a new record."
+          tone="neutral"
+          compact
+        />
       ) : (
         <ul className="my-applications__list">
           {items.map((item) => (

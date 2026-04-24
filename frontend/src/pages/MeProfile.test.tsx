@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
+import userEvent from '@testing-library/user-event';
 import { screen } from '@testing-library/react';
 import { renderWithRouter } from '../test/renderWithRouter';
 import MeProfile from './MeProfile';
@@ -43,5 +44,23 @@ describe('me profile page', () => {
       screen.queryByRole('heading', { name: /public scholar preview/i })
     ).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /open public scholar page/i })).not.toBeInTheDocument();
+  });
+
+  it('shows an explicit saved state after profile changes are submitted', async () => {
+    const user = userEvent.setup();
+
+    renderWithRouter(<MeProfile />, '/me/profile');
+
+    expect(await screen.findByRole('heading', { name: /profile/i })).toBeInTheDocument();
+
+    const titleInput = screen.getByLabelText(/position \/ title/i);
+    await user.clear(titleInput);
+    await user.type(titleInput, 'Professor');
+    await user.click(screen.getByRole('button', { name: /save profile/i }));
+
+    expect(await screen.findByText('Profile changes saved')).toBeInTheDocument();
+    expect(
+      screen.getByText(/the private editor and public scholar preview now reflect the latest profile fields/i)
+    ).toBeInTheDocument();
   });
 });

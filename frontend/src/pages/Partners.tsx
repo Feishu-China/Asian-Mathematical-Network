@@ -4,6 +4,7 @@ import { PortalShell } from '../components/layout/PortalShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
+import { DemoStatePanel } from '../features/demo/DemoStatePanel';
 import { readReturnContext, toReturnContextState } from '../features/navigation/returnContext';
 import { partnerProvider } from '../features/partner/partnerProvider';
 import type { PartnerListItem } from '../features/partner/types';
@@ -13,16 +14,33 @@ export const routePath = '/partners';
 
 export default function Partners() {
   const [items, setItems] = useState<PartnerListItem[] | null>(null);
+  const [hasError, setHasError] = useState(false);
   const location = useLocation();
   const returnContext = readReturnContext(location.state);
 
   useEffect(() => {
-    partnerProvider.listPublicPartners().then(setItems);
-  }, []);
+    let active = true;
 
-  if (items === null) {
-    return <div className="partner-page">Loading partners...</div>;
-  }
+    setItems(null);
+    setHasError(false);
+
+    partnerProvider
+      .listPublicPartners()
+      .then((value) => {
+        if (active) {
+          setItems(value);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setHasError(true);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   return (
     <PortalShell
@@ -71,8 +89,24 @@ export default function Partners() {
       }
     >
       <div className="partner-page">
-        {items.length === 0 ? (
-          <div className="conference-empty">No partners or collaboration teasers yet.</div>
+        {items === null ? (
+          <DemoStatePanel
+            badgeLabel={hasError ? 'Error' : 'Loading'}
+            title={hasError ? 'Partner list unavailable' : 'Loading partners'}
+            description={
+              hasError
+                ? 'We could not load the partner breadth surface right now.'
+                : 'Preparing the partner breadth surface used in the demo.'
+            }
+            tone={hasError ? 'danger' : 'info'}
+          />
+        ) : items.length === 0 ? (
+          <DemoStatePanel
+            badgeLabel="Empty"
+            title="No partners or collaboration teasers yet"
+            description="Partner and collaboration breadth records will appear here once they are ready for the demo."
+            tone="neutral"
+          />
         ) : (
           <div className="partner-grid">
             {items.map((partner) => (

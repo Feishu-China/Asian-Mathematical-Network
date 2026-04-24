@@ -7,6 +7,7 @@ import { RoleBadge } from '../components/ui/RoleBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
 import { getMe } from '../api/auth';
 import { dashboardProvider } from '../features/dashboard/dashboardProvider';
+import { DemoStatePanel } from '../features/demo/DemoStatePanel';
 import type { MyApplication, ViewerStatus } from '../features/dashboard/types';
 import { DemoShortcutPanel } from '../features/demo/DemoShortcutPanel';
 import {
@@ -98,15 +99,38 @@ export default function Dashboard() {
     navigate('/login');
   };
 
-  if (loading) {
-    return <div className="loading">Loading dashboard...</div>;
-  }
-
   const latestApplication = applications[0] ?? null;
   const applicationCountLabel =
     applications.length === 1
       ? '1 active application in your workspace.'
       : `${applications.length} active applications in your workspace.`;
+
+  if (loading) {
+    return (
+      <WorkspaceShell
+        eyebrow="Applicant workspace"
+        title="Dashboard"
+        description="A stable working surface for authenticated participation across the Asiamath network."
+        badges={
+          <>
+            <RoleBadge role="applicant" />
+            <PageModeBadge mode="real-aligned" />
+            <StatusBadge tone="info">Loading</StatusBadge>
+          </>
+        }
+      >
+        <div className="dashboard-page">
+          <DemoStatePanel
+            className="dashboard-widget"
+            badgeLabel="Loading"
+            title="Loading dashboard"
+            description="Preparing the authenticated applicant workspace used in the demo."
+            tone="info"
+          />
+        </div>
+      </WorkspaceShell>
+    );
+  }
 
   return (
     <WorkspaceShell
@@ -140,33 +164,63 @@ export default function Dashboard() {
         </div>
 
         <div className="dashboard-grid">
-          <div className="dashboard-widget">
-            <h3>My Applications</h3>
-            {latestApplication ? (
-              <>
-                <p className="dashboard-widget__summary">{applicationCountLabel}</p>
-                <div className="dashboard-widget__record">
-                  <p className="dashboard-widget__record-title">
-                    {latestApplication.sourceTitle ?? 'Application record'}
-                  </p>
-                  <StatusBadge tone={VIEWER_STATUS_TONES[latestApplication.viewerStatus]}>
-                    {VIEWER_STATUS_LABELS[latestApplication.viewerStatus]}
-                  </StatusBadge>
-                </div>
-              </>
-            ) : applicationsError ? (
-              <p>Open your application workspace to reload your current records.</p>
-            ) : (
-              <p>Open your application workspace to review records or start a submission.</p>
-            )}
-            <Link
-              to="/me/applications"
-              state={buildChainedReturnState(MY_APPLICATIONS_RETURN_CONTEXT, DASHBOARD_RETURN_CONTEXT)}
-              className="dashboard-widget__link"
-            >
-              Open my applications
-            </Link>
-          </div>
+          {latestApplication ? (
+            <div className="dashboard-widget">
+              <h3>My Applications</h3>
+              <p className="dashboard-widget__summary">{applicationCountLabel}</p>
+              <div className="dashboard-widget__record">
+                <p className="dashboard-widget__record-title">
+                  {latestApplication.sourceTitle ?? 'Application record'}
+                </p>
+                <StatusBadge tone={VIEWER_STATUS_TONES[latestApplication.viewerStatus]}>
+                  {VIEWER_STATUS_LABELS[latestApplication.viewerStatus]}
+                </StatusBadge>
+              </div>
+              <Link
+                to="/me/applications"
+                state={buildChainedReturnState(MY_APPLICATIONS_RETURN_CONTEXT, DASHBOARD_RETURN_CONTEXT)}
+                className="dashboard-widget__link"
+              >
+                Open my applications
+              </Link>
+            </div>
+          ) : applicationsError ? (
+            <DemoStatePanel
+              className="dashboard-widget"
+              headingLevel="h3"
+              badgeLabel="Error"
+              title="Application workspace unavailable"
+              description="We could not load your current application records right now."
+              tone="danger"
+              actions={
+                <Link
+                  to="/me/applications"
+                  state={buildChainedReturnState(MY_APPLICATIONS_RETURN_CONTEXT, DASHBOARD_RETURN_CONTEXT)}
+                  className="dashboard-widget__link"
+                >
+                  Open my applications
+                </Link>
+              }
+            />
+          ) : (
+            <DemoStatePanel
+              className="dashboard-widget"
+              headingLevel="h3"
+              badgeLabel="Empty"
+              title="No active applications yet"
+              description="Open your application workspace to review records or start a submission."
+              tone="neutral"
+              actions={
+                <Link
+                  to="/me/applications"
+                  state={buildChainedReturnState(MY_APPLICATIONS_RETURN_CONTEXT, DASHBOARD_RETURN_CONTEXT)}
+                  className="dashboard-widget__link"
+                >
+                  Open my applications
+                </Link>
+              }
+            />
+          )}
           <DemoShortcutPanel
             className="dashboard-widget"
             headingLevel="h3"

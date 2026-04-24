@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { resetReviewFakeState } from '../features/review/fakeReviewProvider';
@@ -9,6 +9,10 @@ describe('MyApplicationDetail page', () => {
   beforeEach(() => {
     localStorage.clear();
     resetReviewFakeState();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it('renders an applicant-safe released result view for a single application', async () => {
@@ -63,5 +67,27 @@ describe('MyApplicationDetail page', () => {
     ).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /application summary/i })).toBeInTheDocument();
     expect(screen.queryByText(/internal status/i)).not.toBeInTheDocument();
+  });
+
+  it('renders a dedicated error state when the applicant detail request fails', async () => {
+    localStorage.setItem('token', 'applicant-1');
+    vi.spyOn(reviewProvider, 'getMyApplicationDetail').mockRejectedValueOnce(
+      new Error('Backend unavailable')
+    );
+
+    render(
+      <MemoryRouter initialEntries={['/me/applications/review-application-1']}>
+        <Routes>
+          <Route path="/me/applications/:id" element={<MyApplicationDetail />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByText('Application detail unavailable')).toBeInTheDocument();
+    expect(screen.getByText(/we could not load this application detail right now/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /back to my applications/i })).toHaveAttribute(
+      'href',
+      '/me/applications'
+    );
   });
 });

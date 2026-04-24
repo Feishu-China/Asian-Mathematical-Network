@@ -4,6 +4,8 @@ import { WorkspaceShell } from '../components/layout/WorkspaceShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
+import { DemoStatePanel } from '../features/demo/DemoStatePanel';
+import { DemoStatusNotice } from '../features/demo/DemoStatusNotice';
 import { ProfileForm } from '../features/profile/ProfileForm';
 import {
   buildScholarRoute,
@@ -21,6 +23,7 @@ export const routePath = '/me/profile';
 
 export default function MeProfile() {
   const [profile, setProfile] = useState<EditableProfile | null>(null);
+  const [loadState, setLoadState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [status, setStatus] = useState<'loading' | 'idle' | 'saving' | 'saved' | 'error'>(
     'loading'
   );
@@ -36,6 +39,7 @@ export default function MeProfile() {
         }
 
         setProfile(value);
+        setLoadState('ready');
         setStatus('idle');
       })
       .catch(() => {
@@ -43,6 +47,7 @@ export default function MeProfile() {
           return;
         }
 
+        setLoadState('error');
         setStatus('error');
       });
 
@@ -63,16 +68,59 @@ export default function MeProfile() {
     }
   };
 
+  const badgeTone =
+    loadState === 'error'
+      ? 'danger'
+      : status === 'saved'
+        ? 'success'
+        : status === 'saving'
+          ? 'warning'
+          : status === 'error'
+            ? 'danger'
+            : 'info';
+  const badgeLabel =
+    loadState === 'error'
+      ? 'Profile unavailable'
+      : status === 'saved'
+        ? 'Saved'
+        : status === 'saving'
+          ? 'Saving'
+          : status === 'error'
+            ? 'Save failed'
+            : loadState === 'loading'
+              ? 'Loading'
+              : 'Ready';
+
   if (!profile) {
     return (
-      <div className="profile-page">
-        {status === 'error' ? 'Unable to load the profile editor.' : 'Loading profile...'}
-      </div>
+      <WorkspaceShell
+        eyebrow="Academic directory"
+        title="Profile"
+        description="Edit the authenticated scholar record here, explain the public/private boundary clearly, and hand off to the public scholar view without changing the underlying PROFILE contract."
+        badges={
+          <>
+            <RoleBadge role="applicant" />
+            <PageModeBadge mode="real-aligned" />
+            <StatusBadge tone={badgeTone}>{badgeLabel}</StatusBadge>
+          </>
+        }
+      >
+        <div className="profile-page">
+          <DemoStatePanel
+            badgeLabel={loadState === 'error' ? 'Error' : 'Loading'}
+            title={loadState === 'error' ? 'Profile editor unavailable' : 'Loading profile editor'}
+            description={
+              loadState === 'error'
+                ? 'Unable to load the profile editor.'
+                : 'Preparing the authenticated scholar profile used across the demo.'
+            }
+            tone={loadState === 'error' ? 'danger' : 'info'}
+          />
+        </div>
+      </WorkspaceShell>
     );
   }
 
-  const badgeTone =
-    status === 'saved' ? 'success' : status === 'saving' ? 'warning' : status === 'error' ? 'danger' : 'info';
   const publicScholarHref = `/scholars/${profile.slug}`;
   const visibilityLabel = profile.isProfilePublic
     ? 'Public scholar page is enabled'
@@ -90,11 +138,29 @@ export default function MeProfile() {
         <>
           <RoleBadge role="applicant" />
           <PageModeBadge mode="real-aligned" />
-          <StatusBadge tone={badgeTone}>{status}</StatusBadge>
+          <StatusBadge tone={badgeTone}>{badgeLabel}</StatusBadge>
         </>
       }
     >
       <div className="profile-page">
+        {status === 'saved' ? (
+          <DemoStatusNotice
+            tone="success"
+            badgeLabel="Saved"
+            title="Profile changes saved"
+            description="The private editor and public scholar preview now reflect the latest profile fields."
+          />
+        ) : null}
+
+        {status === 'error' ? (
+          <DemoStatusNotice
+            tone="danger"
+            badgeLabel="Error"
+            title="Profile update failed"
+            description="We could not save your latest profile changes right now."
+          />
+        ) : null}
+
         <section className="profile-context-grid">
           <article className="surface-card profile-context-card">
             <p className="profile-section-kicker">Current demo state</p>

@@ -70,7 +70,10 @@ describe('conference apply page', () => {
       '/conferences/:slug/apply'
     );
 
-    expect(await screen.findByText(/draft saved/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/this conference application draft is already on file/i)
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/^Draft saved$/i)).not.toBeInTheDocument();
     expect(await screen.findByDisplayValue('talk')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Saved statement')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Saved abstract title')).toBeInTheDocument();

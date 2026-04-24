@@ -10,6 +10,27 @@
 
 ## 📅 Handoff 历史记录
 
+### 2026-04-24 (Session 27)
+*   **Agent 角色**: Coding Agent (Demo polish)
+*   **完成 Feature**: `DEMO-POLISH-001`
+*   **变更记录**:
+    *   新增共享前端状态组件 `frontend/src/features/demo/DemoStatePanel.tsx` 与 `frontend/src/features/demo/DemoStatusNotice.tsx`，把 demo 页面的 loading / empty / not-found / error 与页内 success / warning / error 反馈统一到同一套 presenter-safe 视觉与文案结构。
+    *   `Conferences` / `ConferenceDetail`、`Grants` / `GrantDetail`、`Schools` / `SchoolDetail`、`Partners`、`Prizes` / `PrizeDetail`、`ScholarProfile` 全部改为在 shell 内渲染一致的状态 panel；conference list/detail 新增真实错误态，grant detail 错误态不再停留在 loading 文案。
+    *   `Dashboard` 的 `My applications` 卡片现在区分 empty / error / record-present 三种状态；空工作区与加载失败都改成统一 state panel，而不是零散说明文字。
+    *   `MyApplications` 改为在加载失败时显示 dedicated error state，不再一边报错一边渲染两个空 section；section 级 empty hint 也收敛到 compact state panel。
+    *   `MyApplicationDetail` 现在区分 `loading / not_found / error / ready`，避免把后端失败误报成“Application not found”；错误/缺失状态仍保留稳定返回链。
+    *   `ConferenceApply` 与 `GrantApply` 补了统一的页内 notice：保存成功、提交成功、blocked prerequisite、保存/提交失败都走同一 affordance；同时修正“页面 hydrate 到已有 draft 就显示 Draft saved”的语义错误，现改为明确的 “draft already on file / draft in progress”。
+    *   `MeProfile` 现在在 load failure 时使用统一 page state，并在成功保存后显示明确的 success notice，而不只是在 badge 上切到 `saved`。
+*   **验证记录**:
+    *   改动前执行通过 `cd frontend && npm run test:run -- src/pages/Conferences.test.tsx src/pages/Grants.test.tsx src/pages/Dashboard.test.tsx src/pages/MyApplications.test.tsx src/pages/MyApplicationDetail.test.tsx src/pages/ConferenceApply.test.tsx src/pages/GrantApply.test.tsx src/pages/MeProfile.test.tsx src/pages/Schools.test.tsx src/pages/Partners.test.tsx src/pages/Prizes.test.tsx src/pages/ScholarProfile.test.tsx`
+    *   按 TDD 先补失败测试，再执行同一组 page tests，`12` 个 test files、`55` 个 tests 全部通过。
+    *   执行通过 `cd frontend && npm run test:run`：`28` 个 test files、`102` 个 tests 全部通过。
+    *   执行通过 `cd frontend && npm run build`（`tsc -b && vite build`），无类型或构建错误。
+*   **边界与说明**:
+    *   本轮只处理 demo 页面的状态一致性、presenter-safe 成功/错误反馈与 applicant/public breadth 的状态收口，没有修改后端 schema、没有扩展新模块、没有把 organizer/reviewer 额外重构进来。
+    *   本地未跟踪文件 `docs/planning/asiamath-demo-manual-test-checkpoints-d0.md` 按要求保持不提交。
+*   **下一步**: `CP4 rehearsal cut` 手测 / walkthrough rehearsal
+
 ### 2026-04-24 (Session 26)
 *   **Agent 角色**: Coding Agent (Demo polish)
 *   **完成 Feature**: `DEMO-POLISH-002`

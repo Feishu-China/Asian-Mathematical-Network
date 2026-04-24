@@ -4,6 +4,7 @@ import { WorkspaceShell } from '../components/layout/WorkspaceShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
+import { DemoStatePanel } from '../features/demo/DemoStatePanel';
 import { DemoShortcutPanel } from '../features/demo/DemoShortcutPanel';
 import {
   DASHBOARD_RETURN_CONTEXT,
@@ -60,8 +61,9 @@ export default function MyApplicationDetail() {
   const { id = '' } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const [application, setApplication] = useState<ApplicantApplicationDetail | null | undefined>(
-    undefined
+  const [application, setApplication] = useState<ApplicantApplicationDetail | null>(null);
+  const [loadState, setLoadState] = useState<'loading' | 'ready' | 'not_found' | 'error'>(
+    'loading'
   );
   const returnContext = readReturnContext(location.state);
   const backLink = returnContext ?? {
@@ -77,18 +79,21 @@ export default function MyApplicationDetail() {
       return;
     }
 
-    setApplication(undefined);
+    setApplication(null);
+    setLoadState('loading');
 
     reviewProvider
       .getMyApplicationDetail(id)
       .then((value) => {
         if (active) {
           setApplication(value);
+          setLoadState('ready');
         }
       })
-      .catch(() => {
+      .catch((error) => {
         if (active) {
           setApplication(null);
+          setLoadState(isNotFoundError(error) ? 'not_found' : 'error');
         }
       });
 
@@ -97,29 +102,29 @@ export default function MyApplicationDetail() {
     };
   }, [id, navigate]);
 
-  if (application === undefined) {
-    return <div className="review-page">Loading application detail...</div>;
-  }
-
-  if (application === null) {
-    return <div className="review-page">Application not found.</div>;
-  }
-
-  const sourceTitle = readSourceTitle(application);
-
   return (
     <WorkspaceShell
       eyebrow="Applicant workspace"
-      title={sourceTitle}
-      description="Review your submitted materials and any released result without exposing organizer-only workflow state."
+      title={application ? readSourceTitle(application) : 'Application detail'}
+      description={
+        application
+          ? 'Review your submitted materials and any released result without exposing organizer-only workflow state.'
+          : 'Open one applicant-safe application record, result summary, and return path without exposing organizer-only workflow state.'
+      }
       badges={
         <>
           <RoleBadge role="applicant" />
           <PageModeBadge mode="hybrid" />
-          <StatusBadge tone={VIEWER_STATUS_TONES[application.viewerStatus]}>
-            {VIEWER_STATUS_LABELS[application.viewerStatus]}
-          </StatusBadge>
-          {application.releasedDecision ? (
+          {application ? (
+            <StatusBadge tone={VIEWER_STATUS_TONES[application.viewerStatus]}>
+              {VIEWER_STATUS_LABELS[application.viewerStatus]}
+            </StatusBadge>
+          ) : (
+            <StatusBadge tone={loadState === 'error' ? 'danger' : 'info'}>
+              {loadState === 'not_found' ? 'Unavailable' : loadState === 'error' ? 'Load failed' : 'Loading detail'}
+            </StatusBadge>
+          )}
+          {application?.releasedDecision ? (
             <StatusBadge tone={FINAL_STATUS_TONES[application.releasedDecision.finalStatus]}>
               {application.releasedDecision.displayLabel}
             </StatusBadge>
@@ -132,64 +137,89 @@ export default function MyApplicationDetail() {
         </Link>
       }
       aside={
-        <div className="application-detail__aside-stack">
-          <div className="surface-card review-sidebar application-detail__aside">
-            <h3>Application snapshot</h3>
-            <div className="review-stack">
-              <p>
-                <strong>Type:</strong> {APPLICATION_TYPE_LABELS[application.applicationType]}
-              </p>
-              <p>
-                <strong>Module:</strong> {application.sourceModule}
-              </p>
-              <p>
-                <strong>Submitted:</strong>{' '}
-                {application.submittedAt
-                  ? new Date(application.submittedAt).toLocaleString()
-                  : 'Not submitted'}
-              </p>
-              {application.linkedConferenceTitle ? (
+        application ? (
+          <div className="application-detail__aside-stack">
+            <div className="surface-card review-sidebar application-detail__aside">
+              <h3>Application snapshot</h3>
+              <div className="review-stack">
                 <p>
-                  <strong>Linked conference:</strong> {application.linkedConferenceTitle}
+                  <strong>Type:</strong> {APPLICATION_TYPE_LABELS[application.applicationType]}
                 </p>
-              ) : null}
-              {application.applicantProfileSnapshot.fullName ? (
                 <p>
-                  <strong>Profile snapshot:</strong> {application.applicantProfileSnapshot.fullName}
+                  <strong>Module:</strong> {application.sourceModule}
                 </p>
-              ) : null}
-              {application.applicantProfileSnapshot.institutionNameRaw ? (
                 <p>
-                  <strong>Institution:</strong>{' '}
-                  {application.applicantProfileSnapshot.institutionNameRaw}
+                  <strong>Submitted:</strong>{' '}
+                  {application.submittedAt
+                    ? new Date(application.submittedAt).toLocaleString()
+                    : 'Not submitted'}
                 </p>
-              ) : null}
+                {application.linkedConferenceTitle ? (
+                  <p>
+                    <strong>Linked conference:</strong> {application.linkedConferenceTitle}
+                  </p>
+                ) : null}
+                {application.applicantProfileSnapshot.fullName ? (
+                  <p>
+                    <strong>Profile snapshot:</strong> {application.applicantProfileSnapshot.fullName}
+                  </p>
+                ) : null}
+                {application.applicantProfileSnapshot.institutionNameRaw ? (
+                  <p>
+                    <strong>Institution:</strong>{' '}
+                    {application.applicantProfileSnapshot.institutionNameRaw}
+                  </p>
+                ) : null}
+              </div>
             </div>
-          </div>
 
-          <DemoShortcutPanel
-            className="surface-card review-sidebar application-detail__aside"
-            headingLevel="h3"
-            title={demoWalkthroughCopy.detail.title}
-            intro={demoWalkthroughCopy.detail.intro}
-            shortcuts={[
-              {
-                to: DASHBOARD_RETURN_CONTEXT.to,
-                label: DASHBOARD_RETURN_CONTEXT.label,
-                description: 'Return to the authenticated workspace summary after narrating this application detail.',
-              },
-              {
-                to: PORTAL_RETURN_CONTEXT.to,
-                label: 'Restart from portal',
-                description: 'Replay the story from the public entry when the rehearsal needs a clean reset.',
-              },
-            ]}
-          />
-        </div>
+            <DemoShortcutPanel
+              className="surface-card review-sidebar application-detail__aside"
+              headingLevel="h3"
+              title={demoWalkthroughCopy.detail.title}
+              intro={demoWalkthroughCopy.detail.intro}
+              shortcuts={[
+                {
+                  to: DASHBOARD_RETURN_CONTEXT.to,
+                  label: DASHBOARD_RETURN_CONTEXT.label,
+                  description: 'Return to the authenticated workspace summary after narrating this application detail.',
+                },
+                {
+                  to: PORTAL_RETURN_CONTEXT.to,
+                  label: 'Restart from portal',
+                  description: 'Replay the story from the public entry when the rehearsal needs a clean reset.',
+                },
+              ]}
+            />
+          </div>
+        ) : null
       }
     >
       <div className="review-page">
-        {application.releasedDecision ? (
+        {loadState === 'loading' ? (
+          <DemoStatePanel
+            badgeLabel="Loading"
+            title="Loading application detail"
+            description="Preparing the applicant-safe detail record used in the demo walkthrough."
+            tone="info"
+          />
+        ) : loadState === 'error' ? (
+          <DemoStatePanel
+            badgeLabel="Error"
+            title="Application detail unavailable"
+            description="We could not load this application detail right now."
+            tone="danger"
+          />
+        ) : loadState === 'not_found' || !application ? (
+          <DemoStatePanel
+            badgeLabel="Unavailable"
+            title="Application not found"
+            description="This applicant-facing record is unavailable in the current demo dataset."
+            tone="neutral"
+          />
+        ) : null}
+
+        {application?.releasedDecision ? (
           <section className="surface-card review-panel">
             <header className="review-panel__header">
               <div>
@@ -222,7 +252,7 @@ export default function MyApplicationDetail() {
           </section>
         ) : null}
 
-        <div className="review-grid review-grid--single">
+        {application ? <div className="review-grid review-grid--single">
           <section className="surface-card review-card">
             <header className="review-card__header">
               <div>
@@ -272,8 +302,16 @@ export default function MyApplicationDetail() {
               ) : null}
             </div>
           </section>
-        </div>
+        </div> : null}
       </div>
     </WorkspaceShell>
   );
 }
+
+const isNotFoundError = (error: unknown) => {
+  if (error && typeof error === 'object' && 'code' in error && error.code === 'NOT_FOUND') {
+    return true;
+  }
+
+  return error instanceof Error && /not found/i.test(error.message);
+};

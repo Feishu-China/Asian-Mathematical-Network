@@ -6,6 +6,8 @@ import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
 import { conferenceProvider } from '../features/conference/conferenceProvider';
+import { DemoStatePanel } from '../features/demo/DemoStatePanel';
+import { DemoStatusNotice } from '../features/demo/DemoStatusNotice';
 import { GrantApplyForm } from '../features/grant/GrantApplyForm';
 import { GrantApplicationStatePanel } from '../features/grant/components/GrantApplicationStatePanel';
 import { GrantApplicationSummaryCard } from '../features/grant/components/GrantApplicationSummaryCard';
@@ -43,6 +45,9 @@ export default function GrantApply() {
   const location = useLocation();
   const returnContext = readReturnContext(location.state);
   const [grant, setGrant] = useState<GrantDetail | null | undefined>(undefined);
+  const [loadState, setLoadState] = useState<'loading' | 'ready' | 'not_found' | 'error'>(
+    'loading'
+  );
   const [schema, setSchema] = useState<GrantFormSchema>({ fields: [] });
   const [application, setApplication] = useState<GrantApplication | null>(null);
   const [prerequisite, setPrerequisite] = useState<GrantPrerequisite | null>(null);
@@ -50,16 +55,24 @@ export default function GrantApply() {
   const [status, setStatus] = useState<
     'idle' | 'saving' | 'submitting' | 'submitted' | 'conflict' | 'prerequisite' | 'error'
   >('idle');
+  const [notice, setNotice] = useState<null | {
+    tone: 'success' | 'warning' | 'danger';
+    badgeLabel: string;
+    title: string;
+    description: string;
+  }>(null);
 
   useEffect(() => {
     let active = true;
 
     setGrant(undefined);
+    setLoadState('loading');
     setSchema({ fields: [] });
     setApplication(null);
     setPrerequisite(null);
     setViewerEmail(null);
     setStatus('idle');
+    setNotice(null);
 
     grantProvider
       .getGrantBySlug(slug)
@@ -72,7 +85,13 @@ export default function GrantApply() {
 
         const token = localStorage.getItem('token');
 
-        if (!value || !token) {
+        if (!value) {
+          setLoadState('not_found');
+          return;
+        }
+
+        if (!token) {
+          setLoadState('ready');
           return;
         }
 
@@ -88,12 +107,22 @@ export default function GrantApply() {
           setApplication(nextApplication);
           setPrerequisite(nextPrerequisite);
           setViewerEmail(me?.user?.email ?? null);
+          setLoadState('ready');
+
+          if (nextApplication?.status === 'draft') {
+            setNotice({
+              tone: 'warning',
+              badgeLabel: 'Draft in progress',
+              title: 'This grant application draft is already on file.',
+              description: 'Keep editing the saved draft before submitting it into review.',
+            });
+          }
         }
       })
       .catch(() => {
         if (active) {
           setGrant(null);
-          setStatus('error');
+          setLoadState('error');
         }
       });
 
@@ -102,15 +131,66 @@ export default function GrantApply() {
     };
   }, [slug]);
 
-  if (grant === undefined) {
-    return <div className="conference-page">Loading grant application...</div>;
-  }
-
-  if (grant === null) {
-    return <div className="conference-page">Grant not found.</div>;
-  }
-
   const isSignedIn = Boolean(localStorage.getItem('token'));
+
+  if (loadState !== 'ready' || !grant) {
+    return (
+      <WorkspaceShell
+        eyebrow="Grant application"
+        title={grant?.title ?? 'Grant application'}
+        description="Request travel support through a dedicated grant-owned applicant flow."
+        badges={
+          <>
+            <RoleBadge role={isSignedIn ? 'applicant' : 'visitor'} />
+            <PageModeBadge mode="hybrid" />
+            <StatusBadge tone={loadState === 'error' ? 'danger' : 'info'}>
+              {loadState === 'not_found'
+                ? 'Unavailable'
+                : loadState === 'error'
+                  ? 'Load failed'
+                  : 'Grant applicant slice'}
+            </StatusBadge>
+          </>
+        }
+      >
+        <div className="conference-page">
+          {loadState === 'loading' ? (
+            <DemoStatePanel
+              badgeLabel="Loading"
+              title="Loading grant application"
+              description="Preparing this grant application surface for the demo."
+              tone="info"
+            />
+          ) : loadState === 'error' ? (
+            <DemoStatePanel
+              badgeLabel="Error"
+              title="Grant application unavailable"
+              description="We could not load this grant application right now."
+              tone="danger"
+              actions={
+                <Link className="my-applications__section-link" to="/grants">
+                  Back to grants
+                </Link>
+              }
+            />
+          ) : (
+            <DemoStatePanel
+              badgeLabel="Unavailable"
+              title="Grant not found"
+              description="This grant is not published or is unavailable in the current demo dataset."
+              tone="neutral"
+              actions={
+                <Link className="my-applications__section-link" to="/grants">
+                  Back to grants
+                </Link>
+              }
+            />
+          )}
+        </div>
+      </WorkspaceShell>
+    );
+  }
+
   const linkedOpportunityCopy = getLinkedOpportunityCopy(grant.linkedOpportunityType);
 
   if (!isSignedIn) {
@@ -128,13 +208,17 @@ export default function GrantApply() {
         }
       >
         <div className="conference-page">
-          <div className="conference-detail-card">
-            <h2>Sign in to start a grant application</h2>
-            <p>You need an authenticated session before creating a draft.</p>
-            <Link className="conference-primary-link" to="/login">
-              Go to login
-            </Link>
-          </div>
+          <DemoStatePanel
+            badgeLabel="Sign in required"
+            title="Sign in to start a grant application"
+            description="You need an authenticated session before creating a draft."
+            tone="info"
+            actions={
+              <Link className="conference-primary-link" to="/login">
+                Go to login
+              </Link>
+            }
+          />
         </div>
       </WorkspaceShell>
     );
@@ -164,6 +248,8 @@ export default function GrantApply() {
           : 'info';
 
   const saveDraft = async (values: GrantApplicationValues) => {
+    setNotice(null);
+
     if (!linkedOpportunityApplicationId) {
       setStatus('prerequisite');
       return;
@@ -182,11 +268,23 @@ export default function GrantApply() {
 
       setApplication(nextApplication);
       setStatus('idle');
+      setNotice({
+        tone: 'success',
+        badgeLabel: 'Saved',
+        title: 'Draft saved',
+        description: 'You can keep editing this grant application before submitting it into review.',
+      });
     } catch (error) {
       const code = (error as { code?: string }).code;
 
       if (code === 'CONFLICT') {
         setStatus('conflict');
+        setNotice({
+          tone: 'danger',
+          badgeLabel: 'Conflict',
+          title: 'Draft already exists',
+          description: 'An application draft already exists for this grant.',
+        });
         return;
       }
 
@@ -196,6 +294,12 @@ export default function GrantApply() {
       }
 
       setStatus('error');
+      setNotice({
+        tone: 'danger',
+        badgeLabel: 'Error',
+        title: 'Grant application update failed',
+        description: 'We could not save your grant application right now.',
+      });
     }
   };
 
@@ -204,11 +308,19 @@ export default function GrantApply() {
       return;
     }
 
+    setNotice(null);
+
     try {
       setStatus('submitting');
       const submitted = await grantProvider.submitGrantApplication(application.id);
       setApplication(submitted);
       setStatus('submitted');
+      setNotice({
+        tone: 'success',
+        badgeLabel: 'Submitted',
+        title: 'Application submitted',
+        description: 'The applicant view now reflects the submitted grant record and waits for review.',
+      });
     } catch (error) {
       if ((error as { code?: string }).code === 'PREREQUISITE') {
         setStatus('prerequisite');
@@ -216,6 +328,12 @@ export default function GrantApply() {
       }
 
       setStatus('error');
+      setNotice({
+        tone: 'danger',
+        badgeLabel: 'Error',
+        title: 'Grant application submission failed',
+        description: 'We could not submit this grant application right now.',
+      });
     }
   };
 
@@ -253,29 +371,21 @@ export default function GrantApply() {
     >
       <div className="conference-page conference-detail-page">
         {prerequisiteBlocked || status === 'prerequisite' ? (
-          <div className="conference-inline-message error">
-            {linkedOpportunityCopy.blockedMessage}
-          </div>
+          <DemoStatusNotice
+            tone="warning"
+            badgeLabel="Prerequisite"
+            title="Grant application blocked"
+            description={linkedOpportunityCopy.blockedMessage}
+          />
         ) : null}
 
-        {status === 'conflict' ? (
-          <div className="conference-inline-message error">
-            An application draft already exists for this grant.
-          </div>
-        ) : null}
-
-        {status === 'submitted' ? (
-          <div className="conference-inline-message success">Application submitted.</div>
-        ) : null}
-
-        {status === 'idle' && application?.status === 'draft' ? (
-          <div className="conference-inline-message success">Draft saved.</div>
-        ) : null}
-
-        {status === 'error' ? (
-          <div className="conference-inline-message error">
-            We could not update the grant application right now.
-          </div>
+        {notice ? (
+          <DemoStatusNotice
+            tone={notice.tone}
+            badgeLabel={notice.badgeLabel}
+            title={notice.title}
+            description={notice.description}
+          />
         ) : null}
 
         <GrantApplicationStatePanel

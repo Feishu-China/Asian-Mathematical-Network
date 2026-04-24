@@ -1,7 +1,8 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from '@testing-library/react';
 import { screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { dashboardProvider } from '../features/dashboard/dashboardProvider';
 import { renderWithRouter } from '../test/renderWithRouter';
 import {
   resetDashboardFakeState,
@@ -64,6 +65,10 @@ describe('MyApplications page', () => {
     resetDashboardFakeState();
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('redirects to /login when no token is present', async () => {
     renderWithRouter(<MyApplications />, '/me/applications', '/me/applications');
 
@@ -87,6 +92,22 @@ describe('MyApplications page', () => {
       'href',
       '/conferences'
     );
+  });
+
+  it('shows a dedicated error state when application records fail to load', async () => {
+    localStorage.setItem('token', 'test-token');
+    vi.spyOn(dashboardProvider, 'listMyApplications').mockRejectedValueOnce(
+      new Error('Backend unavailable')
+    );
+
+    renderWithRouter(<MyApplications />, '/me/applications', '/me/applications');
+
+    expect(await screen.findByText('My applications unavailable')).toBeInTheDocument();
+    expect(
+      screen.getByText(/we could not load your application records right now/i)
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/you have no conference applications yet/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/you have no travel grant applications yet/i)).not.toBeInTheDocument();
   });
 
   it('renders the seeded demo application flow when demo state is loaded', async () => {

@@ -4,6 +4,7 @@ import { PortalShell } from '../components/layout/PortalShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
+import { DemoStatePanel } from '../features/demo/DemoStatePanel';
 import { readReturnContext, toReturnContextState } from '../features/navigation/returnContext';
 import { prizeProvider } from '../features/prize/prizeProvider';
 import type { PrizeListItem } from '../features/prize/types';
@@ -13,17 +14,34 @@ export const routePath = '/prizes';
 
 export default function Prizes() {
   const [items, setItems] = useState<PrizeListItem[] | null>(null);
+  const [hasError, setHasError] = useState(false);
   const location = useLocation();
   const returnContext = readReturnContext(location.state);
   const detailState = toReturnContextState(returnContext);
 
   useEffect(() => {
-    prizeProvider.listPublicPrizes().then(setItems);
-  }, []);
+    let active = true;
 
-  if (items === null) {
-    return <div className="prize-page">Loading prizes...</div>;
-  }
+    setItems(null);
+    setHasError(false);
+
+    prizeProvider
+      .listPublicPrizes()
+      .then((value) => {
+        if (active) {
+          setItems(value);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setHasError(true);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   return (
     <PortalShell
@@ -50,8 +68,24 @@ export default function Prizes() {
       }
     >
       <div className="prize-page">
-        {items.length === 0 ? (
-          <div className="conference-empty">No prizes or awards yet.</div>
+        {items === null ? (
+          <DemoStatePanel
+            badgeLabel={hasError ? 'Error' : 'Loading'}
+            title={hasError ? 'Prize list unavailable' : 'Loading prizes'}
+            description={
+              hasError
+                ? 'We could not load the prize breadth surface right now.'
+                : 'Preparing the prize breadth surface used in the demo.'
+            }
+            tone={hasError ? 'danger' : 'info'}
+          />
+        ) : items.length === 0 ? (
+          <DemoStatePanel
+            badgeLabel="Empty"
+            title="No prizes or awards yet"
+            description="Prize and award breadth records will appear here once they are ready for the demo."
+            tone="neutral"
+          />
         ) : (
           <div className="prize-grid">
             {items.map((prize) => (

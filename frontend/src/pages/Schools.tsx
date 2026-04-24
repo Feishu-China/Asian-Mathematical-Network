@@ -4,6 +4,7 @@ import { PortalShell } from '../components/layout/PortalShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
+import { DemoStatePanel } from '../features/demo/DemoStatePanel';
 import { readReturnContext } from '../features/navigation/returnContext';
 import { schoolProvider } from '../features/school/schoolProvider';
 import type { SchoolListItem } from '../features/school/types';
@@ -13,16 +14,33 @@ export const routePath = '/schools';
 
 export default function Schools() {
   const [items, setItems] = useState<SchoolListItem[] | null>(null);
+  const [hasError, setHasError] = useState(false);
   const location = useLocation();
   const returnContext = readReturnContext(location.state);
 
   useEffect(() => {
-    schoolProvider.listPublicSchools().then(setItems);
-  }, []);
+    let active = true;
 
-  if (items === null) {
-    return <div className="school-page">Loading schools...</div>;
-  }
+    setItems(null);
+    setHasError(false);
+
+    schoolProvider
+      .listPublicSchools()
+      .then((value) => {
+        if (active) {
+          setItems(value);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setHasError(true);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   return (
     <PortalShell
@@ -49,8 +67,24 @@ export default function Schools() {
       }
     >
       <div className="school-page">
-        {items.length === 0 ? (
-          <div className="conference-empty">No schools or training programs yet.</div>
+        {items === null ? (
+          <DemoStatePanel
+            badgeLabel={hasError ? 'Error' : 'Loading'}
+            title={hasError ? 'School list unavailable' : 'Loading schools'}
+            description={
+              hasError
+                ? 'We could not load the published school opportunities right now.'
+                : 'Preparing the published school opportunities used in the demo.'
+            }
+            tone={hasError ? 'danger' : 'info'}
+          />
+        ) : items.length === 0 ? (
+          <DemoStatePanel
+            badgeLabel="Empty"
+            title="No schools or training programs yet"
+            description="Published schools and training programs will appear here once they are ready for the demo."
+            tone="neutral"
+          />
         ) : (
           <div className="school-grid">
             {items.map((school) => (

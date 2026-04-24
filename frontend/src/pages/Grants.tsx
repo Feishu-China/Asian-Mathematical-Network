@@ -4,6 +4,7 @@ import { PortalShell } from '../components/layout/PortalShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
+import { DemoStatePanel } from '../features/demo/DemoStatePanel';
 import { readReturnContext, toReturnContextState } from '../features/navigation/returnContext';
 import { GrantListCard } from '../features/grant/GrantListCard';
 import { grantProvider } from '../features/grant/grantProvider';
@@ -45,14 +46,6 @@ export default function Grants() {
     };
   }, []);
 
-  if (items === null) {
-    if (hasError) {
-      return <div className="conference-page">We could not load grants right now.</div>;
-    }
-
-    return <div className="conference-page">Loading grants...</div>;
-  }
-
   return (
     <PortalShell
       eyebrow="Public opportunities"
@@ -82,8 +75,24 @@ export default function Grants() {
       }
     >
       <div className="conference-page">
-        {items.length === 0 ? (
-          <div className="conference-empty">No published grants yet.</div>
+        {items === null ? (
+          <DemoStatePanel
+            badgeLabel={hasError ? 'Error' : 'Loading'}
+            title={hasError ? 'Grant list unavailable' : 'Loading grants'}
+            description={
+              hasError
+                ? 'We could not load grants right now.'
+                : 'Preparing the published grant opportunities used in the demo.'
+            }
+            tone={hasError ? 'danger' : 'info'}
+          />
+        ) : items.length === 0 ? (
+          <DemoStatePanel
+            badgeLabel="Empty"
+            title="No published grants yet"
+            description="Published grant opportunities will appear here once organizers release them."
+            tone="neutral"
+          />
         ) : (
           <div className="conference-grid">
             {sortByPreferredOpportunity(items, preferredOpportunityType).map((grant) => (

@@ -247,8 +247,8 @@
       "demo_criticality": "polish",
       "delivery_mode": "shared",
       "depends_on": ["DEMO-STORY-002"],
-      "status": "planned",
-      "passes": false
+      "status": "completed",
+      "passes": true
     },
     {
       "id": "DEMO-POLISH-002",
