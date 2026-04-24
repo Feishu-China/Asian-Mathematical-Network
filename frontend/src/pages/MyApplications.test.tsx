@@ -92,6 +92,9 @@ describe('MyApplications page', () => {
       'href',
       '/conferences'
     );
+    expect(
+      screen.getByRole('link', { name: /start from published conferences/i })
+    ).toHaveAttribute('href', '/conferences');
   });
 
   it('shows a dedicated error state when application records fail to load', async () => {
@@ -154,9 +157,24 @@ describe('MyApplications page', () => {
       'href',
       '/dashboard'
     );
-    expect(screen.getByRole('link', { name: /open seeded walkthrough record/i })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /open latest walkthrough record/i })).toHaveAttribute(
       'href',
       '/me/applications/review-application-1'
+    );
+  });
+
+  it('links the walkthrough shortcut to the first real application when records exist', async () => {
+    localStorage.setItem('token', 'test-token');
+    setDashboardFakeState([submittedConferenceApp, draftGrantApp]);
+
+    renderWithRouter(<MyApplications />, '/me/applications', '/me/applications');
+
+    expect(
+      await screen.findByRole('heading', { name: 'Asiamath 2026 Workshop' })
+    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /open latest walkthrough record/i })).toHaveAttribute(
+      'href',
+      '/me/applications/conf-app-1'
     );
   });
 

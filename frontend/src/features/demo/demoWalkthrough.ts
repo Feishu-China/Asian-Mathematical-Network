@@ -3,6 +3,7 @@ import { toReturnContextState } from '../navigation/returnContext';
 
 export const DEMO_PRIMARY_APPLICATION_ID = 'review-application-1';
 export const DEMO_PRIMARY_APPLICATION_PATH = `/me/applications/${DEMO_PRIMARY_APPLICATION_ID}`;
+export const DEMO_PRIMARY_CONFERENCE_LIST_PATH = '/conferences';
 
 export const PORTAL_RETURN_CONTEXT: ReturnContext = {
   to: '/portal',
@@ -43,7 +44,7 @@ export const demoWalkthroughCopy = {
   applications: {
     title: 'Presenter-safe walkthrough',
     intro:
-      'Use this list as the main demo control point for active records, seeded detail, and public-route restarts.',
+      'Use this list as the main demo control point for active records, stable next steps, and public-route restarts.',
   },
   detail: {
     title: 'Presenter shortcuts',

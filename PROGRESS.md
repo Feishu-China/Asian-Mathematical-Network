@@ -10,6 +10,23 @@
 
 ## 📅 Handoff 历史记录
 
+### 2026-04-24 (Session 28)
+*   **Agent 角色**: Coding Agent (Demo rehearsal follow-up)
+*   **完成 Feature**: `DEMO-POLISH-002` 手测后修补
+*   **变更记录**:
+    *   修正 `frontend/src/pages/MyApplications.tsx` 的 presenter-safe walkthrough shortcut，不再固定指向 fake detail id `review-application-1`。
+    *   现在当 `My applications` 已有真实 applicant record 时，shortcut 会直接跳到当前列表里的第一条真实记录；当列表为空时，shortcut 会回落到稳定的 `/conferences` 入口，而不是给出会失败的 seeded detail 链接。
+    *   同步更新 `frontend/src/features/demo/demoWalkthrough.ts` 的 applications copy，去掉“seeded detail”假设，并补充 `MyApplications.test.tsx` 覆盖空列表 fallback 与“首条真实记录”两种分支。
+*   **验证记录**:
+    *   按 TDD 先补失败测试，再执行 `cd frontend && npm run test:run -- src/pages/MyApplications.test.tsx`，验证红灯后转绿。
+    *   执行通过 `cd frontend && npm run test:run -- src/pages/MyApplications.test.tsx src/pages/MyApplicationDetail.test.tsx`：`2` 个 test files、`12` 个 tests 全部通过。
+    *   执行通过 `cd frontend && npm run build`（`tsc -b && vite build`），无类型或构建错误。
+    *   复跑浏览器手测：`/me/applications` 顶部 shortcut 已改为 `Open latest walkthrough record`，并实际跳转到真实 draft detail `/me/applications/225b38b9-fa2f-4070-84a0-3879a962b620`。
+*   **边界与说明**:
+    *   本轮只修 walkthrough shortcut 的 real/fake 漂移，没有扩展新的 demo 模块，也没有改后端 schema 或 applicant detail 数据契约。
+    *   本地未跟踪文件 `docs/planning/asiamath-demo-manual-test-checkpoints-d0.md` 继续按要求保持不提交。
+*   **下一步**: 继续 `CP4 rehearsal cut`，优先复测 grant half 与 presenter narration
+
 ### 2026-04-24 (Session 27)
 *   **Agent 角色**: Coding Agent (Demo polish)
 *   **完成 Feature**: `DEMO-POLISH-001`

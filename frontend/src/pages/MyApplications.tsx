@@ -17,7 +17,7 @@ import {
   buildChainedReturnState,
   DASHBOARD_RETURN_CONTEXT,
   demoWalkthroughCopy,
-  DEMO_PRIMARY_APPLICATION_PATH,
+  DEMO_PRIMARY_CONFERENCE_LIST_PATH,
   MY_APPLICATIONS_RETURN_CONTEXT,
 } from '../features/demo/demoWalkthrough';
 import { readReturnContext, type ReturnContextState } from '../features/navigation/returnContext';
@@ -93,6 +93,22 @@ export default function MyApplications() {
   const [hasError, setHasError] = useState(false);
   const returnContext = readReturnContext(location.state);
   const sectionReturnState = buildChainedReturnState(MY_APPLICATIONS_RETURN_CONTEXT, returnContext);
+  const primaryWalkthroughShortcut =
+    items && items.length > 0
+      ? {
+          to: `/me/applications/${items[0].id}`,
+          state: sectionReturnState,
+          label: 'Open latest walkthrough record',
+          description:
+            'Jump directly into the most recent applicant record used for the demo rehearsal.',
+        }
+      : {
+          to: DEMO_PRIMARY_CONFERENCE_LIST_PATH,
+          state: sectionReturnState,
+          label: 'Start from published conferences',
+          description:
+            'Use the stable conference list to create a real applicant record before returning here.',
+        };
 
   useEffect(() => {
     let active = true;
@@ -176,12 +192,7 @@ export default function MyApplications() {
             title={demoWalkthroughCopy.applications.title}
             intro={demoWalkthroughCopy.applications.intro}
             shortcuts={[
-              {
-                to: DEMO_PRIMARY_APPLICATION_PATH,
-                state: sectionReturnState,
-                label: 'Open seeded walkthrough record',
-                description: 'Jump directly into the seeded applicant-safe detail page used for the demo rehearsal.',
-              },
+              primaryWalkthroughShortcut,
               {
                 to: '/portal',
                 label: 'Restart from portal',
