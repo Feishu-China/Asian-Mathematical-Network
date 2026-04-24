@@ -4,11 +4,40 @@
 
 ## 当前项目状态
 *   **最新版本**: V4.0-Optimized
-*   **总览**: `AUTH`、`PROFILE`、`CONF`、`GRANT` 与 `REVIEW` 五个 Epic 已完成；`PORTAL` Epic 的 `BE-PORTAL-001` 已在 main，`FE-PORTAL-001` 经本轮 contract realignment 后重新对齐到 REVIEW-era 的 applicant-safe 形状，等待 merge；`INT-PORTAL-001` 仍需单独的真实联调验证。
+*   **总览**: `AUTH`、`PROFILE`、`CONF`、`GRANT` 与 `REVIEW` 五个 Epic 已完成；`PORTAL` Epic 的 `BE-PORTAL-001` 已在 main，`FE-PORTAL-001` 前端 dashboard（列表页）+ applicant detail 页（`/me/applications/:id`）都在 `feature/portal` 上并已对齐 applicant-safe contract，统一走 PR #11 合入；`INT-PORTAL-001` 仍需单独的真实联调验证。
 
 ---
 
 ## 📅 Handoff 历史记录
+
+### 2026-04-22 (Session 26)
+*   **Agent 角色**: Coding Agent (Frontend / FE-PORTAL-001 follow-up)
+*   **完成 Feature**: `FE-PORTAL-001` detail page（仪表板行的 clickable 目的地）
+*   **上下文**:
+    *   Session 25 的 contract realignment 把 dashboard 的 "Next step" 文案做成了纯 label，因为 applicant-safe payload 不再带 slug，列表层无法生成正确 href。
+    *   REVIEW Epic 已在 backend 新增 `GET /api/v1/me/applications/:id`（`backend/src/controllers/review.ts:761` 的 `getMyApplicationDetail`，由 `serializeApplicantApplicationDetail` 输出 applicant-safe detail 形状），但 frontend 此前没有对应的消费页。
+    *   本轮把 dashboard 行直接指向新的 `/me/applications/:id`，让 "Next step" 变成可点击链接；同时补齐 detail 页的 UI。
+*   **变更记录**:
+    *   `frontend/src/features/dashboard/types.ts` 新增 `MyApplicationDetail` 域模型、`ReleasedDecisionDetail`（比 list 版本多 `noteExternal`）、`ApplicantProfileSnapshot`，并在 `DashboardProvider` 接口上扩展 `getMyApplication(applicationId)` 方法。
+    *   `frontend/src/features/dashboard/dashboardMappers.ts` 新增 `TransportMyApplicationDetail` 与 `fromTransportMyApplicationDetail`，把后端 snake_case detail payload（含 `released_decision.note_external` 与 `applicant_profile_snapshot`）映射到新域模型。
+    *   `frontend/src/api/me.ts` 新增 `fetchMyApplicationDetail(token, id)`，命中 `GET /api/v1/me/applications/:id`。
+    *   `frontend/src/features/dashboard/httpDashboardProvider.ts` 实现 `getMyApplication(id)`，404 → `null`，其他错误透传。`fakeDashboardProvider.ts` 新增 `setDashboardDetailFakeState` / `resetDashboardFakeState` 复位逻辑，保持与 list fake 一致。
+    *   新增 `frontend/src/pages/MyApplicationDetail.tsx`（`routePath = '/me/applications/:id'`，走 `WorkspaceShell`）：状态徽章沿用与 list 一致的 tone 规则（`releasedDecision.finalStatus` 优先，否则 `viewerStatus`）；页面分四个 section —— Result（仅 released 且有 `noteExternal` 才渲染）、Submitted 时间戳 / 未提交提示、Statement、Travel plan + Funding need（仅 grant），以及 Profile at submission（仅提交后且 snapshot 非空时渲染）。未登录 → `navigate('/login')`；找不到或非本人 → "Application not found" + 返回链接。
+    *   `frontend/src/pages/MyApplications.tsx` 把每行的 "Next step" 文案替换为一个真正的 `<Link>` 到 `/me/applications/${item.id}`（按钮样式复用 `.conference-primary-link`）。label 依然由 `nextAction` 决定，但现在可点击。
+    *   `frontend/src/pages/MyApplications.css` 新增 `.my-applications__detail-note / __detail-subhead / __detail-snapshot`，仅作为 detail 页局部样式，不引入新的全局视觉层。
+*   **验证记录**:
+    *   新增 `frontend/src/pages/MyApplicationDetail.test.tsx`（5 用例）：未登录跳转、draft grant 详情（含 Linked conference / Statement / Travel plan / Funding need / "This application has not been submitted yet"）、submitted 会议详情含 "Profile at submission" snapshot 渲染、released accepted 详情含 Result section 与 `note_external` 文案、not-found 状态下返回到 `/me/applications` 的链接。
+    *   扩展 `frontend/src/features/dashboard/dashboardMappers.test.ts`（总计 5 用例）：新增 detail mapper 的 grant-submitted 与 released-with-note_external 两组，覆盖 `extra_answers`、`applicant_profile_snapshot`、`note_external`、`files`、`linked_conference_application_id`。
+    *   更新 `frontend/src/pages/MyApplications.test.tsx` 的既有 3 个 row 断言，从"Next step: X 文案"切换为"name=X 的 Link，href=/me/applications/:id"。
+    *   执行通过 `cd frontend && npx vitest run`：`14` 个 test files、`50` 个 tests 全部通过。
+    *   执行通过 `cd frontend && npm run build`，无类型或构建错误。
+    *   `cd backend && npx jest --runInBand` 在本分支跑通 `9` 个 test suites、`39` 个 tests；仓库级 `npm run test:smoke` 由于仍未合入 PR #12 的 `--runInBand`，parallel-jest flake 仍在 —— 本轮零后端改动，不引入也不加剧该 flake。
+*   **边界与说明**:
+    *   未改动任何后端代码、Prisma schema、OpenAPI、route loader 或 `App.tsx`；detail 页由 auto-discovery 从 `frontend/src/pages/MyApplicationDetail.tsx` 自动挂载到 `/me/applications/:id`。
+    *   未实装 post-visit report 提交界面：backend 现在对 `post_visit_report_status` 始终返回 `null`，detail 页做了字段预留但不渲染 action；这一块归属未来的 `FE-GRANT` / `FE-PORTAL` 增量。
+    *   `extra_answers`、`files` 已进入域模型但 detail 页暂未展示；一旦 form builder / 文件子系统落地再回头扩展。
+    *   与 PR #11 合并策略：本轮改动直接 push 到 `feature/portal`，PR #11 自动更新 —— 保持"一个 PORTAL epic、一个 PR"的 CLAUDE.md 约定。
+*   **下一步**: 等 PR #11 与 PR #12 一并合入；随后在 `scripts/` 下落一个 `me-applications-real-flow-check.mjs`（mirror `grant-real-flow-check.mjs`）作为 `INT-PORTAL-001` 的真实联调脚本起点。
 
 ### 2026-04-22 (Session 25)
 *   **Agent 角色**: Coding Agent (Frontend / Contract Realignment)

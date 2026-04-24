@@ -17,6 +17,10 @@ export type ReleasedDecision = {
   releasedAt: string | null;
 };
 
+export type ReleasedDecisionDetail = ReleasedDecision & {
+  noteExternal: string | null;
+};
+
 export type MyApplication = {
   id: string;
   applicationType: MyApplicationKind;
@@ -31,6 +35,39 @@ export type MyApplication = {
   postVisitReportStatus: string | null;
 };
 
+export type ApplicantProfileSnapshot = {
+  full_name?: string;
+  institution_name_raw?: string | null;
+  country_code?: string | null;
+  career_stage?: string | null;
+  research_keywords?: string[];
+};
+
+export type MyApplicationDetail = {
+  id: string;
+  applicationType: MyApplicationKind;
+  sourceModule: string;
+  conferenceId: string | null;
+  conferenceTitle: string | null;
+  grantId: string | null;
+  grantTitle: string | null;
+  linkedConferenceId: string | null;
+  linkedConferenceTitle: string | null;
+  linkedConferenceApplicationId: string | null;
+  viewerStatus: ViewerStatus;
+  statement: string | null;
+  travelPlanSummary: string | null;
+  fundingNeedSummary: string | null;
+  extraAnswers: Record<string, unknown>;
+  applicantProfileSnapshot: ApplicantProfileSnapshot;
+  files: unknown[];
+  submittedAt: string | null;
+  releasedDecision: ReleasedDecisionDetail | null;
+  postVisitReportStatus: string | null;
+};
+
 export type DashboardProvider = {
   listMyApplications(): Promise<MyApplication[]>;
+  getMyApplication(applicationId: string): Promise<MyApplicationDetail | null>;
 };
+

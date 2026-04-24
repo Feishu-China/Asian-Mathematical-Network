@@ -201,9 +201,9 @@ function ApplicationSection({
                   Submitted {new Date(item.submittedAt).toLocaleDateString()}
                 </p>
               ) : null}
-              <p className="my-applications__row-next-action" aria-label="Next step">
-                Next step: {NEXT_ACTION_LABELS[item.nextAction]}
-              </p>
+              <Link to={`/me/applications/${item.id}`} className="conference-primary-link">
+                {NEXT_ACTION_LABELS[item.nextAction]}
+              </Link>
             </li>
           ))}
         </ul>

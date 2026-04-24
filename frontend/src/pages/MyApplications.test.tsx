@@ -86,7 +86,7 @@ describe('MyApplications page', () => {
     );
   });
 
-  it('renders an under-review conference application with source title and next step', async () => {
+  it('renders an under-review conference application with a View submission link to its detail page', async () => {
     localStorage.setItem('token', 'test-token');
     setDashboardFakeState([submittedConferenceApp]);
 
@@ -96,10 +96,13 @@ describe('MyApplications page', () => {
       await screen.findByRole('heading', { name: 'Asiamath 2026 Workshop' })
     ).toBeInTheDocument();
     expect(screen.getByText('Under review')).toBeInTheDocument();
-    expect(screen.getByText(/Next step: View submission/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'View submission' })).toHaveAttribute(
+      'href',
+      '/me/applications/conf-app-1'
+    );
   });
 
-  it('renders a draft grant application with linked conference title and continue-draft next step', async () => {
+  it('renders a draft grant application with linked conference title and Continue draft link', async () => {
     localStorage.setItem('token', 'test-token');
     setDashboardFakeState([draftGrantApp]);
 
@@ -110,10 +113,13 @@ describe('MyApplications page', () => {
     ).toBeInTheDocument();
     expect(screen.getByText('Draft')).toBeInTheDocument();
     expect(screen.getByText(/Linked conference: Asiamath 2026 Workshop/i)).toBeInTheDocument();
-    expect(screen.getByText(/Next step: Continue draft/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Continue draft' })).toHaveAttribute(
+      'href',
+      '/me/applications/grant-app-1'
+    );
   });
 
-  it('renders a released accepted conference decision with its display label and view-result next step', async () => {
+  it('renders a released accepted conference decision with its display label and View result link', async () => {
     localStorage.setItem('token', 'test-token');
     setDashboardFakeState([releasedAcceptedApp]);
 
@@ -123,7 +129,10 @@ describe('MyApplications page', () => {
       await screen.findByRole('heading', { name: 'Asiamath 2025 Conference' })
     ).toBeInTheDocument();
     expect(screen.getByText('Accepted')).toBeInTheDocument();
-    expect(screen.getByText(/Next step: View result/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'View result' })).toHaveAttribute(
+      'href',
+      '/me/applications/conf-app-2'
+    );
   });
 
   it('splits records into conference and grant sections', async () => {

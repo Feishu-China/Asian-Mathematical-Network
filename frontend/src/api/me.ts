@@ -12,3 +12,8 @@ export const fetchMyApplications = async (token: string) => {
   const response = await api.get('/me/applications', withAuth(token));
   return response.data;
 };
+
+export const fetchMyApplicationDetail = async (token: string, applicationId: string) => {
+  const response = await api.get(`/me/applications/${applicationId}`, withAuth(token));
+  return response.data;
+};
