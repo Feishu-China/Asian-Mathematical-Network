@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
+import { PublicPortalNav } from '../components/layout/PublicPortalNav';
 import { PortalShell } from '../components/layout/PortalShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
@@ -48,6 +49,7 @@ export default function ScholarProfile() {
   if (profile === null) {
     return (
       <PortalShell
+        masthead={<PublicPortalNav />}
         eyebrow="Academic directory"
         title="Scholar profile"
         description="A sample public scholar profile used across the directory, reviewer, and partner-matching demos."
@@ -88,6 +90,7 @@ export default function ScholarProfile() {
 
   return (
     <PortalShell
+      masthead={<PublicPortalNav />}
       eyebrow="Academic directory"
       title="Scholar profile"
       description="A sample public scholar profile used across the directory, reviewer, and partner-matching demos."

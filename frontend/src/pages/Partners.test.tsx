@@ -17,6 +17,7 @@ describe('partner public pages', () => {
   it('renders the partners surface with an expertise-matching teaser', async () => {
     renderWithRouter(<Partners />, '/partners', '/partners');
 
+    expect(screen.getByRole('navigation', { name: /public sections/i })).toBeInTheDocument();
     expect(
       await screen.findByRole('heading', { name: 'Institute for Mathematical Systems and Data' })
     ).toBeInTheDocument();

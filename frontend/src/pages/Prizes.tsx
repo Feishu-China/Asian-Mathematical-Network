@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { PublicPortalNav } from '../components/layout/PublicPortalNav';
 import { PortalShell } from '../components/layout/PortalShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
@@ -45,6 +46,7 @@ export default function Prizes() {
 
   return (
     <PortalShell
+      masthead={<PublicPortalNav />}
       eyebrow="Recognition surfaces"
       title="Prizes"
       description="Archive-style recognition pages that preview how scholar identity, nomination context, and review governance can live inside the same platform."

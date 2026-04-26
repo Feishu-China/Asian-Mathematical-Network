@@ -12,6 +12,7 @@ describe('governance preview page', () => {
       '/admin/governance'
     );
 
+    expect(screen.getByRole('navigation', { name: /public sections/i })).toBeInTheDocument();
     expect(await screen.findByRole('heading', { name: 'Governance' })).toBeInTheDocument();
     expect(screen.getAllByText('Governance preview')).toHaveLength(2);
     expect(

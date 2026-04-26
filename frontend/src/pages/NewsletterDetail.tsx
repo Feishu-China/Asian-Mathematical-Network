@@ -1,4 +1,5 @@
 import { Link, useLocation, useParams } from 'react-router-dom';
+import { PublicPortalNav } from '../components/layout/PublicPortalNav';
 import { PortalShell } from '../components/layout/PortalShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
@@ -21,6 +22,7 @@ export default function NewsletterDetail() {
 
   return (
     <PortalShell
+      masthead={<PublicPortalNav />}
       eyebrow="Newsletter issue"
       title={issue.title}
       description={issue.summary}

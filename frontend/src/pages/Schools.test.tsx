@@ -16,6 +16,7 @@ describe('school public pages', () => {
   it('renders the public school list as a distinct opportunity family', async () => {
     renderWithRouter(<Schools />, '/schools', '/schools');
 
+    expect(screen.getByRole('navigation', { name: /public sections/i })).toBeInTheDocument();
     expect(
       await screen.findByRole('heading', { name: 'Asia-Pacific Research School in Algebraic Geometry' })
     ).toBeInTheDocument();
@@ -34,6 +35,7 @@ describe('school public pages', () => {
       '/schools/:slug'
     );
 
+    expect(screen.getByRole('navigation', { name: /public sections/i })).toBeInTheDocument();
     expect(
       await screen.findByRole('heading', {
         name: 'Asia-Pacific Research School in Algebraic Geometry',

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
+import { PublicPortalNav } from '../components/layout/PublicPortalNav';
 import { PortalShell } from '../components/layout/PortalShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
@@ -46,6 +47,7 @@ export default function SchoolDetail() {
 
   return (
     <PortalShell
+      masthead={<PublicPortalNav />}
       eyebrow="School detail"
       title={school?.title ?? 'School detail'}
       description={school?.summary ?? 'Review the public school record and adjacent teaser routes from here.'}

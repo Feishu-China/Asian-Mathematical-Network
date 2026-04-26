@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
+import { PublicPortalNav } from '../components/layout/PublicPortalNav';
 import { PortalShell } from '../components/layout/PortalShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
@@ -51,6 +52,7 @@ export default function GrantDetail() {
 
   return (
     <PortalShell
+      masthead={<PublicPortalNav />}
       eyebrow="Grant detail"
       title={grantDetail?.title ?? 'Grant detail'}
       description={

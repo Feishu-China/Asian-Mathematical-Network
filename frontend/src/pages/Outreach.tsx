@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { PublicPortalNav } from '../components/layout/PublicPortalNav';
 import { PortalShell } from '../components/layout/PortalShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
@@ -11,6 +12,7 @@ export const routePath = '/outreach';
 export default function Outreach() {
   return (
     <PortalShell
+      masthead={<PublicPortalNav />}
       eyebrow="Community programs"
       title="Outreach"
       description="A static preview surface for math circles, public lectures, and school-facing engagement programs."

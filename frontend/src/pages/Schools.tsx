@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { PublicPortalNav } from '../components/layout/PublicPortalNav';
 import { PortalShell } from '../components/layout/PortalShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
@@ -54,6 +55,7 @@ export default function Schools() {
 
   return (
     <PortalShell
+      masthead={<PublicPortalNav />}
       eyebrow="Training opportunities"
       title="Schools"
       description="Programs that emphasize guided learning, cohort building, and pedagogical progression rather than conference presentation."

@@ -59,6 +59,29 @@ it('renders featured public opportunity cards sourced from the public providers'
   expect(within(featuredSection as HTMLElement).getByText('Travel Grant')).toBeInTheDocument();
 });
 
+it('keeps featured opportunity links in the featured section rather than duplicating them inside the hero panel', async () => {
+  renderWithRouter(<Portal />, '/portal', '/portal');
+
+  const heroHeading = screen.getByRole('heading', {
+    name: /opportunities and scholarly exchange across the asian mathematical network/i,
+  });
+  const heroSection = heroHeading.closest('section');
+
+  const featuredHeading = await screen.findByRole('heading', {
+    name: /featured opportunities/i,
+  });
+  const featuredSection = featuredHeading.closest('section');
+
+  expect(heroSection).not.toBeNull();
+  expect(featuredSection).not.toBeNull();
+  expect(
+    within(heroSection as HTMLElement).queryByRole('link', { name: 'Asiamath 2026 Workshop' })
+  ).not.toBeInTheDocument();
+  expect(
+    within(featuredSection as HTMLElement).getByRole('link', { name: 'Asiamath 2026 Workshop' })
+  ).toHaveAttribute('href', '/conferences/asiamath-2026-workshop');
+});
+
 it('renders a scholars and expertise teaser after the opportunity-led sections', async () => {
   renderWithRouter(<Portal />, '/portal', '/portal');
 

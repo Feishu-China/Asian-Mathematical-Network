@@ -7,6 +7,7 @@ describe('outreach preview page', () => {
   it('renders the outreach landing as a static breadth surface', async () => {
     renderWithRouter(<Outreach />, '/outreach', '/outreach');
 
+    expect(screen.getByRole('navigation', { name: /public sections/i })).toBeInTheDocument();
     expect(await screen.findByRole('heading', { name: 'Outreach' })).toBeInTheDocument();
     expect(screen.getByText('Outreach programs')).toBeInTheDocument();
     expect(

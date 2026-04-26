@@ -119,27 +119,6 @@ export default function Portal() {
                   {homepageModel.summary.openSchools === 1 ? '' : 's'}
                 </li>
               </ul>
-              {homepageModel.featuredOpportunities[0] ? (
-                <article className="portal-home__hero-feature surface-card">
-                  <p className="portal-home__hero-feature-kicker">
-                    {opportunityLabels[homepageModel.featuredOpportunities[0].kind]}
-                  </p>
-                  <Link
-                    to={homepageModel.featuredOpportunities[0].href}
-                    state={portalReturnState}
-                    className="portal-home__hero-feature-title"
-                  >
-                    {homepageModel.featuredOpportunities[0].title}
-                  </Link>
-                  <p className="portal-home__hero-feature-meta">
-                    {homepageModel.featuredOpportunities[0].location} ·{' '}
-                    {homepageModel.featuredOpportunities[0].dateLabel}
-                  </p>
-                  <p className="portal-home__hero-feature-summary">
-                    {homepageModel.featuredOpportunities[0].summary}
-                  </p>
-                </article>
-              ) : null}
             </>
           ) : (
             <p className="portal-home__summary-note">

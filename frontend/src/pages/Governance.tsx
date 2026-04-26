@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
+import { PublicPortalNav } from '../components/layout/PublicPortalNav';
 import { PortalShell } from '../components/layout/PortalShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
@@ -14,6 +15,7 @@ export default function Governance() {
 
   return (
     <PortalShell
+      masthead={<PublicPortalNav />}
       eyebrow="Governance preview"
       title="Governance"
       description="A static preview of how a future admin governance layer could frame committee boundaries, reviewer checkpoints, and release controls in d0."

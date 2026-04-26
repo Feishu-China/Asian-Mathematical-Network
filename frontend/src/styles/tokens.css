@@ -3,8 +3,8 @@
 :root {
   color-scheme: light;
 
-  --color-navy-950: #0f1a2d;
-  --color-navy-900: #15233b;
+  --color-navy-950: #0c1830;
+  --color-navy-900: #13233f;
   --color-navy-800: #1f3454;
   --color-navy-700: #2a466f;
   --color-navy-600: #3a5f91;
@@ -17,7 +17,7 @@
   --color-stone-500: #7b7266;
   --color-stone-700: #4d4942;
 
-  --color-accent: #b8903a;
+  --color-accent: #b68a2f;
   --color-accent-soft: #f2e6c9;
   --color-success: #1d6b51;
   --color-success-soft: #e4f1ea;
@@ -31,11 +31,14 @@
   --color-text: #182234;
   --color-text-muted: #5b6577;
   --color-text-subtle: #7d8695;
+  --color-text-on-dark: #f5f0e7;
+  --color-text-on-dark-muted: rgba(245, 240, 231, 0.78);
+  --color-accent-on-dark: #e3c980;
 
-  --surface-canvas: #f5f2ec;
+  --surface-canvas: #f7f3ec;
   --surface-panel: rgba(255, 255, 255, 0.94);
   --surface-panel-strong: #ffffff;
-  --surface-muted: #f4efe6;
+  --surface-muted: #f1eadf;
   --surface-alt: #edf2f7;
 
   --border-subtle: rgba(31, 52, 84, 0.12);

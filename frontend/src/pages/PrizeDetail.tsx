@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
+import { PublicPortalNav } from '../components/layout/PublicPortalNav';
 import { PortalShell } from '../components/layout/PortalShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
@@ -46,6 +47,7 @@ export default function PrizeDetail() {
 
   return (
     <PortalShell
+      masthead={<PublicPortalNav />}
       eyebrow="Prize detail"
       title={prize?.title ?? 'Prize detail'}
       description={prize?.summary ?? 'Review the public prize record and governance-preview handoff from here.'}

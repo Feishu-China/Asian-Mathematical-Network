@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { PublicPortalNav } from '../components/layout/PublicPortalNav';
 import { PortalShell } from '../components/layout/PortalShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
@@ -44,6 +45,7 @@ export default function Partners() {
 
   return (
     <PortalShell
+      masthead={<PublicPortalNav />}
       eyebrow="Applied collaboration"
       title="Partners"
       description="A breadth-facing surface for institutions, applied collaborations, and expertise-matching direction without building a live partner system in d0."

@@ -14,6 +14,7 @@ it('shows related scholar context on the public conference detail page', async (
     '/conferences/:slug'
   );
 
+  expect(screen.getByRole('navigation', { name: /public sections/i })).toBeInTheDocument();
   expect(await screen.findByRole('heading', { name: 'Asiamath 2026 Workshop' })).toBeInTheDocument();
   expect(screen.getByRole('link', { name: /alice chen/i })).toHaveAttribute(
     'href',

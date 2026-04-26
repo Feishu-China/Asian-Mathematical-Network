@@ -10,6 +10,46 @@
 
 ## 📅 Handoff 历史记录
 
+### 2026-04-27 (Session 34)
+*   **Agent 角色**: Coding Agent (Homepage UI priority pass)
+*   **完成 Feature**: `PORTAL` homepage readability / hierarchy refinement
+*   **变更记录**:
+    *   `frontend/src/pages/Portal.tsx` / `Portal.css` 依照 2026-04-27 UI priority addendum 收口首页 hero：移除了 hero 右侧重复的 featured opportunity card，把右侧 panel 收回到纯 summary / orientation 角色，避免与主标题和下方 `Featured opportunities` 区块竞争。
+    *   `frontend/src/styles/tokens.css` 新增 dark-surface text tokens，并重新校准 public-facing `navy / stone / accent` 基础色值，让 hero 和浅色 surface 的对比关系更明确。
+    *   `frontend/src/pages/Portal.css` 提升了 hero headline、lede、stats、summary panel 的可读性，减弱了 grid / glow 的噪音，并统一了 hero CTA 与下方卡片的圆角和 surface grammar。
+    *   `frontend/src/components/layout/PublicPortalNav.css` 做轻量减重：降低 topbar prominence，收紧 nav height 与 link padding，减轻 `Sign in` 的视觉体量，但不改动 nav IA。
+    *   `frontend/src/pages/Portal.test.tsx` 新增失败后转绿的约束，锁定“featured opportunity 链接只应出现在 featured section，而不应在 hero 内重复”。
+*   **验证记录**:
+    *   按 TDD 先补 `src/pages/Portal.test.tsx` 的失败用例，再执行通过 `cd frontend && npm run test:run -- src/pages/Portal.test.tsx`。
+    *   执行通过 `cd frontend && npm run test:run -- src/components/layout/PublicPortalNav.test.tsx src/pages/Schools.test.tsx src/pages/ConferenceDetail.test.tsx`，`3` 个 test files、`8` 个 tests 全部通过。
+    *   执行通过 `cd frontend && npm run build`（`tsc -b && vite build`），无类型或构建错误。
+    *   浏览器验收通过：本地 `vite` dev server 在 `http://127.0.0.1:4173` 下可正常打开 `/portal` 与 `/schools`；`/portal` hero 内已不再出现重复 featured link，`/schools` 仍保留统一 public masthead，控制台无 runtime errors。
+*   **边界与说明**:
+    *   本轮只处理 UI 优先级最高的问题：可读性、hero hierarchy、palette 收敛、masthead 减重。
+    *   没有重做 section order，没有扩展新模块，也没有把 application flows 或 authenticated shell 拉进同一轮视觉重构。
+    *   颜色方向仍可能继续微调；这轮的目标是先从“读不清、抢焦点、风格不收口”退回到更稳定的 public homepage。
+*   **下一步**: 如果继续深化，建议先做一轮纯视觉 polish：更细的 palette tuning、hero / section vertical rhythm、以及 `Featured opportunities` 与 `Schools` 卡片在 typography 上的进一步统一。
+
+### 2026-04-27 (Session 33)
+*   **Agent 角色**: Coding Agent (Public shell consistency follow-up)
+*   **完成 Feature**: `PORTAL` public masthead rollout across visitor-facing pages
+*   **变更记录**:
+    *   将统一的 `PublicPortalNav` masthead 从 `/portal` / `/scholars` 扩展到 homepage nav 直接可达的 public pages 与其 detail pages：`Conferences`、`ConferenceDetail`、`Grants`、`GrantDetail`、`Schools`、`SchoolDetail`、`Prizes`、`PrizeDetail`、`ScholarProfile`、`Newsletters` / `NewsletterDetail`、`Publications` / `PublicationDetail`、`Videos` / `VideoDetail`。
+    *   继续把同一套 public shell 接到 public preview surfaces：`Partners`、`Governance`、`Outreach`，避免从 public detail teaser 深入后又掉回旧壳。
+    *   为 `Schools`、`ConferenceDetail`、`Partners`、`Governance`、`Outreach` 补充测试断言，锁定 “visitor-facing 页面必须保留 `Public sections` 导航” 这一约束。
+*   **验证记录**:
+    *   按 TDD 先让 `src/pages/Schools.test.tsx` 与 `src/pages/ConferenceDetail.test.tsx` 因缺少 public masthead 而失败，再完成实现。
+    *   执行通过 `cd frontend && npm run test:run -- src/pages/Schools.test.tsx src/pages/ConferenceDetail.test.tsx src/pages/Conferences.test.tsx src/pages/Grants.test.tsx src/pages/Prizes.test.tsx src/pages/ScholarProfile.test.tsx`，`6` 个 test files、`24` 个 tests 全部通过。
+    *   执行通过 `cd frontend && npm run test:run -- src/pages/Newsletters.test.tsx src/pages/Publications.test.tsx src/pages/Videos.test.tsx`，`3` 个 test files、`14` 个 tests 全部通过。
+    *   执行通过 `cd frontend && npm run test:run -- src/pages/Partners.test.tsx src/pages/Governance.test.tsx src/pages/Outreach.test.tsx`，`3` 个 test files、`5` 个 tests 全部通过。
+    *   浏览器抽查通过：本地 `vite` dev server 在 `http://127.0.0.1:4173` 正常提供 `/portal` 与 `/schools`，`/schools` 页面可见新的 `Public sections` masthead，控制台无 runtime errors。
+    *   执行通过 `cd frontend && npm run build`（`tsc -b && vite build`），无类型或构建错误。
+*   **边界与说明**:
+    *   本轮没有改色板，只推进 public shell 一致性；首页当前 palette 仍待后续单独调校。
+    *   `ConferenceApply` / `GrantApply` 仍保留 `WorkspaceShell`，因为它们已经进入 applicant-flow 语义，而不是纯 visitor-facing browse surface。
+    *   工作区中 account-menu 相关未提交改动继续保持未触碰。
+*   **下一步**: 如果继续深化 public 体验，优先做两件事：1) 重新校准 homepage / masthead 的色彩与对比度；2) 决定是否把 `WorkspaceShell` 的申请页也拉到更接近 public shell 的视觉语言，还是明确维持“浏览页 / 申请页”两套层级。
+
 ### 2026-04-26 (Session 32)
 *   **Agent 角色**: Coding Agent (Homepage fidelity / public navigation follow-up)
 *   **完成 Feature**: `PORTAL` homepage fidelity pass + public return-context repair
