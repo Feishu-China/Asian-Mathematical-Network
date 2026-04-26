@@ -43,6 +43,19 @@ export type ApplicantProfileSnapshot = {
   research_keywords?: string[];
 };
 
+export type PostVisitReport = {
+  id: string;
+  status: string;
+  reportNarrative: string;
+  attendanceConfirmed: boolean;
+  submittedAt: string | null;
+};
+
+export type PostVisitReportValues = {
+  reportNarrative: string;
+  attendanceConfirmed: boolean;
+};
+
 export type MyApplicationDetail = {
   id: string;
   applicationType: MyApplicationKind;
@@ -63,11 +76,16 @@ export type MyApplicationDetail = {
   files: unknown[];
   submittedAt: string | null;
   releasedDecision: ReleasedDecisionDetail | null;
+  postVisitReport: PostVisitReport | null;
   postVisitReportStatus: string | null;
 };
 
 export type DashboardProvider = {
   listMyApplications(): Promise<MyApplication[]>;
   getMyApplication(applicationId: string): Promise<MyApplicationDetail | null>;
+  submitPostVisitReport(
+    applicationId: string,
+    values: PostVisitReportValues
+  ): Promise<PostVisitReport>;
 };
 

@@ -4,11 +4,29 @@
 
 ## 当前项目状态
 *   **最新版本**: V4.0-Optimized
-*   **总览**: `AUTH`、`PROFILE`、`CONF`、`GRANT` 与 `REVIEW` 五个 Epic 已完成；`PORTAL` Epic 的 `BE-PORTAL-001` 已在 main，`FE-PORTAL-001` 前端 dashboard（列表页）+ applicant detail 页（`/me/applications/:id`）+ legacy `/dashboard` widget 接入都在 `feature/portal` 上并已对齐 applicant-safe contract，统一走 PR #11 合入；`INT-PORTAL-001` 真实联调脚本已在独立分支 `feature/portal-real-flow-check`（PR #16）落地，`INT-PORTAL-001` 票据本身仍依赖 organizer-side `INT-REVIEW-001` 才算完整。
+*   **总览**: `AUTH`、`PROFILE`、`CONF`、`GRANT` 与 `REVIEW` 五个 Epic 已完成；`PORTAL` 现在覆盖 dashboard 列表 / detail 页 / `/portal` 公共门户（接 real providers 后展示 featured conferences + grants）/ `/dashboard` widget / 申请详情页的 post-visit report 提交表单。BE 侧的 post-visit report endpoint 与 OpenAPI 在独立 PR #18，FE 表单与 Portal real-data 继续走 PR #11；`INT-PORTAL-001` 真实联调脚本在 PR #16，OpenAPI applicant-safe schema 在 PR #17。
 
 ---
 
 ## 📅 Handoff 历史记录
+
+### 2026-04-22 (Session 28)
+*   **Agent 角色**: Coding Agent (Frontend / FE-PORTAL-001 polish)
+*   **完成 Feature**: `/portal` real-data wiring + post-visit report 前端表单（PR #11 增量）
+*   **变更记录**:
+    *   `frontend/src/pages/Portal.tsx` 从静态链接列表改成消费 `conferenceProvider.listPublicConferences()` 与 `grantProvider.listPublicGrants()`，分别取前 3 条做 featured 卡片；保留 account-links section（Sign in / Create account / My applications）。Loading / error / empty 三态由 `.conference-empty` 与 `.conference-inline-message error` 复用 foundation。新增 `frontend/src/pages/Portal.test.tsx`（3 用例：published conference 链接、draft grant 不出现、account links）。
+    *   `frontend/src/features/dashboard/types.ts` 新增 `PostVisitReport`、`PostVisitReportValues`，并把 `MyApplicationDetail` 扩展为携带 `postVisitReport: PostVisitReport | null`。`DashboardProvider` 接口加 `submitPostVisitReport(applicationId, values)`。`dashboardMappers.ts` 新增 `fromTransportPostVisitReport` 并在 detail mapper 上把 backend 的 `post_visit_report` 映射进 domain。
+    *   `frontend/src/api/me.ts` 新增 `submitMyPostVisitReportRequest(token, id, payload)` 命中 `POST /api/v1/me/applications/:id/post-visit-report`。`httpDashboardProvider` 增加 `submitPostVisitReport`，把响应映射到 `PostVisitReport`。`fakeDashboardProvider` 暴露 `setNextPostVisitReportFailure` 给单测注入失败路径，并在成功路径里把 fake detail state 的 `postVisitReport` / `postVisitReportStatus` 一并更新。
+    *   `frontend/src/pages/MyApplicationDetail.tsx` 在已 released 且 `final_status=accepted` 的 grant 申请上渲染：若 `postVisitReport === null` 则展示 narrative + attendance checkbox 表单，提交成功后 inline 切换为已提交状态；若 `postVisitReport !== null` 则只展示已提交的 narrative / 提交时间 / attendance 标记。失败回显本地错误文案，按钮在请求中切到 disabled。表单只在 grant + accepted 时出现，其它路径（conference / under_review / rejected）继续不渲染该 section。`MyApplications.css` 新增 `.my-applications__detail-checkbox` 给 inline 复选框排版。
+*   **验证记录**:
+    *   `cd frontend && npx vitest run` 通过：`16` 个 test files、`59` 个 tests 全部通过。`MyApplicationDetail.test.tsx` 新增 3 个 case：accepted grant + 无 report 时表单出现并提交后切换为已提交状态；accepted grant + 已有 report 时表单不出现；conference 申请不渲染该 section。
+    *   `cd frontend && npm run build` clean。
+    *   未跑 `cd backend && npm test`：本轮 FE 不依赖后端代码改动；BE 侧 post-visit report 的 endpoint 在独立 PR #18（branch `feature/post-visit-report-be`），其 jest 在那条 PR 已经验证 10 个 suites / 47 个 tests 全绿（`--runInBand`）。
+*   **边界与说明**:
+    *   PR #18 合入前，本 PR 的 `submitPostVisitReport` 在生产环境会拿到 404（因为 main 上还没有该 endpoint）；fake provider 完全模拟成功路径，所以前端测试不依赖后端。一旦 PR #18 合入 main 且 PR #11 也合入 main，整个 post-visit report 流就端到端可用。
+    *   未触碰 `App.tsx`、`PortalShell` / `WorkspaceShell`、shell 组件、foundation tokens；新增样式仅扩展 `MyApplications.css` 的页面 scoped 类。
+    *   PR #11 累计承担 dashboard 列表、详情、Portal 公共首页、`/dashboard` widget、post-visit report 表单 五件 FE 改动；每个 commit 主题独立，git log 自带分段语义，便于 reviewer 局部审。
+*   **下一步**: 等 PR #11 / #12 / #16 / #17 / #18 合入主干；之后可视情况：(a) 给 `/portal` 公共首页加一个 "Featured scholars" section（消费尚未实现的 `profileProvider.listPublicProfiles()`）；(b) 给 organizer 视角增加 post-visit report 查看路径；(c) `INT-PORTAL-001` 在 `INT-REVIEW-001` 收尾后正式 flip 状态。
 
 ### 2026-04-22 (Session 27)
 *   **Agent 角色**: Coding Agent (Frontend / FE-PORTAL-001 polish)

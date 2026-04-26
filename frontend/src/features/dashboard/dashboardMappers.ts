@@ -4,11 +4,33 @@ import type {
   MyApplicationDetail,
   MyApplicationKind,
   NextAction,
+  PostVisitReport,
   ReleasedDecision,
   ReleasedDecisionDetail,
   ReleasedDecisionFinalStatus,
   ViewerStatus,
 } from './types';
+
+type TransportPostVisitReport = {
+  id: string;
+  status: string;
+  report_narrative: string;
+  attendance_confirmed: boolean;
+  submitted_at: string | null;
+};
+
+export const fromTransportPostVisitReport = (
+  report: TransportPostVisitReport | null
+): PostVisitReport | null =>
+  report
+    ? {
+        id: report.id,
+        status: report.status,
+        reportNarrative: report.report_narrative,
+        attendanceConfirmed: report.attendance_confirmed,
+        submittedAt: report.submitted_at,
+      }
+    : null;
 
 type TransportReleasedDecision = {
   decision_kind: string;
@@ -55,6 +77,7 @@ type TransportMyApplicationDetail = {
   files: unknown[];
   submitted_at: string | null;
   released_decision: TransportReleasedDecisionDetail | null;
+  post_visit_report?: TransportPostVisitReport | null;
   post_visit_report_status: string | null;
 };
 
@@ -119,6 +142,7 @@ export const fromTransportMyApplicationDetail = (
   files: item.files,
   submittedAt: item.submitted_at,
   releasedDecision: fromTransportReleasedDecisionDetail(item.released_decision),
+  postVisitReport: fromTransportPostVisitReport(item.post_visit_report ?? null),
   postVisitReportStatus: item.post_visit_report_status,
 });
 

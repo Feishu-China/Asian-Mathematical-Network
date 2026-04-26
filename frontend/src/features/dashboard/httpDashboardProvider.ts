@@ -1,10 +1,15 @@
 import axios from 'axios';
-import { fetchMyApplicationDetail, fetchMyApplications } from '../../api/me';
+import {
+  fetchMyApplicationDetail,
+  fetchMyApplications,
+  submitMyPostVisitReportRequest,
+} from '../../api/me';
 import {
   fromTransportMyApplication,
   fromTransportMyApplicationDetail,
+  fromTransportPostVisitReport,
 } from './dashboardMappers';
-import type { DashboardProvider } from './types';
+import type { DashboardProvider, PostVisitReport } from './types';
 
 const readToken = () => {
   const token = localStorage.getItem('token');
@@ -37,5 +42,17 @@ export const httpDashboardProvider: DashboardProvider = {
       }
       throw error;
     }
+  },
+
+  async submitPostVisitReport(applicationId, values) {
+    const response = await submitMyPostVisitReportRequest(readToken(), applicationId, {
+      report_narrative: values.reportNarrative,
+      attendance_confirmed: values.attendanceConfirmed,
+    });
+    const report = fromTransportPostVisitReport(response.data.post_visit_report);
+    if (!report) {
+      throw new Error('Backend returned no post_visit_report');
+    }
+    return report as PostVisitReport;
   },
 };

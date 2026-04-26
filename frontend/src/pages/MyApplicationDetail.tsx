@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import type { FormEvent } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { WorkspaceShell } from '../components/layout/WorkspaceShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
@@ -8,6 +9,7 @@ import { dashboardProvider } from '../features/dashboard/dashboardProvider';
 import type {
   ApplicantProfileSnapshot,
   MyApplicationDetail,
+  PostVisitReport,
   ReleasedDecisionFinalStatus,
   ViewerStatus,
 } from '../features/dashboard/types';
@@ -65,6 +67,10 @@ export default function MyApplicationDetail() {
   const navigate = useNavigate();
   const [application, setApplication] = useState<MyApplicationDetail | null | undefined>(undefined);
   const [hasError, setHasError] = useState(false);
+  const [reportNarrative, setReportNarrative] = useState('');
+  const [attendanceConfirmed, setAttendanceConfirmed] = useState(true);
+  const [reportSubmitting, setReportSubmitting] = useState(false);
+  const [reportError, setReportError] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -81,6 +87,9 @@ export default function MyApplicationDetail() {
 
     setHasError(false);
     setApplication(undefined);
+    setReportNarrative('');
+    setAttendanceConfirmed(true);
+    setReportError(null);
 
     dashboardProvider
       .getMyApplication(id)
@@ -100,6 +109,36 @@ export default function MyApplicationDetail() {
       active = false;
     };
   }, [id, navigate]);
+
+  const handleReportSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!application) {
+      return;
+    }
+    const trimmed = reportNarrative.trim();
+    if (!trimmed) {
+      setReportError('Please describe the visit before submitting.');
+      return;
+    }
+
+    setReportError(null);
+    setReportSubmitting(true);
+    try {
+      const submitted: PostVisitReport = await dashboardProvider.submitPostVisitReport(
+        application.id,
+        { reportNarrative: trimmed, attendanceConfirmed }
+      );
+      setApplication({
+        ...application,
+        postVisitReport: submitted,
+        postVisitReportStatus: submitted.status,
+      });
+    } catch {
+      setReportError('We could not submit your post-visit report. Please try again.');
+    } finally {
+      setReportSubmitting(false);
+    }
+  };
 
   if (application === undefined) {
     return (
@@ -219,6 +258,62 @@ export default function MyApplicationDetail() {
               <p className="conference-empty">Not provided yet.</p>
             )}
           </section>
+        ) : null}
+
+        {isGrant && application.releasedDecision?.finalStatus === 'accepted' ? (
+          application.postVisitReport ? (
+            <section className="surface-card my-applications__row" aria-labelledby="detail-report">
+              <h2 id="detail-report">Post-visit report</h2>
+              <p className="my-applications__row-timestamp">
+                Submitted{' '}
+                {application.postVisitReport.submittedAt
+                  ? new Date(application.postVisitReport.submittedAt).toLocaleDateString()
+                  : 'just now'}
+                {application.postVisitReport.attendanceConfirmed
+                  ? ' · attendance confirmed'
+                  : ' · attendance not confirmed'}
+              </p>
+              <p className="my-applications__detail-note">
+                {application.postVisitReport.reportNarrative}
+              </p>
+            </section>
+          ) : (
+            <section className="surface-card my-applications__row" aria-labelledby="detail-report-form">
+              <h2 id="detail-report-form">Submit post-visit report</h2>
+              <p className="my-applications__detail-note">
+                Tell the organizer what happened on your trip. You can submit one report per
+                accepted travel grant.
+              </p>
+              <form onSubmit={handleReportSubmit} className="conference-form">
+                <label>
+                  Report narrative
+                  <textarea
+                    value={reportNarrative}
+                    onChange={(event) => setReportNarrative(event.target.value)}
+                    rows={6}
+                    maxLength={4000}
+                    required
+                  />
+                </label>
+                <label className="my-applications__detail-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={attendanceConfirmed}
+                    onChange={(event) => setAttendanceConfirmed(event.target.checked)}
+                  />{' '}
+                  I confirm I attended the conference.
+                </label>
+                {reportError ? (
+                  <p className="conference-inline-message error">{reportError}</p>
+                ) : null}
+                <div className="conference-form-actions">
+                  <button type="submit" disabled={reportSubmitting}>
+                    {reportSubmitting ? 'Submitting...' : 'Submit report'}
+                  </button>
+                </div>
+              </form>
+            </section>
+          )
         ) : null}
 
         {application.submittedAt && hasProfileContent(snapshot) ? (

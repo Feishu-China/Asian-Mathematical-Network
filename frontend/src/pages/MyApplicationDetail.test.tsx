@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { screen, waitFor } from '@testing-library/react';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { renderWithRouter } from '../test/renderWithRouter';
 import {
   resetDashboardFakeState,
@@ -28,6 +28,7 @@ const draftGrantDetail: MyApplicationDetail = {
   files: [],
   submittedAt: null,
   releasedDecision: null,
+  postVisitReport: null,
   postVisitReportStatus: null,
 };
 
@@ -57,6 +58,7 @@ const submittedConferenceDetail: MyApplicationDetail = {
   files: [],
   submittedAt: '2026-05-05T09:00:00.000Z',
   releasedDecision: null,
+  postVisitReport: null,
   postVisitReportStatus: null,
 };
 
@@ -71,6 +73,35 @@ const releasedConferenceDetail: MyApplicationDetail = {
     releasedAt: '2026-04-29T12:00:00.000Z',
     noteExternal: 'Welcome to the conference.',
   },
+};
+
+const acceptedGrantDetailWithoutReport: MyApplicationDetail = {
+  ...draftGrantDetail,
+  id: 'grant-app-2',
+  viewerStatus: 'result_released',
+  submittedAt: '2026-05-01T09:00:00.000Z',
+  releasedDecision: {
+    decisionKind: 'travel_grant',
+    finalStatus: 'accepted',
+    displayLabel: 'Awarded',
+    releasedAt: '2026-04-29T12:00:00.000Z',
+    noteExternal: 'Your travel grant has been awarded.',
+  },
+  postVisitReport: null,
+  postVisitReportStatus: null,
+};
+
+const acceptedGrantDetailWithReport: MyApplicationDetail = {
+  ...acceptedGrantDetailWithoutReport,
+  id: 'grant-app-3',
+  postVisitReport: {
+    id: 'report-grant-app-3',
+    status: 'submitted',
+    reportNarrative: 'I attended the workshop and presented a poster.',
+    attendanceConfirmed: true,
+    submittedAt: '2026-05-15T09:00:00.000Z',
+  },
+  postVisitReportStatus: 'submitted',
 };
 
 describe('MyApplicationDetail page', () => {
@@ -168,5 +199,75 @@ describe('MyApplicationDetail page', () => {
       'href',
       '/me/applications'
     );
+  });
+
+  it('renders the post-visit report form for an accepted grant without a report and submits it', async () => {
+    localStorage.setItem('token', 'test-token');
+    setDashboardDetailFakeState([acceptedGrantDetailWithoutReport]);
+
+    renderWithRouter(
+      <MyApplicationDetailPage />,
+      `/me/applications/${acceptedGrantDetailWithoutReport.id}`,
+      '/me/applications/:id'
+    );
+
+    expect(
+      await screen.findByRole('heading', { name: 'Submit post-visit report' })
+    ).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText(/Report narrative/i), {
+      target: { value: 'Workshop went well; I gave a 30-minute talk.' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Submit report' }));
+
+    expect(
+      await screen.findByRole('heading', { name: 'Post-visit report' })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('Workshop went well; I gave a 30-minute talk.')
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: 'Submit post-visit report' })
+    ).not.toBeInTheDocument();
+  });
+
+  it('renders the submitted post-visit report and hides the form when one already exists', async () => {
+    localStorage.setItem('token', 'test-token');
+    setDashboardDetailFakeState([acceptedGrantDetailWithReport]);
+
+    renderWithRouter(
+      <MyApplicationDetailPage />,
+      `/me/applications/${acceptedGrantDetailWithReport.id}`,
+      '/me/applications/:id'
+    );
+
+    expect(
+      await screen.findByRole('heading', { name: 'Post-visit report' })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('I attended the workshop and presented a poster.')
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: 'Submit post-visit report' })
+    ).not.toBeInTheDocument();
+  });
+
+  it('does not show the post-visit report form for a conference application', async () => {
+    localStorage.setItem('token', 'test-token');
+    setDashboardDetailFakeState([releasedConferenceDetail]);
+
+    renderWithRouter(
+      <MyApplicationDetailPage />,
+      `/me/applications/${releasedConferenceDetail.id}`,
+      '/me/applications/:id'
+    );
+
+    expect(await screen.findByRole('heading', { name: 'Result' })).toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: 'Submit post-visit report' })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: 'Post-visit report' })
+    ).not.toBeInTheDocument();
   });
 });
