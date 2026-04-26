@@ -87,28 +87,59 @@ export default function Prizes() {
             tone="neutral"
           />
         ) : (
-          <div className="prize-grid">
-            {items.map((prize) => (
-              <article key={prize.id} className="prize-card">
-                <div className="prize-card__meta">
-                  <span>{prize.cycleLabel}</span>
-                  <span>{prize.stageLabel}</span>
-                </div>
-                <h2>{prize.title}</h2>
-                <p className="prize-card__subtitle">{prize.shortLabel}</p>
-                <p className="prize-card__summary">{prize.summary}</p>
-                <div className="prize-card__actions">
-                  <StatusBadge tone="warning">Governance signals included</StatusBadge>
-                  <Link to={`/prizes/${prize.slug}`} state={detailState}>
-                    {prize.ctaLabel}
-                  </Link>
-                </div>
-                <p className="prize-card__teaser">
-                  Open the detail view to see the governance and selection-process preview.
+          <>
+            <section className="prize-hub">
+              <div className="prize-hub__copy">
+                <h2>Prize pathways</h2>
+                <p>
+                  Public recognition pages should preview scholar records, nomination flow, and
+                  governance structure before a visitor enters the full archive.
                 </p>
-              </article>
-            ))}
-          </div>
+              </div>
+              <div className="prize-hub__grid">
+                <article className="prize-card prize-hub__card">
+                  <h3>Archive overview</h3>
+                  <p>
+                    Browse the public-facing recognition records that anchor the wider awards
+                    surface in the demo.
+                  </p>
+                  <a href="#prize-archive-list">Browse prize archive</a>
+                </article>
+                <article className="prize-card prize-hub__card">
+                  <h3>Selection process preview</h3>
+                  <p>
+                    Detail pages continue into governance preview and sample laureate context
+                    without leaving the shared portal narrative.
+                  </p>
+                </article>
+              </div>
+            </section>
+
+            <section id="prize-archive-list" className="prize-archive">
+              <div className="prize-grid">
+                {items.map((prize) => (
+                  <article key={prize.id} className="prize-card">
+                    <div className="prize-card__meta">
+                      <span>{prize.cycleLabel}</span>
+                      <span>{prize.stageLabel}</span>
+                    </div>
+                    <h2>{prize.title}</h2>
+                    <p className="prize-card__subtitle">{prize.shortLabel}</p>
+                    <p className="prize-card__summary">{prize.summary}</p>
+                    <div className="prize-card__actions">
+                      <StatusBadge tone="warning">Governance signals included</StatusBadge>
+                      <Link to={`/prizes/${prize.slug}`} state={detailState}>
+                        {prize.ctaLabel}
+                      </Link>
+                    </div>
+                    <p className="prize-card__teaser">
+                      Open the detail view to see the governance and selection-process preview.
+                    </p>
+                  </article>
+                ))}
+              </div>
+            </section>
+          </>
         )}
       </div>
     </PortalShell>

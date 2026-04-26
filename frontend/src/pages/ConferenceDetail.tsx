@@ -77,22 +77,46 @@ export default function ConferenceDetail() {
       }
       aside={
         conference ? (
-          <div className="conference-detail-card conference-cta-card">
-            <p>
-              Conference applications remain separate from travel-grant applications in the MVP.
-            </p>
-            {conference.isApplicationOpen ? (
+          <>
+            <div className="conference-detail-card conference-cta-card">
+              <p>
+                Conference applications remain separate from travel-grant applications in the MVP.
+              </p>
+              {conference.isApplicationOpen ? (
+                <Link
+                  className="conference-primary-link"
+                  to={`/conferences/${conference.slug}/apply`}
+                  state={toReturnContextState(returnContext)}
+                >
+                  Apply for conference
+                </Link>
+              ) : (
+                <div className="conference-muted-note">
+                  This conference is no longer accepting applications.
+                </div>
+              )}
+            </div>
+            <div className="conference-detail-card conference-scholar-card">
+              <h2>Related scholar context</h2>
+              <p>
+                Show how one public scholar profile can support speaker, organiser, and review
+                context across the wider platform demo.
+              </p>
               <Link
                 className="conference-primary-link"
-                to={`/conferences/${conference.slug}/apply`}
-                state={toReturnContextState(returnContext)}
+                to="/scholars/alice-chen-demo"
+                state={{
+                  returnContext: {
+                    to: `/conferences/${conference.slug}`,
+                    label: 'Back to conference',
+                    state: toReturnContextState(returnContext),
+                  },
+                }}
               >
-                Apply for conference
+                Alice Chen
               </Link>
-            ) : (
-              <div className="conference-muted-note">This conference is no longer accepting applications.</div>
-            )}
-          </div>
+            </div>
+          </>
         ) : null
       }
     >

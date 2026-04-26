@@ -14,8 +14,13 @@ describe('prize public pages', () => {
   it('renders the prize archive as a governance-oriented breadth surface', async () => {
     renderWithRouter(<Prizes />, '/prizes', '/prizes');
 
+    expect(await screen.findByRole('heading', { name: /prize pathways/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /browse prize archive/i })).toHaveAttribute(
+      'href',
+      '#prize-archive-list'
+    );
     expect(
-      await screen.findByRole('heading', { name: 'Asiamath Early Career Prize 2026' })
+      screen.getByRole('heading', { name: 'Asiamath Early Career Prize 2026' })
     ).toBeInTheDocument();
     expect(screen.getByText('Prize archive')).toBeInTheDocument();
     expect(screen.getByText(/Scholar identity, nomination context, and governance signals/i)).toBeInTheDocument();
@@ -49,6 +54,10 @@ describe('prize public pages', () => {
     expect(screen.getByRole('link', { name: /view governance preview/i })).toHaveAttribute(
       'href',
       '/admin/governance'
+    );
+    expect(screen.getByRole('link', { name: /view sample laureate profile/i })).toHaveAttribute(
+      'href',
+      '/scholars/prof-reviewer'
     );
   });
 });

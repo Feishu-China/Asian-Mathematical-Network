@@ -10,6 +10,30 @@
   gap: var(--space-5);
 }
 
+.prize-hub,
+.prize-archive {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.prize-hub__copy,
+.prize-hub__card {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.prize-hub__copy p,
+.prize-hub__card p {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.prize-hub__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
 .prize-card,
 .prize-detail-card {
   display: grid;
@@ -60,4 +84,10 @@
 
 .prize-teaser-card {
   align-content: start;
+}
+
+@media (max-width: 900px) {
+  .prize-hub__grid {
+    grid-template-columns: 1fr;
+  }
 }

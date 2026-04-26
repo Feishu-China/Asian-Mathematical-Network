@@ -96,7 +96,7 @@ export default function PrizeDetail() {
                 },
               }}
             >
-              View scholar context
+              View sample laureate profile
             </Link>
           </div>
         ) : null
