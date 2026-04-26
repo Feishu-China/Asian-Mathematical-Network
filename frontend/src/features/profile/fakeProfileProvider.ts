@@ -1,6 +1,7 @@
 import type {
   EditableProfile,
   ProfileProvider,
+  PublicScholarSummary,
   PublicScholarProfile,
 } from './types';
 
@@ -137,4 +138,23 @@ export const fakeProfileProvider: ProfileProvider = {
 
     return null;
   },
+};
+
+export const readEditablePublicScholarSummary = (): PublicScholarSummary | null => {
+  const publicProfile = toPublicProfile(profileState);
+
+  if (!publicProfile) {
+    return null;
+  }
+
+  return {
+    slug: publicProfile.slug,
+    fullName: publicProfile.fullName,
+    title: publicProfile.title,
+    institutionNameRaw: publicProfile.institutionNameRaw,
+    countryCode: publicProfile.countryCode,
+    researchKeywords: publicProfile.researchKeywords,
+    primaryMscCode: publicProfile.mscCodes.find((item) => item.isPrimary)?.code ?? null,
+    bio: publicProfile.bio,
+  };
 };
