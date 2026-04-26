@@ -1,5 +1,6 @@
 import { beforeEach, expect, it } from 'vitest';
-import { screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { renderWithRouter } from '../test/renderWithRouter';
 import Scholars from './Scholars';
 
@@ -22,5 +23,32 @@ it('renders the public scholar directory with expertise clusters and scholar car
   expect(screen.getByRole('link', { name: 'Prof Reviewer' })).toHaveAttribute(
     'href',
     '/scholars/prof-reviewer'
+  );
+});
+
+it('shows a back-to-portal action when entered from portal navigation', async () => {
+  render(
+    <MemoryRouter
+      initialEntries={[
+        {
+          pathname: '/scholars',
+          state: {
+            returnContext: {
+              to: '/portal',
+              label: 'Back to portal',
+            },
+          },
+        },
+      ]}
+    >
+      <Routes>
+        <Route path="/scholars" element={<Scholars />} />
+      </Routes>
+    </MemoryRouter>
+  );
+
+  expect(await screen.findByRole('link', { name: /back to portal/i })).toHaveAttribute(
+    'href',
+    '/portal'
   );
 });

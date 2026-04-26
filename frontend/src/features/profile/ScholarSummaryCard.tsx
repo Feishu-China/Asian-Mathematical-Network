@@ -1,12 +1,14 @@
 import { Link } from 'react-router-dom';
+import type { ReturnContextState } from '../navigation/returnContext';
 import { buildScholarRoute, formatCountryCode } from './profilePresentation';
 import type { PublicScholarSummary } from './types';
 
 type Props = {
   scholar: PublicScholarSummary;
+  detailState?: ReturnContextState;
 };
 
-export function ScholarSummaryCard({ scholar }: Props) {
+export function ScholarSummaryCard({ scholar, detailState }: Props) {
   const metaLine = [scholar.title, scholar.institutionNameRaw, formatCountryCode(scholar.countryCode)]
     .filter(Boolean)
     .join(' · ');
@@ -14,7 +16,11 @@ export function ScholarSummaryCard({ scholar }: Props) {
   return (
     <article className="surface-card scholar-summary-card">
       <p className="scholar-summary-card__eyebrow">Public scholar profile</p>
-      <Link className="scholar-summary-card__title" to={buildScholarRoute(scholar.slug)}>
+      <Link
+        className="scholar-summary-card__title"
+        to={buildScholarRoute(scholar.slug)}
+        state={detailState}
+      >
         {scholar.fullName}
       </Link>
       <p className="scholar-summary-card__meta">{metaLine || 'Scholar profile available'}</p>

@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import { PortalShell } from '../components/layout/PortalShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
 import { DemoStatePanel } from '../features/demo/DemoStatePanel';
+import { readReturnContext, toReturnContextState } from '../features/navigation/returnContext';
 import { schoolProvider } from '../features/school/schoolProvider';
 import type { SchoolDetail as SchoolDetailModel } from '../features/school/types';
 import './School.css';
@@ -13,6 +14,8 @@ export const routePath = '/schools/:slug';
 
 export default function SchoolDetail() {
   const { slug = '' } = useParams();
+  const location = useLocation();
+  const returnContext = readReturnContext(location.state);
   const [school, setSchool] = useState<SchoolDetailModel | null | undefined>(undefined);
   const [hasError, setHasError] = useState(false);
 
@@ -62,8 +65,12 @@ export default function SchoolDetail() {
         </>
       }
       actions={
-        <Link to="/schools" className="my-applications__section-link">
-          Back to schools
+        <Link
+          to={returnContext?.to ?? '/schools'}
+          state={returnContext?.state}
+          className="my-applications__section-link"
+        >
+          {returnContext?.label ?? 'Back to schools'}
         </Link>
       }
       aside={
@@ -78,6 +85,7 @@ export default function SchoolDetail() {
                 returnContext: {
                   to: `/schools/${school.slug}`,
                   label: 'Back to school',
+                  state: toReturnContextState(returnContext),
                 },
               }}
             >
@@ -136,6 +144,7 @@ export default function SchoolDetail() {
                     returnContext: {
                       to: `/schools/${school.slug}`,
                       label: 'Back to school',
+                      state: toReturnContextState(returnContext),
                     },
                   }}
                 >
@@ -147,6 +156,7 @@ export default function SchoolDetail() {
                     returnContext: {
                       to: `/schools/${school.slug}`,
                       label: 'Back to school',
+                      state: toReturnContextState(returnContext),
                     },
                   }}
                 >
@@ -158,6 +168,7 @@ export default function SchoolDetail() {
                     returnContext: {
                       to: `/schools/${school.slug}`,
                       label: 'Back to school',
+                      state: toReturnContextState(returnContext),
                     },
                   }}
                 >

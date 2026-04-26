@@ -1,9 +1,14 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { render, screen } from '@testing-library/react';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { renderWithRouter } from '../../test/renderWithRouter';
 import { PublicPortalNav } from './PublicPortalNav';
+
+function ReturnStateProbe() {
+  const location = useLocation();
+  return <pre>{JSON.stringify(location.state)}</pre>;
+}
 
 describe('PublicPortalNav', () => {
   beforeEach(() => {
@@ -83,5 +88,23 @@ describe('PublicPortalNav', () => {
 
     expect(localStorage.getItem('token')).toBeNull();
     expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute('href', '/login');
+  });
+
+  it('passes a portal return context through top-level public nav links clicked from the homepage', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter initialEntries={['/portal']}>
+        <Routes>
+          <Route path="/portal" element={<PublicPortalNav />} />
+          <Route path="/schools" element={<ReturnStateProbe />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await user.click(screen.getByRole('link', { name: 'Schools' }));
+
+    expect(screen.getByText(/"to":"\/portal"/)).toBeInTheDocument();
+    expect(screen.getByText(/"label":"Back to portal"/)).toBeInTheDocument();
   });
 });

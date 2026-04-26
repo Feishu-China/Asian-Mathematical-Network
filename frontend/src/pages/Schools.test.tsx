@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { renderWithRouter } from '../test/renderWithRouter';
 import { resetSchoolFakeState } from '../features/school/fakeSchoolProvider';
 import Schools from './Schools';
@@ -48,5 +50,43 @@ describe('school public pages', () => {
     );
     expect(screen.getByRole('heading', { name: /outputs teaser/i })).toBeInTheDocument();
     expect(screen.getByText(/Videos, publications, and newsletters can grow from school activity/i)).toBeInTheDocument();
+  });
+
+  it('preserves the portal return chain through school list and detail navigation', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter
+        initialEntries={[
+          {
+            pathname: '/schools',
+            state: {
+              returnContext: {
+                to: '/portal',
+                label: 'Back to portal',
+              },
+            },
+          },
+        ]}
+      >
+        <Routes>
+          <Route path="/schools" element={<Schools />} />
+          <Route path="/schools/:slug" element={<SchoolDetail />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await screen.findByRole('link', { name: /view school/i });
+    await user.click(screen.getByRole('link', { name: /view school/i }));
+    expect(await screen.findByRole('link', { name: /back to schools/i })).toHaveAttribute(
+      'href',
+      '/schools'
+    );
+
+    await user.click(screen.getByRole('link', { name: /back to schools/i }));
+    expect(await screen.findByRole('link', { name: /back to portal/i })).toHaveAttribute(
+      'href',
+      '/portal'
+    );
   });
 });

@@ -5,6 +5,7 @@ import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
 import { DemoStatePanel } from '../features/demo/DemoStatePanel';
+import { buildChainedReturnState } from '../features/demo/demoWalkthrough';
 import { readReturnContext } from '../features/navigation/returnContext';
 import { schoolProvider } from '../features/school/schoolProvider';
 import type { SchoolListItem } from '../features/school/types';
@@ -17,6 +18,15 @@ export default function Schools() {
   const [hasError, setHasError] = useState(false);
   const location = useLocation();
   const returnContext = readReturnContext(location.state);
+  const detailState = returnContext
+    ? buildChainedReturnState(
+        {
+          to: '/schools',
+          label: 'Back to schools',
+        },
+        returnContext
+      )
+    : undefined;
 
   useEffect(() => {
     let active = true;
@@ -102,7 +112,9 @@ export default function Schools() {
                       ? 'Travel support available'
                       : 'Travel support unavailable'}
                   </StatusBadge>
-                  <Link to={`/schools/${school.slug}`}>{school.ctaLabel}</Link>
+                  <Link to={`/schools/${school.slug}`} state={detailState}>
+                    {school.ctaLabel}
+                  </Link>
                 </div>
               </article>
             ))}

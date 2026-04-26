@@ -1,6 +1,11 @@
 import { useEffect, useId, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { ChevronDown } from 'lucide-react';
+import { PORTAL_RETURN_CONTEXT } from '../../features/demo/demoWalkthrough';
+import {
+  readReturnContext,
+  toReturnContextState,
+} from '../../features/navigation/returnContext';
 import './PublicPortalNav.css';
 
 const publicLinks = [
@@ -20,11 +25,15 @@ const resourceLinks = [
 export function PublicPortalNav() {
   const location = useLocation();
   const navigate = useNavigate();
+  const returnContext = readReturnContext(location.state);
   const [menuOpen, setMenuOpen] = useState(false);
   const [resourcesOpen, setResourcesOpen] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [hasApplicantSession, setHasApplicantSession] = useState(Boolean(localStorage.getItem('token')));
   const accountMenuId = useId();
+  const publicReturnState = toReturnContextState(
+    returnContext ?? (location.pathname === '/portal' ? PORTAL_RETURN_CONTEXT : null)
+  );
 
   useEffect(() => {
     setHasApplicantSession(Boolean(localStorage.getItem('token')));
@@ -70,6 +79,7 @@ export function PublicPortalNav() {
               <NavLink
                 key={item.to}
                 to={item.to}
+                state={publicReturnState}
                 onClick={closeMenus}
                 className={({ isActive }) =>
                   `portal-nav__link${isActive ? ' portal-nav__link--active' : ''}`
@@ -94,6 +104,7 @@ export function PublicPortalNav() {
                     <Link
                       key={item.to}
                       to={item.to}
+                      state={publicReturnState}
                       className="portal-nav__menu-link"
                       onClick={closeMenus}
                     >

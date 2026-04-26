@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { PortalShell } from '../components/layout/PortalShell';
 import { PublicPortalNav } from '../components/layout/PublicPortalNav';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
 import { DemoStatePanel } from '../features/demo/DemoStatePanel';
+import { buildChainedReturnState } from '../features/demo/demoWalkthrough';
+import { readReturnContext } from '../features/navigation/returnContext';
 import { ScholarExpertiseClusterList } from '../features/profile/ScholarExpertiseClusterList';
 import { ScholarSummaryCard } from '../features/profile/ScholarSummaryCard';
 import { scholarDirectoryProvider } from '../features/profile/scholarDirectoryProvider';
@@ -13,9 +16,20 @@ import './Scholars.css';
 export const routePath = '/scholars';
 
 export default function Scholars() {
+  const location = useLocation();
+  const returnContext = readReturnContext(location.state);
   const [scholars, setScholars] = useState<PublicScholarSummary[] | null>(null);
   const [clusters, setClusters] = useState<ScholarExpertiseCluster[]>([]);
   const [hasError, setHasError] = useState(false);
+  const scholarDetailState = returnContext
+    ? buildChainedReturnState(
+        {
+          to: '/scholars',
+          label: 'Back to scholars',
+        },
+        returnContext
+      )
+    : undefined;
 
   useEffect(() => {
     let active = true;
@@ -56,6 +70,17 @@ export default function Scholars() {
           <PageModeBadge mode="hybrid" />
         </>
       }
+      actions={
+        returnContext ? (
+          <Link
+            to={returnContext.to}
+            state={returnContext.state}
+            className="my-applications__section-link"
+          >
+            {returnContext.label}
+          </Link>
+        ) : null
+      }
     >
       <div className="scholar-directory-page">
         {scholars === null ? (
@@ -89,7 +114,11 @@ export default function Scholars() {
               </div>
               <div className="scholar-directory-page__grid">
                 {scholars.map((scholar) => (
-                  <ScholarSummaryCard key={scholar.slug} scholar={scholar} />
+                  <ScholarSummaryCard
+                    key={scholar.slug}
+                    scholar={scholar}
+                    detailState={scholarDetailState}
+                  />
                 ))}
               </div>
             </section>
