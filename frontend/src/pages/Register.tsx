@@ -1,11 +1,14 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { register } from '../api/auth';
+import { readReturnTo, toReturnToState } from '../features/navigation/authReturn';
 import { UserPlus, Mail, Lock, User } from 'lucide-react';
 import './Auth.css';
 
 export default function Register() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const returnTo = readReturnTo(location.state);
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -19,7 +22,7 @@ export default function Register() {
     try {
       const data = await register({ email, password, fullName });
       localStorage.setItem('token', data.accessToken);
-      navigate('/dashboard');
+      navigate(returnTo);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Registration failed.');
     } finally {
@@ -78,7 +81,7 @@ export default function Register() {
         </form>
         
         <div className="auth-footer">
-          Already have an account? <Link to="/login">Sign in</Link>
+          Already have an account? <Link to="/login" state={toReturnToState(returnTo)}>Sign in</Link>
         </div>
       </div>
     </div>

@@ -10,6 +10,12 @@ function ReturnStateProbe() {
   return <pre>{JSON.stringify(location.state)}</pre>;
 }
 
+function PathnameProbe() {
+  const location = useLocation();
+
+  return <pre>{location.pathname}</pre>;
+}
+
 describe('PublicPortalNav', () => {
   beforeEach(() => {
     localStorage.clear();
@@ -81,9 +87,17 @@ describe('PublicPortalNav', () => {
     localStorage.setItem('token', 'applicant-1');
 
     render(
-      <MemoryRouter initialEntries={['/portal']}>
+      <MemoryRouter initialEntries={['/schools']}>
         <Routes>
-          <Route path="/portal" element={<PublicPortalNav />} />
+          <Route
+            path="/schools"
+            element={
+              <>
+                <PublicPortalNav />
+                <PathnameProbe />
+              </>
+            }
+          />
         </Routes>
       </MemoryRouter>
     );
@@ -93,6 +107,7 @@ describe('PublicPortalNav', () => {
 
     expect(localStorage.getItem('token')).toBeNull();
     expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute('href', '/login');
+    expect(screen.getByText('/schools')).toBeInTheDocument();
   });
 
   it('passes a portal return context through top-level public nav links clicked from the homepage', async () => {

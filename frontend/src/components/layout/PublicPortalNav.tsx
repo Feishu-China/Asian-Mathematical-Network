@@ -1,7 +1,9 @@
 import { useEffect, useId, useState } from 'react';
-import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useLocation } from 'react-router-dom';
 import { ChevronDown } from 'lucide-react';
 import { PORTAL_RETURN_CONTEXT } from '../../features/demo/demoWalkthrough';
+import { buildApplicantAccountMenu } from '../../features/navigation/accountMenu';
+import { toReturnToState } from '../../features/navigation/authReturn';
 import {
   readReturnContext,
   toReturnContextState,
@@ -24,7 +26,6 @@ const resourceLinks = [
 
 export function PublicPortalNav() {
   const location = useLocation();
-  const navigate = useNavigate();
   const returnContext = readReturnContext(location.state);
   const [menuOpen, setMenuOpen] = useState(false);
   const [resourcesOpen, setResourcesOpen] = useState(false);
@@ -45,12 +46,11 @@ export function PublicPortalNav() {
     setAccountMenuOpen(false);
   };
 
-  const handleLogout = () => {
+  const accountMenu = buildApplicantAccountMenu(() => {
     localStorage.removeItem('token');
     setHasApplicantSession(false);
     closeMenus();
-    navigate('/portal');
-  };
+  });
 
   return (
     <div className="portal-nav">
@@ -159,34 +159,36 @@ export function PublicPortalNav() {
                   </button>
                   {accountMenuOpen ? (
                     <div id={accountMenuId} className="portal-nav__account-menu">
-                      <Link
-                        to="/me/applications"
-                        className="portal-nav__account-item"
-                        onClick={closeMenus}
-                      >
-                        My Applications
-                      </Link>
-                      <Link
-                        to="/me/profile"
-                        className="portal-nav__account-item"
-                        onClick={closeMenus}
-                      >
-                        My Profile
-                      </Link>
-                      <button
-                        type="button"
-                        className="portal-nav__account-item portal-nav__account-item--danger"
-                        onClick={handleLogout}
-                      >
-                        Log out
-                      </button>
+                      {accountMenu.items.map((item) =>
+                        item.kind === 'link' ? (
+                          <Link
+                            key={item.to}
+                            to={item.to}
+                            className="portal-nav__account-item"
+                            onClick={closeMenus}
+                          >
+                            {item.label}
+                          </Link>
+                        ) : (
+                          <button
+                            key={item.label}
+                            type="button"
+                            className="portal-nav__account-item portal-nav__account-item--danger"
+                            onClick={() => {
+                              item.onSelect();
+                            }}
+                          >
+                            {item.label}
+                          </button>
+                        )
+                      )}
                     </div>
                   ) : null}
                 </div>
               ) : (
                 <Link
                   to="/login"
-                  state={{ returnTo: location.pathname }}
+                  state={toReturnToState(location.pathname)}
                   className="portal-nav__primary"
                 >
                   Sign in
