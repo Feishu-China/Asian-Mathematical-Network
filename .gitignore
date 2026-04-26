@@ -3,6 +3,7 @@
 .next/
 node_modules/
 .superpowers/
+.worktrees/
 
 backend/dist/
 backend/dev.db
