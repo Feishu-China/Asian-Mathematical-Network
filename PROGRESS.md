@@ -4,11 +4,35 @@
 
 ## 当前项目状态
 *   **最新版本**: V4.0-Optimized
-*   **总览**: `AUTH`、`PROFILE`、`CONF`、`GRANT` 与 `REVIEW` 五个 Epic 已完成；`PORTAL` Epic 的 `BE-PORTAL-001` 已在 main，`FE-PORTAL-001` 经本轮 contract realignment 后重新对齐到 REVIEW-era 的 applicant-safe 形状，等待 merge；`INT-PORTAL-001` 仍需单独的真实联调验证。
+*   **总览**: `AUTH`、`PROFILE`、`CONF`、`GRANT` 与 `REVIEW` 五个 Epic 已完成；`PORTAL` Epic 的 applicant-safe dashboard contract 已完成，且本地 demo 分支已补齐 public breadth slice：重建后的 `/portal`、新的 `/scholars` 公共目录，以及 conference / prize 对 `M4` scholar context 的可见复用都已落地。`INT-PORTAL-001` 与 scholar-directory real-data 接通仍需单独验证。
 
 ---
 
 ## 📅 Handoff 历史记录
+
+### 2026-04-26 (Session 31)
+*   **Agent 角色**: Coding Agent (Public portal / M4 breadth slice)
+*   **完成 Feature**: `PORTAL` homepage rebuild + `M4` public-directory demo slice
+*   **变更记录**:
+    *   `frontend/src/components/layout/PublicPortalNav.tsx` 新增 `Scholars` 公共导航入口，并以现有 React 架构补齐 `frontend/src/pages/Scholars.tsx` / `Scholars.css` / `Scholars.test.tsx`，让 `M4` 从单个 profile detail 扩展成可浏览的公共目录页。
+    *   `frontend/src/features/profile/` 新增 hybrid scholar directory 层：扩展 list-level public scholar / expertise cluster types，加入 `directorySeed.ts` 与 `scholarDirectoryProvider.ts`，并复用 editable public profile，让 `alice-chen-demo` 能在 public visibility 打开时稳定出现在目录与首页 teaser 里。
+    *   `frontend/src/features/portal/homepageViewModel.ts` 与 `frontend/src/pages/Portal.tsx` / `Portal.css` 重建 `/portal` 首页结构：hero 后依次呈现 featured opportunities、school spotlights、`Scholars & expertise` mixed teaser，并保留 `Browse Scholar Directory` 入口，符合 2026-04-26 版 homepage + M4 design spec。
+    *   `frontend/src/pages/ConferenceDetail.tsx` 新增 `Related scholar context` 侧栏卡片，把 conference public detail 显式连到 `/scholars/alice-chen-demo`；`frontend/src/pages/Prizes.tsx` 改成 hub + archive 结构，`frontend/src/pages/PrizeDetail.tsx` 把 scholar CTA 明确成 `View sample laureate profile`，让 `M4` 在 `M2` / `M6` demo surface 中可见复用。
+*   **验证记录**:
+    *   改动前执行通过 `cd frontend && npm run test:run -- src/pages/Portal.test.tsx src/pages/Prizes.test.tsx src/pages/ScholarProfile.test.tsx src/pages/Partners.test.tsx`。
+    *   执行通过 targeted tests：
+        *   `cd frontend && npm run test:run -- src/components/layout/PublicPortalNav.test.tsx`
+        *   `cd frontend && npm run test:run -- src/features/profile/scholarDirectoryProvider.test.ts`
+        *   `cd frontend && npm run test:run -- src/components/layout/Shell.test.tsx src/pages/Scholars.test.tsx`
+        *   `cd frontend && npm run test:run -- src/features/portal/homepageViewModel.test.ts src/pages/Portal.test.tsx`
+        *   `cd frontend && npm run test:run -- src/pages/ConferenceDetail.test.tsx src/pages/Prizes.test.tsx`
+    *   执行通过 `cd frontend && npm run test:run -- src/components/layout/PublicPortalNav.test.tsx src/features/profile/scholarDirectoryProvider.test.ts src/pages/Scholars.test.tsx src/features/portal/homepageViewModel.test.ts src/pages/Portal.test.tsx src/pages/ConferenceDetail.test.tsx src/pages/Prizes.test.tsx src/pages/ScholarProfile.test.tsx src/pages/Partners.test.tsx`：`9` 个 test files、`19` 个 tests 全部通过。
+    *   执行通过 `cd frontend && npm run build`（`tsc -b && vite build`），无类型或构建错误。
+*   **边界与说明**:
+    *   本轮没有新增任何 backend endpoint；`/scholars` 仍是 hybrid/demo data slice，由 seeded public scholars 加上当前 editable public profile 组成。
+    *   本轮只扩展 public breadth surfaces，没有把 scholar search、real filtering、institution browse、review-only scholar context、或新的 dashboard flow 一并拉进来。
+    *   工作区里其他与 account menu / auth shell 相关的本地修改继续保持未触碰、未提交。
+*   **下一步**: 做一轮 browser-level acceptance，确认 `/portal`、`/scholars`、conference detail、prize hub 的实际视觉与 click path 符合 demo narration；如果继续深化 `M4`，优先考虑 real scholar list contract 或更多 school / prize / partner 的 scholar-context reuse。
 
 ### 2026-04-26 (Session 30)
 *   **Agent 角色**: Coding Agent (Demo rehearsal follow-up)
