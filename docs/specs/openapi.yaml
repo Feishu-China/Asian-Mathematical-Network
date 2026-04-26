@@ -315,6 +315,184 @@ components:
           type: string
           format: date-time
 
+    # --- Applicant dashboard (applicant-safe) ---
+    ViewerStatus:
+      type: string
+      enum: [draft, under_review, result_released]
+      description: |
+        Derived from the underlying application status and decision release state.
+        `draft` until submission, `under_review` while the workflow is in flight
+        (or decided but not yet released), `result_released` only after the
+        decision has been released to the applicant.
+
+    ApplicantNextAction:
+      type: string
+      enum: [continue_draft, view_submission, view_result, submit_post_visit_report]
+      description: |
+        Tells the UI what action to surface for the row. `submit_post_visit_report`
+        is only emitted for grant applications that were accepted and whose grant
+        has `report_required: true`.
+
+    ReleasedDecisionListItem:
+      type: object
+      nullable: true
+      properties:
+        decision_kind:
+          type: string
+          description: '`conference_admission` or `travel_grant`.'
+        final_status:
+          type: string
+          enum: [accepted, rejected, waitlisted]
+        display_label:
+          type: string
+          description: Backend-formatted label, e.g. `Accepted`, `Awarded`, `Not awarded`.
+        released_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    ReleasedDecisionDetail:
+      allOf:
+        - $ref: '#/components/schemas/ReleasedDecisionListItem'
+        - type: object
+          properties:
+            note_external:
+              type: string
+              nullable: true
+              description: |
+                Externally visible note. Only present in the detail view; the list
+                endpoint omits it so dashboards stay compact.
+
+    ApplicantProfileSnapshot:
+      type: object
+      description: |
+        Frozen snapshot of the applicant's profile at submission time. Empty
+        object before the application has been submitted.
+      additionalProperties: true
+      properties:
+        full_name: { type: string }
+        institution_name_raw:
+          type: string
+          nullable: true
+        country_code:
+          type: string
+          nullable: true
+        career_stage:
+          type: string
+          nullable: true
+        research_keywords:
+          type: array
+          items: { type: string }
+
+    MyApplicationListItem:
+      type: object
+      required:
+        - id
+        - application_type
+        - source_module
+        - viewer_status
+        - next_action
+      properties:
+        id: { type: string, format: uuid }
+        application_type:
+          $ref: '#/components/schemas/ApplicationType'
+        source_module:
+          type: string
+          description: '`M2` for conference applications, `M7` for grant applications.'
+        source_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: Conference id for conference applications, grant id for grant applications.
+        source_title:
+          type: string
+          nullable: true
+        linked_conference_title:
+          type: string
+          nullable: true
+          description: Title of the linked conference for grant applications; null for conference applications.
+        viewer_status:
+          $ref: '#/components/schemas/ViewerStatus'
+        submitted_at:
+          type: string
+          format: date-time
+          nullable: true
+        released_decision:
+          $ref: '#/components/schemas/ReleasedDecisionListItem'
+        next_action:
+          $ref: '#/components/schemas/ApplicantNextAction'
+        post_visit_report_status:
+          type: string
+          nullable: true
+          description: Reserved for the post-visit report flow; currently always null.
+
+    MyApplicationDetail:
+      type: object
+      required:
+        - id
+        - application_type
+        - source_module
+        - viewer_status
+      properties:
+        id: { type: string, format: uuid }
+        application_type:
+          $ref: '#/components/schemas/ApplicationType'
+        source_module: { type: string }
+        conference_id:
+          type: string
+          format: uuid
+          nullable: true
+        conference_title:
+          type: string
+          nullable: true
+        grant_id:
+          type: string
+          format: uuid
+          nullable: true
+        grant_title:
+          type: string
+          nullable: true
+        linked_conference_id:
+          type: string
+          format: uuid
+          nullable: true
+        linked_conference_title:
+          type: string
+          nullable: true
+        linked_conference_application_id:
+          type: string
+          format: uuid
+          nullable: true
+        viewer_status:
+          $ref: '#/components/schemas/ViewerStatus'
+        statement:
+          type: string
+          nullable: true
+        travel_plan_summary:
+          type: string
+          nullable: true
+        funding_need_summary:
+          type: string
+          nullable: true
+        extra_answers:
+          type: object
+          additionalProperties: true
+        applicant_profile_snapshot:
+          $ref: '#/components/schemas/ApplicantProfileSnapshot'
+        files:
+          type: array
+          items:
+            type: object
+        submitted_at:
+          type: string
+          format: date-time
+          nullable: true
+        released_decision:
+          $ref: '#/components/schemas/ReleasedDecisionDetail'
+        post_visit_report_status:
+          type: string
+          nullable: true
+
     # --- Payloads ---
     LoginPayload:
       type: object
@@ -587,12 +765,19 @@ paths:
 
   /me/applications:
     get:
-      summary: List the current user's applications across conference and grant subtypes
+      summary: List the current user's applications in the applicant-safe dashboard shape
       tags: [Applicant]
       responses:
         '200':
-          description: Aggregated dashboard view of the current user's applications.
-                       Decision payload is always null until the REVIEW epic adds release semantics.
+          description: |
+            Applicant-safe dashboard list. Each item collapses the conference/grant
+            distinction onto `source_id` + `source_title`, derives a `viewer_status`
+            from the underlying application status and decision release state, and
+            includes a `released_decision` block only when the decision has been
+            released to the applicant. `next_action` tells the UI what to offer
+            next (`continue_draft`, `view_submission`, `view_result`, or
+            `submit_post_visit_report`). `post_visit_report_status` is reserved
+            for the post-visit report flow and is currently always `null`.
           content:
             application/json:
               schema:
@@ -604,32 +789,48 @@ paths:
                       items:
                         type: array
                         items:
-                          type: object
-                          properties:
-                            id: { type: string, format: uuid }
-                            application_type:
-                              type: string
-                              enum: [conference_application, grant_application]
-                            source_module: { type: string }
-                            status: { type: string }
-                            conference_id: { type: string, format: uuid, nullable: true }
-                            conference_slug: { type: string, nullable: true }
-                            conference_title: { type: string, nullable: true }
-                            grant_id: { type: string, format: uuid, nullable: true }
-                            grant_slug: { type: string, nullable: true }
-                            grant_title: { type: string, nullable: true }
-                            linked_conference_id: { type: string, format: uuid, nullable: true }
-                            linked_conference_application_id: { type: string, format: uuid, nullable: true }
-                            submitted_at: { type: string, format: date-time, nullable: true }
-                            decision: { type: object, nullable: true }
-                            created_at: { type: string, format: date-time }
-                            updated_at: { type: string, format: date-time }
+                          $ref: '#/components/schemas/MyApplicationListItem'
                   meta:
                     type: object
                     properties:
                       total: { type: integer }
         '401':
           description: Unauthorized
+
+  /me/applications/{id}:
+    get:
+      summary: Read the applicant-safe detail view of one of my applications
+      tags: [Applicant]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: |
+            Applicant-safe detail of a single application. Adds the user's
+            statement, grant-only travel/funding text, the frozen
+            `applicant_profile_snapshot` captured at submit time, and a richer
+            `released_decision` (with `note_external`) when the decision has
+            been released. Reviewer-internal data (raw scores, internal notes,
+            unreleased decisions) is intentionally excluded.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      application:
+                        $ref: '#/components/schemas/MyApplicationDetail'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Application not found or not owned by the current user
 
   /me/applications/{id}/draft:
     put:
