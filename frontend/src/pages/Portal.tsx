@@ -1,137 +1,216 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { PortalShell } from '../components/layout/PortalShell';
-import { PageModeBadge } from '../components/ui/PageModeBadge';
-import { RoleBadge } from '../components/ui/RoleBadge';
-import { StatusBadge } from '../components/ui/StatusBadge';
-import { DemoShortcutPanel } from '../features/demo/DemoShortcutPanel';
+import { PublicPortalNav } from '../components/layout/PublicPortalNav';
+import { PORTAL_RETURN_CONTEXT } from '../features/demo/demoWalkthrough';
+import { ScholarExpertiseClusterList } from '../features/profile/ScholarExpertiseClusterList';
+import { ScholarSummaryCard } from '../features/profile/ScholarSummaryCard';
 import {
-  buildChainedReturnState,
-  demoWalkthroughCopy,
-  MY_APPLICATIONS_RETURN_CONTEXT,
-  PORTAL_RETURN_CONTEXT,
-} from '../features/demo/demoWalkthrough';
+  loadPortalHomepageViewModel,
+  type PortalHomepageViewModel,
+} from '../features/portal/homepageViewModel';
 import type { ReturnContextState } from '../features/navigation/returnContext';
+import './Portal.css';
 
 export const routePath = '/portal';
 
-const browseLinks = [
-  {
-    to: '/conferences',
-    title: 'Browse conferences',
-    description: 'Published conferences open for application across the network.',
-  },
-  {
-    to: '/grants',
-    title: 'Browse travel grants',
-    description: 'Travel funding opportunities linked to upcoming conferences.',
-  },
-  {
-    to: '/prizes',
-    title: 'Browse prizes',
-    description:
-      'Recognition archives that preview nomination, review, and release surfaces without requiring a live governance workflow in d0.',
-  },
-  {
-    to: '/partners',
-    title: 'Browse partners',
-    description:
-      'Applied collaboration teasers and expertise-matching pathways for future partner-facing surfaces.',
-  },
-];
-
-const accountLinks = [
-  {
-    to: '/login',
-    title: 'Sign in',
-    description: 'Continue an in-progress application or open your dashboard.',
-  },
-  {
-    to: '/register',
-    title: 'Create an account',
-    description: 'Set up an applicant profile to apply for conferences and grants.',
-  },
-];
+const opportunityLabels = {
+  conference: 'Conference',
+  grant: 'Travel Grant',
+} as const;
 
 export default function Portal() {
+  const [homepageModel, setHomepageModel] = useState<PortalHomepageViewModel | null>(null);
+  const [loadFailed, setLoadFailed] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadHomepage = async () => {
+      try {
+        const nextModel = await loadPortalHomepageViewModel();
+        if (!cancelled) {
+          setHomepageModel(nextModel);
+          setLoadFailed(false);
+        }
+      } catch {
+        if (!cancelled) {
+          setLoadFailed(true);
+        }
+      }
+    };
+
+    void loadHomepage();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const portalReturnState: ReturnContextState = {
     returnContext: PORTAL_RETURN_CONTEXT,
   };
 
   return (
-    <PortalShell
-      eyebrow="Asian Mathematical Network"
-      title="Portal"
-      description="A public entry point into conferences, travel grants, and applicant tools across the network."
-      badges={
-        <>
-          <RoleBadge role="visitor" />
-          <PageModeBadge mode="real-aligned" />
-          <StatusBadge tone="info">Portal entry</StatusBadge>
-        </>
-      }
-    >
-      <DemoShortcutPanel
-        className="dashboard-widget"
-        title={demoWalkthroughCopy.portal.title}
-        intro={demoWalkthroughCopy.portal.intro}
-        shortcuts={[
-          {
-            to: '/conferences',
-            state: portalReturnState,
-            label: 'Start with published conferences',
-            description: 'Open the public conference list and keep a direct return path back to the portal.',
-          },
-          {
-            to: '/login',
-            label: 'Continue to sign in',
-            description: 'Move into the authenticated applicant workspace when you are ready to leave the public entry.',
-            note: 'Use the seeded demo account before continuing to Dashboard or My applications.',
-          },
-          {
-            to: '/me/applications',
-            state: buildChainedReturnState(MY_APPLICATIONS_RETURN_CONTEXT, PORTAL_RETURN_CONTEXT),
-            label: 'Jump to My applications',
-            description: 'Skip directly to the stable applicant control point when the walkthrough needs a shorter route.',
-          },
-        ]}
-      />
+    <PortalShell masthead={<PublicPortalNav />}>
+      <section className="portal-home__hero" aria-labelledby="portal-home-heading">
+        <div className="portal-home__hero-copy">
+          <p className="portal-home__eyebrow">Asian Mathematical Network</p>
+          <h1 id="portal-home-heading">
+            Opportunities and scholarly exchange across the Asian Mathematical Network
+          </h1>
+          <p className="portal-home__lede">
+            Discover conferences, travel grants, schools, and public resources that support
+            research participation, training, and regional scholarly exchange.
+          </p>
+          <div className="portal-home__actions">
+            <Link to="/conferences" state={portalReturnState} className="conference-primary-link">
+              Browse Conferences
+            </Link>
+            <Link to="/grants" state={portalReturnState} className="portal-home__secondary-link">
+              Explore Travel Grants
+            </Link>
+          </div>
+        </div>
 
-      <section className="dashboard-widget" aria-labelledby="portal-browse-heading">
-        <h2 id="portal-browse-heading">Browse opportunities</h2>
-        <ul className="portal-link-list">
-          {browseLinks.map((link) => (
-            <li key={link.to} className="surface-card portal-link-card">
-              <Link to={link.to} state={portalReturnState} className="portal-link-card__title">
-                {link.title}
-              </Link>
-              <p>{link.description}</p>
-            </li>
-          ))}
-        </ul>
+        <aside className="surface-card portal-home__summary" aria-labelledby="portal-home-open-now">
+          <p className="portal-home__summary-kicker">Open now</p>
+          <h2 id="portal-home-open-now">Current opportunities across the network</h2>
+          {homepageModel ? (
+            <>
+              <ul className="portal-home__summary-list">
+                <li>
+                  <strong>{homepageModel.summary.openConferences}</strong> open conference
+                  {homepageModel.summary.openConferences === 1 ? '' : 's'}
+                </li>
+                <li>
+                  <strong>{homepageModel.summary.openGrants}</strong> open grant
+                  {homepageModel.summary.openGrants === 1 ? '' : 's'}
+                </li>
+                <li>
+                  <strong>{homepageModel.summary.openSchools}</strong> active school
+                  {homepageModel.summary.openSchools === 1 ? '' : 's'}
+                </li>
+              </ul>
+              <p className="portal-home__summary-note">{homepageModel.summary.note}</p>
+            </>
+          ) : (
+            <p className="portal-home__summary-note">
+              {loadFailed
+                ? 'Current opportunity data is temporarily unavailable.'
+                : 'Loading current opportunity data...'}
+            </p>
+          )}
+        </aside>
       </section>
 
-      <section className="dashboard-widget" aria-labelledby="portal-account-heading">
-        <h2 id="portal-account-heading">Your account</h2>
-        <ul className="portal-link-list">
-          {accountLinks.map((link) => (
-            <li key={link.to} className="surface-card portal-link-card">
-              <Link to={link.to} className="portal-link-card__title">
-                {link.title}
-              </Link>
-              <p>{link.description}</p>
-            </li>
-          ))}
-          <li className="surface-card portal-link-card">
-            <Link
-              to="/me/applications"
-              state={buildChainedReturnState(MY_APPLICATIONS_RETURN_CONTEXT, PORTAL_RETURN_CONTEXT)}
-              className="portal-link-card__title"
-            >
-              My applications
+      <section className="portal-home__featured" aria-labelledby="portal-home-featured-heading">
+        <div className="portal-home__section-copy">
+          <p className="portal-home__section-kicker">Featured now</p>
+          <h2 id="portal-home-featured-heading">Featured opportunities</h2>
+          <p>
+            Public opportunities stay content-first on the homepage so visitors can immediately see
+            what is active across the network.
+          </p>
+        </div>
+
+        {homepageModel ? (
+          <ul className="portal-home__card-grid">
+            {homepageModel.featuredOpportunities.map((card) => (
+              <li key={card.href} className="surface-card portal-home__card">
+                <div className="portal-home__card-header">
+                  <span className="portal-home__card-kind">{opportunityLabels[card.kind]}</span>
+                  <span className="portal-home__card-status">{card.statusLabel}</span>
+                </div>
+                <Link to={card.href} state={portalReturnState} className="portal-home__card-title">
+                  {card.title}
+                </Link>
+                <div className="portal-home__card-meta">
+                  <span>{card.location}</span>
+                  <span>{card.dateLabel}</span>
+                </div>
+                <p className="portal-home__card-summary">{card.summary}</p>
+                <Link to={card.href} state={portalReturnState} className="portal-home__card-link">
+                  View details
+                </Link>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div className="surface-card portal-home__loading-card">
+            {loadFailed
+              ? 'Featured opportunity cards could not be loaded.'
+              : 'Loading featured opportunities...'}
+          </div>
+        )}
+      </section>
+
+      <section className="portal-home__schools" aria-labelledby="portal-home-schools-heading">
+        <div className="portal-home__section-copy">
+          <p className="portal-home__section-kicker">Schools & training</p>
+          <h2 id="portal-home-schools-heading">Training programmes across the network</h2>
+          <p>
+            School formats stay distinct from conferences and foreground pedagogy, cohort learning,
+            and early-career support.
+          </p>
+        </div>
+
+        {homepageModel ? (
+          <div className="portal-home__school-grid">
+            {homepageModel.schoolSpotlights.map((school) => (
+              <article key={school.href} className="surface-card portal-home__school-card">
+                <Link to={school.href} state={portalReturnState} className="portal-home__card-title">
+                  {school.title}
+                </Link>
+                <p className="portal-home__card-meta">{school.location}</p>
+                <p className="portal-home__card-summary">{school.summary}</p>
+                <p className="portal-home__school-support">
+                  {school.travelSupportAvailable
+                    ? 'Travel support available'
+                    : 'Travel support to be announced'}
+                </p>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className="surface-card portal-home__loading-card">
+            {loadFailed
+              ? 'School spotlights could not be loaded.'
+              : 'Loading school spotlights...'}
+          </div>
+        )}
+      </section>
+
+      <section className="portal-home__scholars" aria-labelledby="portal-home-scholars-heading">
+        <div className="portal-home__section-copy">
+          <p className="portal-home__section-kicker">M4 · Academic directory</p>
+          <h2 id="portal-home-scholars-heading">Scholars & expertise</h2>
+          <p>
+            The network is not only a set of opportunities. Public scholar profiles and expertise
+            clusters show the people and fields that support conferences, grants, prizes, and
+            partner-facing collaboration.
+          </p>
+        </div>
+
+        {homepageModel ? (
+          <>
+            <ScholarExpertiseClusterList clusters={homepageModel.scholarTeaser.clusters} />
+
+            <div className="portal-home__scholar-grid">
+              {homepageModel.scholarTeaser.scholars.map((scholar) => (
+                <ScholarSummaryCard key={scholar.slug} scholar={scholar} />
+              ))}
+            </div>
+
+            <Link to="/scholars" className="conference-primary-link">
+              Browse Scholar Directory
             </Link>
-            <p>Review seeded conference and grant records with a presenter-safe way back to the portal.</p>
-          </li>
-        </ul>
+          </>
+        ) : (
+          <div className="surface-card portal-home__loading-card">
+            {loadFailed ? 'Scholar teaser could not be loaded.' : 'Loading scholar teaser...'}
+          </div>
+        )}
       </section>
     </PortalShell>
   );
