@@ -26,6 +26,7 @@ const toValues = (application: ConferenceApplication | null): ConferenceApplicat
 
 export function ConferenceApplyForm({ schema, application, status, onSave, onSubmit }: Props) {
   const [values, setValues] = useState<ConferenceApplicationValues>(() => toValues(application));
+  const isLocked = application?.status === 'submitted' || status === 'submitted';
 
   const fieldKeys = useMemo(() => new Set(schema.fields.map((field) => field.key)), [schema]);
 
@@ -76,6 +77,7 @@ export function ConferenceApplyForm({ schema, application, status, onSave, onSub
         <select
           value={values.participationType}
           onChange={(event) => setField('participationType', event.target.value)}
+          disabled={isLocked}
           required
         >
           <option value="">Select one</option>
@@ -93,6 +95,7 @@ export function ConferenceApplyForm({ schema, application, status, onSave, onSub
           rows={5}
           value={values.statement}
           onChange={(event) => setField('statement', event.target.value)}
+          disabled={isLocked}
           required
         />
       </label>
@@ -103,6 +106,7 @@ export function ConferenceApplyForm({ schema, application, status, onSave, onSub
           <input
             value={values.abstractTitle}
             onChange={(event) => setField('abstractTitle', event.target.value)}
+            disabled={isLocked}
           />
         </label>
       ) : null}
@@ -114,6 +118,7 @@ export function ConferenceApplyForm({ schema, application, status, onSave, onSub
             rows={5}
             value={values.abstractText}
             onChange={(event) => setField('abstractText', event.target.value)}
+            disabled={isLocked}
           />
         </label>
       ) : null}
@@ -124,19 +129,20 @@ export function ConferenceApplyForm({ schema, application, status, onSave, onSub
             type="checkbox"
             checked={values.interestedInTravelSupport}
             onChange={(event) => setField('interestedInTravelSupport', event.target.checked)}
+            disabled={isLocked}
           />
           Interested in travel support
         </label>
       ) : null}
 
       <div className="conference-form-actions">
-        <button type="submit" disabled={status === 'saving'}>
+        <button type="submit" disabled={status === 'saving' || isLocked}>
           {status === 'saving' ? 'Saving...' : 'Save draft'}
         </button>
         <button
           type="button"
           onClick={() => void onSubmit()}
-          disabled={!application || !canSubmit || status === 'submitting' || status === 'submitted'}
+          disabled={!application || !canSubmit || status === 'submitting' || isLocked}
         >
           {status === 'submitting' ? 'Submitting...' : 'Submit application'}
         </button>

@@ -10,6 +10,23 @@
 
 ## 📅 Handoff 历史记录
 
+### 2026-04-26 (Session 30)
+*   **Agent 角色**: Coding Agent (Demo rehearsal follow-up)
+*   **完成 Feature**: `DEMO-POLISH-001` 手测后修补
+*   **变更记录**:
+    *   修复 `frontend/src/pages/ConferenceApply.tsx` 在 reload 一个已提交 conference application 时仍显示 `Draft in progress` 的状态漂移；现在已提交记录会显示 `Submitted and under review`。
+    *   同步收口 `frontend/src/features/conference/ConferenceApplyForm.tsx` 的交互状态：当 `application.status === submitted` 时，表单字段、`Save draft` 与 `Submit application` 都会锁成只读，避免 reload 后仍出现可编辑假象。
+    *   新增 `ConferenceApply.test.tsx` 覆盖“已提交后重开页面”的 presenter-safe 行为，确保不再回退到 draft banner。
+*   **验证记录**:
+    *   改动前执行通过 `cd frontend && npm run test:run -- src/pages/ConferenceApply.test.tsx`。
+    *   按 TDD 先补失败测试，再执行同一命令，`1` 个 test file、`6` 个 tests 全部通过。
+    *   执行通过 `cd frontend && npm run test:run -- src/pages/ConferenceApply.test.tsx src/pages/MyApplications.test.tsx`：`2` 个 test files、`17` 个 tests 全部通过。
+    *   执行通过 `cd frontend && npm run build`（`tsc -b && vite build`），无类型或构建错误。
+*   **边界与说明**:
+    *   本轮只修 conference apply 的 submitted reload 状态，没有扩大到 grant apply 的额外 UX 收口。
+    *   本地未跟踪文件 `docs/planning/asiamath-demo-manual-test-checkpoints-d0.md` 继续按要求保持不提交。
+*   **下一步**: 继续 grant prerequisite / submit 手测，确认 demo applicant 主链已无状态漂移
+
 ### 2026-04-26 (Session 29)
 *   **Agent 角色**: Coding Agent (Demo rehearsal follow-up)
 *   **完成 Feature**: `DEMO-POLISH-002` 手测后修补

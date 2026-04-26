@@ -79,7 +79,16 @@ export default function ConferenceApply() {
         setApplication(nextApplication);
         setLoadState('ready');
 
-        if (nextApplication) {
+        if (nextApplication?.status === 'submitted') {
+          setStatus('submitted');
+          setNotice({
+            tone: 'success',
+            badgeLabel: 'Submitted',
+            title: 'Submitted and under review',
+            description:
+              'This conference application has already been submitted and is waiting for review.',
+          });
+        } else if (nextApplication) {
           setNotice({
             tone: 'warning',
             badgeLabel: 'Draft in progress',

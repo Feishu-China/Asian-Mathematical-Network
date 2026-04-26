@@ -81,6 +81,34 @@ describe('conference apply page', () => {
     expect(screen.getByLabelText(/interested in travel support/i)).toBeChecked();
   });
 
+  it('shows a submitted-state notice and locks editing after a submitted application reloads', async () => {
+    localStorage.setItem('token', 'applicant-1');
+
+    const created = await fakeConferenceProvider.createConferenceApplication('conf-published-001', {
+      participationType: 'talk',
+      statement: 'Submitted statement',
+      abstractTitle: 'Submitted abstract title',
+      abstractText: 'Submitted abstract text',
+      interestedInTravelSupport: true,
+      extraAnswers: {},
+    });
+    await fakeConferenceProvider.submitConferenceApplication(created.id);
+
+    renderWithRouter(
+      <ConferenceApply />,
+      '/conferences/asiamath-2026-workshop/apply',
+      '/conferences/:slug/apply'
+    );
+
+    expect(await screen.findByText(/submitted and under review/i)).toBeInTheDocument();
+    expect(
+      screen.queryByText(/this conference application draft is already on file/i)
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /save draft/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /submit application/i })).toBeDisabled();
+    expect(screen.getByLabelText(/statement/i)).toBeDisabled();
+  });
+
   it('updates an existing draft after the page reloads', async () => {
     localStorage.setItem('token', 'applicant-1');
 
