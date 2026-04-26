@@ -4,11 +4,33 @@
 
 ## 当前项目状态
 *   **最新版本**: V4.0-Optimized
-*   **总览**: `AUTH`、`PROFILE`、`CONF`、`GRANT` 与 `REVIEW` 五个 Epic 已完成；`PORTAL` Epic 的 `BE-PORTAL-001` 已在 main，`FE-PORTAL-001` 前端 dashboard（列表页）+ applicant detail 页（`/me/applications/:id`）都在 `feature/portal` 上并已对齐 applicant-safe contract，统一走 PR #11 合入；`INT-PORTAL-001` 仍需单独的真实联调验证。
+*   **总览**: `AUTH`、`PROFILE`、`CONF`、`GRANT` 与 `REVIEW` 五个 Epic 已完成；`PORTAL` Epic 的 `BE-PORTAL-001` 已在 main，`FE-PORTAL-001` 前端 dashboard（列表页）+ applicant detail 页（`/me/applications/:id`）+ legacy `/dashboard` widget 接入都在 `feature/portal` 上并已对齐 applicant-safe contract，统一走 PR #11 合入；`INT-PORTAL-001` 真实联调脚本已在独立分支 `feature/portal-real-flow-check`（PR #16）落地，`INT-PORTAL-001` 票据本身仍依赖 organizer-side `INT-REVIEW-001` 才算完整。
 
 ---
 
 ## 📅 Handoff 历史记录
+
+### 2026-04-22 (Session 27)
+*   **Agent 角色**: Coding Agent (Frontend / FE-PORTAL-001 polish)
+*   **完成 Feature**: `FE-PORTAL-001` legacy `/dashboard` widget 接入真实 applicant dashboard 数据
+*   **上下文**:
+    *   `/dashboard` 页面仍是 AUTH-era 留下的占位，"My Applications" widget 写死 "You have no pending applications."，并且没有任何 link 引导到新的 `/me/applications` 仪表板。
+    *   `dashboardProvider` 已经在 PR #11 里建好了（list + detail）；这次只是把 `/dashboard` widget 接到现成的 provider 上，让 logged-in landing 也成为 applicant-safe 数据的一个入口。
+*   **变更记录**:
+    *   `frontend/src/pages/Dashboard.tsx` 在原 `getMe` 流程之后串联一次 `dashboardProvider.listMyApplications()`，把 `viewerStatus` 计数（`draft / under_review / result_released`）渲染成 "You have N applications — A in draft, B under review, C released"，零应用时回退到 "You have not started any applications yet."。"My applications" widget 与 "Upcoming Conferences" widget 都补齐了 `View all` / `Browse conferences` 的 `Link`，分别指到 `/me/applications` 与 `/conferences`。
+    *   未触碰 `Dashboard.css`、`WorkspaceShell`、`PortalShell`、shell 组件、foundation tokens；新增样式全部复用既有 `.dashboard-widget` / `.my-applications__section-link`。
+    *   未改动 `App.tsx`，`Dashboard` 仍由自动发现的 `routePath = '/dashboard'`（默认 lowercase 文件名）挂载；列表 / 详情页路由保持不变。
+*   **验证记录**:
+    *   新增 `frontend/src/pages/Dashboard.test.tsx`（3 用例）：零应用时显示 empty hint + `View all` 链接；2 条应用时按 `viewer_status` 汇总成 "You have 2 applications — 1 in draft, 1 under review."；`dashboardProvider.listMyApplications` 抛错时显示 "We could not load your applications right now"。Auth 流通过 `vi.mock('../api/auth')` 隔离。
+    *   执行通过 `cd frontend && npx vitest run`：`15` 个 test files、`53` 个 tests 全部通过。
+    *   执行通过 `cd frontend && npm run build`，无类型或构建错误。
+    *   未跑 backend jest 与 `test:smoke`：本轮零后端文件改动，且 PR #12 的 `--runInBand` 还未合入，跑 smoke 仍受现有 parallel-jest flake 影响。
+*   **边界与说明**:
+    *   `getMe` 失败仍按既有逻辑清 token 并跳 `/login`；本轮没有改 auth 失败语义。
+    *   widget 当前只展示 `viewer_status` 维度的分组数；不展示 `next_action` / `released_decision` 细节 —— 那是 `/me/applications` 列表页的职责。
+    *   未触碰 `Portal.tsx`、`MyApplications.tsx`、`MyApplicationDetail.tsx` 与 dashboard feature 的任何文件。
+    *   提交策略：本轮直接 push 到 `feature/portal`，PR #11 自动更新；继续保留 "一个 PORTAL epic、一个 PR" 的 CLAUDE.md 约定。
+*   **下一步**: 当 PR #11 / PR #12 / PR #16 都合入后，可视情况推进 (a) `Portal.tsx` 接 `conferenceProvider.listPublicConferences()` 让公共门户首页呈现真实 featured 内容；(b) post-visit report 提交流（先后端 BE，再前端表单）；(c) 把 `INT-PORTAL-001` 在 feature-list JSON 上正式置 `passes: true`（前提是 `INT-REVIEW-001` 已经收尾）。
 
 ### 2026-04-22 (Session 26)
 *   **Agent 角色**: Coding Agent (Frontend / FE-PORTAL-001 follow-up)
