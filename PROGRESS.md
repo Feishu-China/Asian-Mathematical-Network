@@ -29,7 +29,7 @@
     *   `getMe` 失败仍按既有逻辑清 token 并跳 `/login`；本轮没有改 auth 失败语义。
     *   widget 当前只展示 `viewer_status` 维度的分组数；不展示 `next_action` / `released_decision` 细节 —— 那是 `/me/applications` 列表页的职责。
     *   未触碰 `Portal.tsx`、`MyApplications.tsx`、`MyApplicationDetail.tsx` 与 dashboard feature 的任何文件。
-    *   提交策略：本轮直接 push 到 `feature/portal`，PR #11 自动更新；继续保留 "一个 PORTAL epic、一个 PR" 的 CLAUDE.md 约定。
+    *   提交策略：本轮直接 push 到 `feature/portal`，PR #11 自动更新；继续保留 "一个 PORTAL epic、一个 PR" 的本地约定。
 *   **下一步**: 当 PR #11 / PR #12 / PR #16 都合入后，可视情况推进 (a) `Portal.tsx` 接 `conferenceProvider.listPublicConferences()` 让公共门户首页呈现真实 featured 内容；(b) post-visit report 提交流（先后端 BE，再前端表单）；(c) 把 `INT-PORTAL-001` 在 feature-list JSON 上正式置 `passes: true`（前提是 `INT-REVIEW-001` 已经收尾）。
 
 ### 2026-04-22 (Session 26)
@@ -58,7 +58,7 @@
     *   未改动任何后端代码、Prisma schema、OpenAPI、route loader 或 `App.tsx`；detail 页由 auto-discovery 从 `frontend/src/pages/MyApplicationDetail.tsx` 自动挂载到 `/me/applications/:id`。
     *   未实装 post-visit report 提交界面：backend 现在对 `post_visit_report_status` 始终返回 `null`，detail 页做了字段预留但不渲染 action；这一块归属未来的 `FE-GRANT` / `FE-PORTAL` 增量。
     *   `extra_answers`、`files` 已进入域模型但 detail 页暂未展示；一旦 form builder / 文件子系统落地再回头扩展。
-    *   与 PR #11 合并策略：本轮改动直接 push 到 `feature/portal`，PR #11 自动更新 —— 保持"一个 PORTAL epic、一个 PR"的 CLAUDE.md 约定。
+    *   与 PR #11 合并策略：本轮改动直接 push 到 `feature/portal`，PR #11 自动更新 —— 保持"一个 PORTAL epic、一个 PR"的本地约定。
 *   **下一步**: 等 PR #11 与 PR #12 一并合入；随后在 `scripts/` 下落一个 `me-applications-real-flow-check.mjs`（mirror `grant-real-flow-check.mjs`）作为 `INT-PORTAL-001` 的真实联调脚本起点。
 
 ### 2026-04-22 (Session 25)
@@ -102,7 +102,7 @@
     *   执行通过 `cd frontend && npm run build`（`tsc -b && vite build`），无类型或构建错误。
     *   仓库级 `npm run test:smoke` 在 3 次连续运行中 2 次通过；第 3 次失败为 `tests/grants.test.ts` 后端 flake（详见下方"已知问题"），与本轮前端改动无关（本轮零后端文件改动）。
 *   **边界与说明**:
-    *   未编辑 `frontend/src/App.tsx`（CLAUDE.md 禁止动中央路由），因此公共门户页路由是 `/portal` 而不是 `/`；`/` 仍维持原有 `Navigate to="/login"` 行为。如需把 `/` 改为公共门户入口，应作为独立后续任务由用户决定。
+    *   未编辑 `frontend/src/App.tsx`（本仓库工作约定禁止动中央路由），因此公共门户页路由是 `/portal` 而不是 `/`；`/` 仍维持原有 `Navigate to="/login"` 行为。如需把 `/` 改为公共门户入口，应作为独立后续任务由用户决定。
     *   未触碰 `frontend/src/pages/Dashboard.tsx`：保留其 AUTH-era 占位面板，FE-PORTAL-001 通过新页 `/me/applications` 提供真正的申请列表，二者并存。
     *   未触碰任何后端代码、数据库迁移、契约文件，本轮改动严格收敛在 `frontend/src/`。
     *   未触碰 `docs/planning/` 下的 feature-list JSON；保持本仓库 "planning 只读" 约定。
