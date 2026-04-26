@@ -54,7 +54,7 @@ export default function Portal() {
   return (
     <PortalShell masthead={<PublicPortalNav />}>
       <section className="portal-home__hero" aria-labelledby="portal-home-heading">
-        <div className="portal-home__hero-copy">
+        <div className="portal-home__hero-main">
           <p className="portal-home__eyebrow">Asian Mathematical Network</p>
           <h1 id="portal-home-heading">
             Opportunities and scholarly exchange across the Asian Mathematical Network
@@ -71,28 +71,75 @@ export default function Portal() {
               Explore Travel Grants
             </Link>
           </div>
+
+          {homepageModel ? (
+            <dl className="portal-home__stats" aria-label="Network activity summary">
+              <div>
+                <dd>{homepageModel.summary.openConferences}</dd>
+                <dt>Conferences open</dt>
+              </div>
+              <div>
+                <dd>{homepageModel.summary.openGrants}</dd>
+                <dt>Grants open</dt>
+              </div>
+              <div>
+                <dd>{homepageModel.summary.openSchools}</dd>
+                <dt>Schools active</dt>
+              </div>
+            </dl>
+          ) : (
+            <div className="portal-home__stats portal-home__stats--loading">
+              <span>Loading current activity…</span>
+            </div>
+          )}
         </div>
 
-        <aside className="surface-card portal-home__summary" aria-labelledby="portal-home-open-now">
+        <aside
+          className="portal-home__hero-panel"
+          aria-labelledby="portal-home-glance-heading"
+        >
           <p className="portal-home__summary-kicker">Open now</p>
-          <h2 id="portal-home-open-now">Current opportunities across the network</h2>
+          <h2 id="portal-home-glance-heading">Network at a glance</h2>
           {homepageModel ? (
             <>
+              <p className="portal-home__summary-note">{homepageModel.summary.note}</p>
               <ul className="portal-home__summary-list">
                 <li>
-                  <strong>{homepageModel.summary.openConferences}</strong> open conference
+                  <strong>{homepageModel.summary.openConferences}</strong> conference
                   {homepageModel.summary.openConferences === 1 ? '' : 's'}
+                  {' '}accepting applications
                 </li>
                 <li>
-                  <strong>{homepageModel.summary.openGrants}</strong> open grant
+                  <strong>{homepageModel.summary.openGrants}</strong> grant
                   {homepageModel.summary.openGrants === 1 ? '' : 's'}
+                  {' '}available for mobility support
                 </li>
                 <li>
                   <strong>{homepageModel.summary.openSchools}</strong> active school
                   {homepageModel.summary.openSchools === 1 ? '' : 's'}
                 </li>
               </ul>
-              <p className="portal-home__summary-note">{homepageModel.summary.note}</p>
+              {homepageModel.featuredOpportunities[0] ? (
+                <article className="portal-home__hero-feature surface-card">
+                  <p className="portal-home__hero-feature-kicker">
+                    {opportunityLabels[homepageModel.featuredOpportunities[0].kind]}
+                  </p>
+                  <Link
+                    to={homepageModel.featuredOpportunities[0].href}
+                    state={portalReturnState}
+                    className="portal-home__hero-feature-title"
+                  >
+                    {homepageModel.featuredOpportunities[0].title}
+                  </Link>
+                  <p className="portal-home__hero-feature-meta">
+                    {homepageModel.featuredOpportunities[0].location} ·{' '}
+                    {homepageModel.featuredOpportunities[0].dateLabel}
+                  </p>
+                  <p className="portal-home__hero-feature-summary">
+                    {homepageModel.featuredOpportunities[0].summary}
+                  </p>
+                </article>
+              ) : null}
             </>
           ) : (
             <p className="portal-home__summary-note">

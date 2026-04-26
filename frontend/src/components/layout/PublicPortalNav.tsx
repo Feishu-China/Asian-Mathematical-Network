@@ -54,115 +54,145 @@ export function PublicPortalNav() {
 
   return (
     <div className="portal-nav">
-      <div className="portal-nav__inner">
-        <Link to="/portal" className="portal-nav__brand" onClick={closeMenus}>
-          <span className="portal-nav__brand-word">Asiamath</span>
-          <span className="portal-nav__brand-subtitle">Asian Mathematical Network</span>
-        </Link>
+      <div className="portal-nav__topbar">
+        <div className="portal-nav__topbar-inner">
+          <p className="portal-nav__topbar-copy">
+            Regional opportunities • public pathways • scholarly network
+          </p>
+          <div className="portal-nav__topbar-links">
+            <Link to="/newsletter" state={publicReturnState} onClick={closeMenus}>
+              Newsletter
+            </Link>
+            <Link to="/videos" state={publicReturnState} onClick={closeMenus}>
+              Videos
+            </Link>
+            <Link to="/publications" state={publicReturnState} onClick={closeMenus}>
+              Publications
+            </Link>
+          </div>
+        </div>
+      </div>
 
-        <button
-          type="button"
-          className="portal-nav__toggle"
-          aria-expanded={menuOpen}
-          aria-controls="portal-nav-links"
-          onClick={() => setMenuOpen((value) => !value)}
-        >
-          Menu
-        </button>
+      <div className="portal-nav__bar">
+        <div className="portal-nav__inner">
+          <Link to="/portal" className="portal-nav__brand" onClick={closeMenus}>
+            <span className="portal-nav__brand-mark" aria-hidden="true">
+              AM
+            </span>
+            <span className="portal-nav__brand-body">
+              <span className="portal-nav__brand-word">Asiamath</span>
+              <span className="portal-nav__brand-subtitle">Asian Mathematical Network</span>
+            </span>
+          </Link>
 
-        <div
-          id="portal-nav-links"
-          className={`portal-nav__panel${menuOpen ? ' portal-nav__panel--open' : ''}`}
-        >
-          <nav className="portal-nav__links" aria-label="Public sections">
-            {publicLinks.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                state={publicReturnState}
-                onClick={closeMenus}
-                className={({ isActive }) =>
-                  `portal-nav__link${isActive ? ' portal-nav__link--active' : ''}`
-                }
-              >
-                {item.label}
-              </NavLink>
-            ))}
+          <button
+            type="button"
+            className="portal-nav__toggle"
+            aria-expanded={menuOpen}
+            aria-controls="portal-nav-links"
+            onClick={() => setMenuOpen((value) => !value)}
+          >
+            Menu
+          </button>
 
-            <div className="portal-nav__dropdown">
-              <button
-                type="button"
-                className="portal-nav__link portal-nav__link--button"
-                aria-expanded={resourcesOpen}
-                onClick={() => setResourcesOpen((value) => !value)}
-              >
-                Resources
-              </button>
-              {resourcesOpen ? (
-                <div className="portal-nav__menu" role="menu">
-                  {resourceLinks.map((item) => (
-                    <Link
-                      key={item.to}
-                      to={item.to}
-                      state={publicReturnState}
-                      className="portal-nav__menu-link"
-                      onClick={closeMenus}
-                    >
-                      {item.label}
-                    </Link>
-                  ))}
-                </div>
-              ) : null}
-            </div>
-          </nav>
+          <div
+            id="portal-nav-links"
+            className={`portal-nav__panel${menuOpen ? ' portal-nav__panel--open' : ''}`}
+          >
+            <nav className="portal-nav__links" aria-label="Public sections">
+              {publicLinks.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  state={publicReturnState}
+                  onClick={closeMenus}
+                  className={({ isActive }) =>
+                    `portal-nav__link${isActive ? ' portal-nav__link--active' : ''}`
+                  }
+                >
+                  {item.label}
+                </NavLink>
+              ))}
 
-          <div className="portal-nav__actions">
-            {hasApplicantSession ? (
-              <div className="portal-nav__account">
+              <div className="portal-nav__dropdown">
                 <button
                   type="button"
-                  className="portal-nav__account-trigger"
-                  aria-expanded={accountMenuOpen}
-                  aria-controls={accountMenuId}
-                  onClick={() => {
-                    setResourcesOpen(false);
-                    setAccountMenuOpen((value) => !value);
-                  }}
+                  className="portal-nav__link portal-nav__link--button"
+                  aria-expanded={resourcesOpen}
+                  onClick={() => setResourcesOpen((value) => !value)}
                 >
-                  <span>Account</span>
-                  <ChevronDown size={18} aria-hidden="true" />
+                  Resources
                 </button>
-                {accountMenuOpen ? (
-                  <div id={accountMenuId} className="portal-nav__account-menu">
-                    <Link
-                      to="/me/applications"
-                      className="portal-nav__account-item"
-                      onClick={closeMenus}
-                    >
-                      My Applications
-                    </Link>
-                    <Link to="/me/profile" className="portal-nav__account-item" onClick={closeMenus}>
-                      My Profile
-                    </Link>
-                    <button
-                      type="button"
-                      className="portal-nav__account-item portal-nav__account-item--danger"
-                      onClick={handleLogout}
-                    >
-                      Log out
-                    </button>
+                {resourcesOpen ? (
+                  <div className="portal-nav__menu" role="menu">
+                    {resourceLinks.map((item) => (
+                      <Link
+                        key={item.to}
+                        to={item.to}
+                        state={publicReturnState}
+                        className="portal-nav__menu-link"
+                        onClick={closeMenus}
+                      >
+                        {item.label}
+                      </Link>
+                    ))}
                   </div>
                 ) : null}
               </div>
-            ) : (
-              <Link
-                to="/login"
-                state={{ returnTo: location.pathname }}
-                className="portal-nav__primary"
-              >
-                Sign in
-              </Link>
-            )}
+            </nav>
+
+            <div className="portal-nav__actions">
+              {hasApplicantSession ? (
+                <div className="portal-nav__account">
+                  <button
+                    type="button"
+                    className="portal-nav__account-trigger"
+                    aria-expanded={accountMenuOpen}
+                    aria-controls={accountMenuId}
+                    onClick={() => {
+                      setResourcesOpen(false);
+                      setAccountMenuOpen((value) => !value);
+                    }}
+                  >
+                    <span>Account</span>
+                    <ChevronDown size={18} aria-hidden="true" />
+                  </button>
+                  {accountMenuOpen ? (
+                    <div id={accountMenuId} className="portal-nav__account-menu">
+                      <Link
+                        to="/me/applications"
+                        className="portal-nav__account-item"
+                        onClick={closeMenus}
+                      >
+                        My Applications
+                      </Link>
+                      <Link
+                        to="/me/profile"
+                        className="portal-nav__account-item"
+                        onClick={closeMenus}
+                      >
+                        My Profile
+                      </Link>
+                      <button
+                        type="button"
+                        className="portal-nav__account-item portal-nav__account-item--danger"
+                        onClick={handleLogout}
+                      >
+                        Log out
+                      </button>
+                    </div>
+                  ) : null}
+                </div>
+              ) : (
+                <Link
+                  to="/login"
+                  state={{ returnTo: location.pathname }}
+                  className="portal-nav__primary"
+                >
+                  Sign in
+                </Link>
+              )}
+            </div>
           </div>
         </div>
       </div>

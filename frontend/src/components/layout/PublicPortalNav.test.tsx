@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import userEvent from '@testing-library/user-event';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { renderWithRouter } from '../../test/renderWithRouter';
 import { PublicPortalNav } from './PublicPortalNav';
@@ -35,12 +35,17 @@ describe('PublicPortalNav', () => {
 
     await user.click(screen.getByRole('button', { name: 'Resources' }));
 
-    expect(screen.getByRole('link', { name: 'Newsletter' })).toHaveAttribute(
+    const resourceMenu = screen.getByRole('menu');
+
+    expect(within(resourceMenu).getByRole('link', { name: 'Newsletter' })).toHaveAttribute(
       'href',
       '/newsletter'
     );
-    expect(screen.getByRole('link', { name: 'Videos' })).toHaveAttribute('href', '/videos');
-    expect(screen.getByRole('link', { name: 'Publications' })).toHaveAttribute(
+    expect(within(resourceMenu).getByRole('link', { name: 'Videos' })).toHaveAttribute(
+      'href',
+      '/videos'
+    );
+    expect(within(resourceMenu).getByRole('link', { name: 'Publications' })).toHaveAttribute(
       'href',
       '/publications'
     );

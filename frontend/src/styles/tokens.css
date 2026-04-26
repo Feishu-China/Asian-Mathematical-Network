@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Noto+Serif:wght@500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap');
 
 :root {
   color-scheme: light;
@@ -17,8 +17,8 @@
   --color-stone-500: #7b7266;
   --color-stone-700: #4d4942;
 
-  --color-accent: #7a6239;
-  --color-accent-soft: #efe5d3;
+  --color-accent: #b8903a;
+  --color-accent-soft: #f2e6c9;
   --color-success: #1d6b51;
   --color-success-soft: #e4f1ea;
   --color-warning: #996816;
@@ -32,9 +32,9 @@
   --color-text-muted: #5b6577;
   --color-text-subtle: #7d8695;
 
-  --surface-canvas: var(--color-stone-50);
-  --surface-panel: rgba(255, 253, 249, 0.94);
-  --surface-panel-strong: #fffdf9;
+  --surface-canvas: #f5f2ec;
+  --surface-panel: rgba(255, 255, 255, 0.94);
+  --surface-panel-strong: #ffffff;
   --surface-muted: #f4efe6;
   --surface-alt: #edf2f7;
 
@@ -60,9 +60,9 @@
   --space-10: 2.5rem;
   --space-12: 3rem;
 
-  --font-heading: 'Noto Serif', 'Iowan Old Style', 'Palatino Linotype', serif;
-  --font-body: 'Source Sans 3', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-  --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+  --font-heading: 'EB Garamond', Georgia, serif;
+  --font-body: 'DM Sans', system-ui, sans-serif;
+  --font-mono: 'DM Mono', monospace;
 
   --focus-ring: 0 0 0 3px rgba(58, 95, 145, 0.18);
 
