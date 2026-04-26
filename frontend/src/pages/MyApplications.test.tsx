@@ -17,6 +17,7 @@ const submittedConferenceApp: MyApplication = {
   applicationType: 'conference_application',
   sourceModule: 'M2',
   sourceId: 'conf-1',
+  sourceSlug: 'asiamath-2026-workshop',
   sourceTitle: 'Asiamath 2026 Workshop',
   linkedConferenceTitle: null,
   viewerStatus: 'under_review',
@@ -26,11 +27,27 @@ const submittedConferenceApp: MyApplication = {
   postVisitReportStatus: null,
 };
 
+const draftConferenceApp: MyApplication = {
+  id: 'conf-app-draft-1',
+  applicationType: 'conference_application',
+  sourceModule: 'M2',
+  sourceId: 'conf-draft-1',
+  sourceSlug: 'integration-grant-conf-2026',
+  sourceTitle: 'Integration Grant Conference 2026',
+  linkedConferenceTitle: null,
+  viewerStatus: 'draft',
+  submittedAt: null,
+  releasedDecision: null,
+  nextAction: 'continue_draft',
+  postVisitReportStatus: null,
+};
+
 const draftGrantApp: MyApplication = {
   id: 'grant-app-1',
   applicationType: 'grant_application',
   sourceModule: 'M7',
   sourceId: 'grant-1',
+  sourceSlug: 'asiamath-2026-travel-grant',
   sourceTitle: 'Asiamath 2026 Travel Grant',
   linkedConferenceTitle: 'Asiamath 2026 Workshop',
   viewerStatus: 'draft',
@@ -45,6 +62,7 @@ const releasedAcceptedApp: MyApplication = {
   applicationType: 'conference_application',
   sourceModule: 'M2',
   sourceId: 'conf-2',
+  sourceSlug: 'asiamath-2025-conference',
   sourceTitle: 'Asiamath 2025 Conference',
   linkedConferenceTitle: null,
   viewerStatus: 'result_released',
@@ -205,7 +223,25 @@ describe('MyApplications page', () => {
     ).toBeInTheDocument();
     expect(screen.getByText('Draft')).toBeInTheDocument();
     expect(screen.getByText(/Linked conference: Asiamath 2026 Workshop/i)).toBeInTheDocument();
-    expect(screen.getByText(/Next step: Continue draft/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /continue draft/i })).toHaveAttribute(
+      'href',
+      '/grants/asiamath-2026-travel-grant/apply'
+    );
+  });
+
+  it('routes a draft conference application back to the editable conference apply page', async () => {
+    localStorage.setItem('token', 'test-token');
+    setDashboardFakeState([draftConferenceApp]);
+
+    renderWithRouter(<MyApplications />, '/me/applications', '/me/applications');
+
+    expect(
+      await screen.findByRole('heading', { name: 'Integration Grant Conference 2026' })
+    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /continue draft/i })).toHaveAttribute(
+      'href',
+      '/conferences/integration-grant-conf-2026/apply'
+    );
   });
 
   it('renders a released accepted conference decision with its display label and view-result next step', async () => {

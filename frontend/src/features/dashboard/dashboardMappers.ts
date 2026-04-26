@@ -19,6 +19,7 @@ type TransportMyApplication = {
   application_type: MyApplicationKind;
   source_module: string;
   source_id: string | null;
+  source_slug: string | null;
   source_title: string | null;
   linked_conference_title: string | null;
   viewer_status: ViewerStatus;
@@ -45,6 +46,7 @@ export const fromTransportMyApplication = (item: TransportMyApplication): MyAppl
   applicationType: item.application_type,
   sourceModule: item.source_module,
   sourceId: item.source_id,
+  sourceSlug: item.source_slug,
   sourceTitle: item.source_title,
   linkedConferenceTitle: item.linked_conference_title,
   viewerStatus: item.viewer_status,

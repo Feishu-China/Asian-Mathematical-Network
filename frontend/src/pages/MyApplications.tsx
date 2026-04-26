@@ -57,6 +57,16 @@ const NEXT_ACTION_LABELS: Record<NextAction, string> = {
   submit_post_visit_report: 'Submit post-visit report',
 };
 
+const buildApplicationNextStepTarget = (item: MyApplication) => {
+  if (item.nextAction === 'continue_draft' && item.sourceSlug) {
+    return item.applicationType === 'conference_application'
+      ? `/conferences/${item.sourceSlug}/apply`
+      : `/grants/${item.sourceSlug}/apply`;
+  }
+
+  return `/me/applications/${item.id}`;
+};
+
 const splitByKind = (items: MyApplication[]): Bucket =>
   items.reduce<Bucket>(
     (acc, item) => {
@@ -286,7 +296,7 @@ function ApplicationSection({
               ) : null}
               <p className="my-applications__row-next-action" aria-label="Next step">
                 <Link
-                  to={`/me/applications/${item.id}`}
+                  to={buildApplicationNextStepTarget(item)}
                   state={detailState}
                   className="my-applications__row-next-action-link"
                   aria-label={NEXT_ACTION_LABELS[item.nextAction]}

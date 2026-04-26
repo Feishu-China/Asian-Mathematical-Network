@@ -6,6 +6,7 @@ const demoDashboardSeed: MyApplication[] = [
     applicationType: 'conference_application',
     sourceModule: 'M2',
     sourceId: 'review-conf-001',
+    sourceSlug: 'review-demo-conference-2026',
     sourceTitle: 'Review Demo Conference 2026',
     linkedConferenceTitle: null,
     viewerStatus: 'under_review',

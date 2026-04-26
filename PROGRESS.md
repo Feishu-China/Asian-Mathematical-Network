@@ -10,6 +10,23 @@
 
 ## 📅 Handoff 历史记录
 
+### 2026-04-26 (Session 29)
+*   **Agent 角色**: Coding Agent (Demo rehearsal follow-up)
+*   **完成 Feature**: `DEMO-POLISH-002` 手测后修补
+*   **变更记录**:
+    *   修复 `frontend/src/pages/MyApplications.tsx` 中 draft 行 CTA `Continue draft` 的落点错误；conference / grant draft 现在会基于真实 `sourceSlug` 返回对应的可编辑 apply 页，而不是统一落到只读的 applicant detail `/me/applications/:id`。
+    *   为此补齐 `GET /api/v1/me/applications` 的 applicant-safe 列表 contract：`backend/src/serializers/applicationDashboard.ts` 现在序列化 `source_slug`，前端 `dashboardMappers` / `types` / fake provider 同步接入 `sourceSlug`，确保列表页在 real-aligned 模式下也能生成稳定的编辑入口。
+    *   扩展 `MyApplications.test.tsx`，覆盖 conference draft 与 grant draft 两条 `continue_draft` 分支，避免后续再把 CTA 退回到只读 detail。
+*   **验证记录**:
+    *   执行通过 `cd frontend && npm run test:run -- src/pages/MyApplications.test.tsx src/features/dashboard/dashboardMappers.test.ts`：`2` 个 test files、`14` 个 tests 全部通过。
+    *   执行通过 `cd backend && npm test -- meApplications.test.ts`：`1` 个 test suite、`6` 个 tests 全部通过。
+    *   执行通过 `cd frontend && npm run test:run -- src/pages/MyApplications.test.tsx src/pages/MyApplicationDetail.test.tsx src/features/dashboard/dashboardMappers.test.ts`：`3` 个 test files、`16` 个 tests 全部通过。
+    *   执行通过 `cd frontend && npm run build`（`tsc -b && vite build`），无类型或构建错误。
+*   **边界与说明**:
+    *   本轮仅修正 `Continue draft` 的导航语义与所需最小 contract 字段，没有扩展新模块，也没有改 applicant detail 的只读设计。
+    *   本地未跟踪文件 `docs/planning/asiamath-demo-manual-test-checkpoints-d0.md` 继续按要求保持不提交。
+*   **下一步**: 继续手测 grant prerequisite / submit 分支，确认 demo rehearsal 其余点击链无断点
+
 ### 2026-04-24 (Session 28)
 *   **Agent 角色**: Coding Agent (Demo rehearsal follow-up)
 *   **完成 Feature**: `DEMO-POLISH-002` 手测后修补

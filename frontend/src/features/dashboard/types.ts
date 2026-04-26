@@ -22,6 +22,7 @@ export type MyApplication = {
   applicationType: MyApplicationKind;
   sourceModule: string;
   sourceId: string | null;
+  sourceSlug: string | null;
   sourceTitle: string | null;
   linkedConferenceTitle: string | null;
   viewerStatus: ViewerStatus;
