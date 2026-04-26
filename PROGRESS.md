@@ -4,11 +4,33 @@
 
 ## 当前项目状态
 *   **最新版本**: V4.0-Optimized
-*   **总览**: `AUTH`、`PROFILE`、`CONF`、`GRANT` 与 `REVIEW` 五个 Epic 已完成；`PORTAL` Epic 的 applicant-safe dashboard contract 已完成，且本地 demo 分支已补齐 public breadth slice：重建后的 `/portal`、新的 `/scholars` 公共目录，以及 conference / prize 对 `M4` scholar context 的可见复用都已落地。`INT-PORTAL-001` 与 scholar-directory real-data 接通仍需单独验证。
+*   **总览**: `AUTH`、`PROFILE`、`CONF`、`GRANT` 与 `REVIEW` 五个 Epic 已完成；`PORTAL` Epic 的 applicant-safe dashboard contract 已完成，且本地 demo 分支已补齐 public breadth slice：重建后的 `/portal`、新的 `/scholars` 公共目录、conference / prize 对 `M4` scholar context 的可见复用、首页高保真视觉对齐、以及 public portal 返回链修复都已落地。`INT-PORTAL-001`、browser-level acceptance 与 scholar-directory real-data 接通仍需单独验证。
 
 ---
 
 ## 📅 Handoff 历史记录
+
+### 2026-04-26 (Session 32)
+*   **Agent 角色**: Coding Agent (Homepage fidelity / public navigation follow-up)
+*   **完成 Feature**: `PORTAL` homepage fidelity pass + public return-context repair
+*   **变更记录**:
+    *   `frontend/src/components/layout/PublicPortalNav.tsx` / `PublicPortalNav.css` 重做 public masthead：加入 slim topbar、editorial-style nav shell、brand mark、参考稿风格的 topbar links，同时保留 resources dropdown 与 account / sign-in 分支。
+    *   `frontend/src/pages/Portal.tsx` / `Portal.css` 把 `/portal` 从“结构已对齐”的版本推进到更接近 `asiamath-home-fixed.html` 的高保真实现：深色 hero、grid/glow 背景、`Network at a glance` hero panel、hero stat strip、以及更接近参考稿的 section typography / pacing / card treatment。
+    *   `frontend/src/styles/tokens.css` 切换到更接近参考稿的 public typography 与 palette：`EB Garamond + DM Sans + DM Mono`，并把 accent / canvas / panel 色值向参考 HTML 收拢。
+    *   修复 public portal 返回链：`PublicPortalNav` 现在会在 portal-origin 或已有 return context 存在时把 state 继续传递到 public pages；`Scholars` / `ScholarSummaryCard` 与 `Schools` / `SchoolDetail` 也补齐了 list → detail → parent → portal 的 chained return-state 传播，不再从首页导航点进去后失去返回入口。
+*   **验证记录**:
+    *   改动前执行通过 `cd frontend && npm run test:run -- src/components/layout/PublicPortalNav.test.tsx src/pages/Portal.test.tsx src/pages/Schools.test.tsx src/pages/Scholars.test.tsx src/pages/ScholarProfile.test.tsx`。
+    *   改动前执行通过 `cd frontend && npm run build`（`tsc -b && vite build`）。
+    *   按 TDD 先补 portal return-context 失败测试，再执行通过 `cd frontend && npm run test:run -- src/components/layout/PublicPortalNav.test.tsx src/pages/Scholars.test.tsx src/pages/Schools.test.tsx`。
+    *   按 TDD 补 homepage fidelity 结构测试，再执行通过 `cd frontend && npm run test:run -- src/pages/Portal.test.tsx`。
+    *   执行通过 focused regression：`cd frontend && npm run test:run -- src/components/layout/PublicPortalNav.test.tsx src/pages/Portal.test.tsx src/pages/Schools.test.tsx src/pages/Scholars.test.tsx src/pages/ScholarProfile.test.tsx`，`5` 个 test files、`16` 个 tests 全部通过。
+    *   执行通过 public-breadth regression：`cd frontend && npm run test:run -- src/pages/ConferenceDetail.test.tsx src/pages/Prizes.test.tsx src/pages/Partners.test.tsx`，`3` 个 test files、`5` 个 tests 全部通过。
+    *   执行通过 `cd frontend && npm run build`（`tsc -b && vite build`），无类型或构建错误。
+*   **边界与说明**:
+    *   本轮没有扩展 backend，没有新增 real scholar search/filtering，也没有改 authenticated dashboard 或 account-menu in-progress 分支。
+    *   高保真目标是“视觉上明显接近参考 HTML”，不是直接拷贝静态 DOM；当前 React 数据结构、homepage section order、`M4` 位置与 hybrid provider 方案保持不变。
+    *   还没有做 browser-level acceptance，也没有逐页对 conference / grants / schools / scholars 的列表/detail 进行统一视觉重构；本轮只修它们的 portal return chain。
+*   **下一步**: 做 browser-level acceptance，重点检查 `/portal` hero / masthead 的实际呈现、`/portal -> /schools -> /schools/:slug -> back` 等公共链路，以及移动端 nav 收起后的可用性；若继续深化，再决定是否把 conference / grants / scholars page 自身也拉到与首页更一致的视觉语言。
 
 ### 2026-04-26 (Session 31)
 *   **Agent 角色**: Coding Agent (Public portal / M4 breadth slice)
