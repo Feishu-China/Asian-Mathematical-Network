@@ -40,17 +40,17 @@ export default function Videos() {
         ) : null
       }
     >
-      <div className="video-page">
-        <div className="video-grid">
+      <div className="video-page public-browse-page">
+        <div className="video-grid public-browse-grid public-browse-grid--compact">
           {videoPreviews.map((video) => (
-            <article key={video.id} className="video-card">
-              <div className="video-card__meta">
+            <article key={video.id} className="video-card public-browse-card">
+              <div className="video-card__meta public-browse-meta">
                 <span>{video.seriesLabel}</span>
                 <span>Static preview</span>
               </div>
               <h2>{video.title}</h2>
-              <p className="video-card__summary">{video.summary}</p>
-              <div className="video-card__actions">
+              <p className="video-card__summary public-browse-copy">{video.summary}</p>
+              <div className="video-card__actions public-browse-actions">
                 <StatusBadge tone="neutral">Media layer</StatusBadge>
                 <Link to={`/videos/${video.slug}`} state={detailState}>
                   {video.ctaLabel}

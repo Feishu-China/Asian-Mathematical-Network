@@ -19,8 +19,12 @@ describe('governance preview page', () => {
       screen.getByText(/static preview of how a future admin governance layer could frame committee boundaries/i)
     ).toBeInTheDocument();
     expect(screen.getByText('Admin preview perspective')).toBeInTheDocument();
+    expect(screen.getByText('Static preview only')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /committee workflow preview/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /decision release controls/i })).toBeInTheDocument();
+    expect(
+      screen.getByText(/review packets remain visible only to authorized committee roles/i)
+    ).toBeInTheDocument();
   });
 
   it('shows a return link when entered from a prize detail teaser', async () => {

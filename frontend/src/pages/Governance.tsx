@@ -38,9 +38,9 @@ export default function Governance() {
         ) : null
       }
       aside={
-        <div className="governance-card governance-teaser-card">
+        <div className="governance-card governance-teaser-card public-browse-card public-browse-aside-card">
           <h2>Preview scope</h2>
-          <p>
+          <p className="public-browse-copy">
             This surface stays public in the demo, but it represents what a future admin-facing
             governance layer could clarify around release timing, committee boundaries, and public
             archive readiness.
@@ -49,13 +49,13 @@ export default function Governance() {
         </div>
       }
     >
-      <div className="governance-page">
-        <div className="governance-grid">
+      <div className="governance-page public-browse-page">
+        <div className="governance-grid public-browse-grid">
           {governancePreviewSections.map((section) => (
-            <section key={section.id} className="governance-card">
+            <section key={section.id} className="governance-card public-browse-card">
               <h2>{section.title}</h2>
-              <p className="governance-card__summary">{section.summary}</p>
-              <ul className="governance-card__list">
+              <p className="governance-card__summary public-browse-copy">{section.summary}</p>
+              <ul className="governance-card__list public-browse-list">
                 {section.checkpoints.map((checkpoint) => (
                   <li key={checkpoint}>{checkpoint}</li>
                 ))}

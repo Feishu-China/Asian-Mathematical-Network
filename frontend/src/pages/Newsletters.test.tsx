@@ -12,6 +12,8 @@ describe('newsletter preview pages', () => {
   it('renders the newsletter archive as a static breadth surface', async () => {
     renderWithRouter(<Newsletters />, '/newsletter', '/newsletter');
 
+    expect(screen.getByRole('navigation', { name: /public sections/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Newsletter' })).toBeInTheDocument();
     expect(
       await screen.findByRole('heading', { name: 'Asiamath Monthly Briefing - April 2026' })
     ).toBeInTheDocument();

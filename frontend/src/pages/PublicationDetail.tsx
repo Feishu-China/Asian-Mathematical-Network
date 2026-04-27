@@ -17,7 +17,7 @@ export default function PublicationDetail() {
   const publication = getPublicationBySlug(slug);
 
   if (!publication) {
-    return <div className="publication-page">Publication preview not found.</div>;
+    return <div className="publication-page public-browse-page">Publication preview not found.</div>;
   }
 
   return (
@@ -43,11 +43,11 @@ export default function PublicationDetail() {
         </Link>
       }
       aside={
-        <div className="publication-detail-card publication-teaser-card">
+        <div className="publication-detail-card publication-teaser-card public-browse-card public-browse-aside-card">
           <h2>Publication focus</h2>
-          <p>{publication.publicationFocus}</p>
+          <p className="public-browse-copy">{publication.publicationFocus}</p>
           <Link
-            className="publication-primary-link"
+            className="public-browse-primary-link"
             to="/newsletter"
             state={{
               returnContext: {
@@ -62,10 +62,10 @@ export default function PublicationDetail() {
         </div>
       }
     >
-      <div className="publication-page">
-        <section className="publication-detail-card">
+      <div className="publication-page public-browse-page">
+        <section className="publication-detail-card public-browse-card">
           <h2>Highlights</h2>
-          <ul className="publication-highlight-list">
+          <ul className="publication-highlight-list public-browse-list">
             {publication.highlights.map((item) => (
               <li key={item}>{item}</li>
             ))}

@@ -16,6 +16,9 @@ describe('outreach preview page', () => {
     expect(
       screen.getByRole('heading', { name: 'Regional Math Circle Preview' })
     ).toBeInTheDocument();
+    expect(screen.getByText('Community workshop')).toBeInTheDocument();
+    expect(screen.getByText('Public lecture')).toBeInTheDocument();
+    expect(screen.getByText('School-facing resources')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /community pathway/i })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /view media recap sample/i })).toHaveAttribute(
       'href',

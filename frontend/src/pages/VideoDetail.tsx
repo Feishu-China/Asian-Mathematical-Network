@@ -17,7 +17,7 @@ export default function VideoDetail() {
   const video = getVideoBySlug(slug);
 
   if (!video) {
-    return <div className="video-page">Video preview not found.</div>;
+    return <div className="video-page public-browse-page">Video preview not found.</div>;
   }
 
   return (
@@ -43,11 +43,11 @@ export default function VideoDetail() {
         </Link>
       }
       aside={
-        <div className="video-detail-card video-teaser-card">
+        <div className="video-detail-card video-teaser-card public-browse-card public-browse-aside-card">
           <h2>Video focus</h2>
-          <p>{video.videoFocus}</p>
+          <p className="public-browse-copy">{video.videoFocus}</p>
           <Link
-            className="video-primary-link"
+            className="public-browse-primary-link"
             to="/newsletter"
             state={{
               returnContext: {
@@ -62,10 +62,10 @@ export default function VideoDetail() {
         </div>
       }
     >
-      <div className="video-page">
-        <section className="video-detail-card">
+      <div className="video-page public-browse-page">
+        <section className="video-detail-card public-browse-card">
           <h2>Highlights</h2>
-          <ul className="video-highlight-list">
+          <ul className="video-highlight-list public-browse-list">
             {video.highlights.map((item) => (
               <li key={item}>{item}</li>
             ))}

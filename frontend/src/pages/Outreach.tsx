@@ -24,14 +24,14 @@ export default function Outreach() {
         </>
       }
       aside={
-        <div className="outreach-detail-card outreach-teaser-card">
+        <div className="outreach-detail-card outreach-teaser-card public-browse-card public-browse-aside-card">
           <h2>Community pathway</h2>
-          <p>
+          <p className="public-browse-copy">
             Outreach programs can later connect scholar profiles, event recaps, and media assets
             without requiring a live program management system in d0.
           </p>
           <Link
-            className="outreach-primary-link"
+            className="public-browse-primary-link"
             to="/videos"
             state={{
               returnContext: {
@@ -45,17 +45,17 @@ export default function Outreach() {
         </div>
       }
     >
-      <div className="outreach-page">
-        <div className="outreach-grid">
+      <div className="outreach-page public-browse-page">
+        <div className="outreach-grid public-browse-grid public-browse-grid--compact">
           {outreachPrograms.map((program) => (
-            <article key={program.id} className="outreach-card">
-              <div className="outreach-card__meta">
+            <article key={program.id} className="outreach-card public-browse-card">
+              <div className="outreach-card__meta public-browse-meta">
                 <span>{program.formatLabel}</span>
                 <span>Static preview</span>
               </div>
               <h2>{program.title}</h2>
-              <p className="outreach-card__summary">{program.summary}</p>
-              <div className="outreach-card__actions">
+              <p className="outreach-card__summary public-browse-copy">{program.summary}</p>
+              <div className="outreach-card__actions public-browse-actions">
                 <StatusBadge tone="neutral">Community-facing preview</StatusBadge>
               </div>
             </article>

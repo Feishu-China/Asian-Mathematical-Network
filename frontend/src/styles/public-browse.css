@@ -80,7 +80,7 @@
 }
 
 .public-browse-actions a,
-.public-browse-card > a,
+.public-browse-card > a:not(.conference-primary-link, .school-primary-link, .prize-primary-link, .public-browse-primary-link),
 .public-browse-card .school-output-links a,
 .page-shell--portal .page-shell__actions .my-applications__section-link {
   font-weight: 600;
@@ -90,7 +90,8 @@
 }
 
 .public-browse-actions a:hover,
-.public-browse-card > a:hover,
+.public-browse-card
+  > a:not(.conference-primary-link, .school-primary-link, .prize-primary-link, .public-browse-primary-link):hover,
 .public-browse-card .school-output-links a:hover,
 .page-shell--portal .page-shell__actions .my-applications__section-link:hover {
   color: var(--color-navy-900);
@@ -108,6 +109,11 @@
 
 .public-browse-aside-card :is(h2, h3) {
   font-size: 1.12rem;
+}
+
+.public-browse-card > :is(.conference-primary-link, .school-primary-link, .prize-primary-link, .public-browse-primary-link) {
+  justify-self: start;
+  width: fit-content;
 }
 
 .page-shell--portal .page-shell__actions .my-applications__section-link {
@@ -156,6 +162,13 @@
   background: rgba(42, 70, 111, 0.08);
   color: var(--color-navy-900);
   font-size: 0.9rem;
+}
+
+.public-browse-list {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: grid;
+  gap: 0.6rem;
 }
 
 @media (max-width: 900px) {

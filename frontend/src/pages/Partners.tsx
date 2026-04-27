@@ -68,14 +68,14 @@ export default function Partners() {
         ) : null
       }
       aside={
-        <div className="partner-detail-card partner-teaser-card">
+        <div className="partner-detail-card partner-teaser-card public-browse-card public-browse-aside-card">
           <h2>Sample matching flow</h2>
-          <p>
+          <p className="public-browse-copy">
             A future partner workflow could start by reviewing a scholar&apos;s public profile,
             research areas, and institution before requesting an introduction.
           </p>
           <Link
-            className="partner-primary-link"
+            className="public-browse-primary-link"
             to="/scholars/prof-reviewer"
             state={{
               returnContext: {
@@ -90,7 +90,7 @@ export default function Partners() {
         </div>
       }
     >
-      <div className="partner-page">
+      <div className="partner-page public-browse-page">
         {items === null ? (
           <DemoStatePanel
             badgeLabel={hasError ? 'Error' : 'Loading'}
@@ -110,18 +110,18 @@ export default function Partners() {
             tone="neutral"
           />
         ) : (
-          <div className="partner-grid">
+          <div className="partner-grid public-browse-grid public-browse-grid--compact">
             {items.map((partner) => (
-              <article key={partner.id} className="partner-card">
-                <div className="partner-card__meta">
+              <article key={partner.id} className="partner-card public-browse-card">
+                <div className="partner-card__meta public-browse-meta">
                   <span>{partner.sectorLabel}</span>
                   <span>{partner.geographyLabel}</span>
                 </div>
                 <h2>{partner.title}</h2>
-                <p className="partner-card__summary">{partner.summary}</p>
+                <p className="partner-card__summary public-browse-copy">{partner.summary}</p>
                 <div className="partner-card__matching">
                   <StatusBadge tone="warning">Matching teaser</StatusBadge>
-                  <p>{partner.matchingFocus}</p>
+                  <p className="public-browse-copy">{partner.matchingFocus}</p>
                 </div>
               </article>
             ))}

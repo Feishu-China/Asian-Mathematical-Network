@@ -31,6 +31,11 @@ describe('partner public pages', () => {
         /reviewing a scholar's public profile, research areas, and institution before requesting an introduction/i
       )
     ).toBeInTheDocument();
+    expect(screen.getByText('Research and applied institute')).toBeInTheDocument();
+    expect(screen.getByText('Singapore and regional collaborations')).toBeInTheDocument();
+    expect(
+      screen.getByText(/seeking scholars in optimization, geometry, and mathematical modeling/i)
+    ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /view sample scholar profile/i })).toHaveAttribute(
       'href',
       '/scholars/prof-reviewer'

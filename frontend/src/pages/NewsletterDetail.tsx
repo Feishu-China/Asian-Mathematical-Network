@@ -17,7 +17,7 @@ export default function NewsletterDetail() {
   const issue = getNewsletterBySlug(slug);
 
   if (!issue) {
-    return <div className="newsletter-page">Newsletter issue not found.</div>;
+    return <div className="newsletter-page public-browse-page">Newsletter issue not found.</div>;
   }
 
   return (
@@ -43,11 +43,11 @@ export default function NewsletterDetail() {
         </Link>
       }
       aside={
-        <div className="newsletter-detail-card newsletter-teaser-card">
+        <div className="newsletter-detail-card newsletter-teaser-card public-browse-card public-browse-aside-card">
           <h2>Issue focus</h2>
-          <p>{issue.issueFocus}</p>
+          <p className="public-browse-copy">{issue.issueFocus}</p>
           <Link
-            className="newsletter-primary-link"
+            className="public-browse-primary-link"
             to="/conferences"
             state={{
               returnContext: {
@@ -62,10 +62,10 @@ export default function NewsletterDetail() {
         </div>
       }
     >
-      <div className="newsletter-page newsletter-detail-page">
-        <section className="newsletter-detail-card">
+      <div className="newsletter-page newsletter-detail-page public-browse-page">
+        <section className="newsletter-detail-card public-browse-card">
           <h2>Highlights</h2>
-          <ul className="newsletter-highlight-list">
+          <ul className="newsletter-highlight-list public-browse-list">
             {issue.highlights.map((item) => (
               <li key={item}>{item}</li>
             ))}

@@ -40,24 +40,24 @@ export default function Newsletters() {
         ) : null
       }
     >
-      <div className="newsletter-page">
-        <div className="newsletter-grid">
+      <div className="newsletter-page public-browse-page">
+        <div className="newsletter-grid public-browse-grid public-browse-grid--compact">
           {newsletterIssues.map((issue) => (
-            <article key={issue.id} className="newsletter-card">
-              <div className="newsletter-card__meta">
+            <article key={issue.id} className="newsletter-card public-browse-card">
+              <div className="newsletter-card__meta public-browse-meta">
                 <span>{issue.issueLabel}</span>
                 <span>Static preview</span>
               </div>
               <h2>{issue.title}</h2>
-              <p className="newsletter-card__summary">{issue.summary}</p>
-                <div className="newsletter-card__actions">
-                  <StatusBadge tone="neutral">Editorial layer</StatusBadge>
-                  <Link to={`/newsletter/${issue.slug}`} state={detailState}>
-                    {issue.ctaLabel}
-                  </Link>
-                </div>
-              </article>
-            ))}
+              <p className="newsletter-card__summary public-browse-copy">{issue.summary}</p>
+              <div className="newsletter-card__actions public-browse-actions">
+                <StatusBadge tone="neutral">Editorial layer</StatusBadge>
+                <Link to={`/newsletter/${issue.slug}`} state={detailState}>
+                  {issue.ctaLabel}
+                </Link>
+              </div>
+            </article>
+          ))}
         </div>
       </div>
     </PortalShell>

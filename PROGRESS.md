@@ -10,6 +10,29 @@
 
 ## 📅 Handoff 历史记录
 
+### 2026-04-27 (Session 38)
+*   **Agent 角色**: Coding Agent (Public page visual unification Phase 2)
+*   **完成 Feature**: `PORTAL` public browse visual unification, Phase 2 only
+*   **计划微调**:
+    *   当前 `demo/d0` 已包含 Phase 1 结果与共享 `public-browse.css` 基座，因此本轮没有回头重做 implementation plan 的 Phase 1 任务。
+    *   本轮按 plan 保留了 preflight、Phase 2 contract tests、Phase 2 regression、full public-page regression、build 与 browser acceptance；Phase 1 页面只作为回归集参与验证。
+*   **变更记录**:
+    *   扩展 `frontend/src/styles/public-browse.css`，为 Phase 2 页面补齐共享 `public-browse-list`，并收紧 public card 内普通文本链接与 primary CTA 的分工，避免 detail-aside primary links 被 list-link grammar 覆盖。
+    *   `frontend/src/pages/Newsletters.tsx`、`NewsletterDetail.tsx`、`Publications.tsx`、`PublicationDetail.tsx`、`Videos.tsx`、`VideoDetail.tsx`、`Partners.tsx`、`Governance.tsx`、`Outreach.tsx` 全部接入既有 shared public-browse hooks：`public-browse-page`、`public-browse-grid`、`public-browse-card`、`public-browse-meta`、`public-browse-copy`、`public-browse-actions`、`public-browse-aside-card`，并把 detail-aside CTA 收口到共享 `public-browse-primary-link`。
+    *   `frontend/src/pages/Newsletter.css`、`Publication.css`、`Video.css`、`Partner.css`、`Governance.css`、`Outreach.css` 删除旧的 fallback-token card/grid 重复规则，只保留 route-specific 结构，例如 highlight list、matching teaser 与 teaser-card 对齐。
+    *   `frontend/src/pages/Newsletters.test.tsx`、`Partners.test.tsx`、`Governance.test.tsx`、`Outreach.test.tsx` 补强 Phase 2 contract tests，锁定 shared masthead、archive/detail CTA、meta 文案与 governance/outreach/partner teaser 内容。
+*   **验证记录**:
+    *   preflight baseline 通过：`cd frontend && npm run test:run -- src/pages/Conferences.test.tsx src/pages/Grants.test.tsx src/pages/Schools.test.tsx src/pages/Scholars.test.tsx src/pages/Prizes.test.tsx src/pages/Newsletters.test.tsx src/pages/Publications.test.tsx src/pages/Videos.test.tsx src/pages/Partners.test.tsx src/pages/Governance.test.tsx src/pages/Outreach.test.tsx`，`11` 个 test files、`43` 个 tests 全部通过。
+    *   preflight build 通过：`cd frontend && npm run build`。
+    *   Phase 2 contract tests 通过：`cd frontend && npm run test:run -- src/pages/Conferences.test.tsx src/pages/Prizes.test.tsx src/pages/Newsletters.test.tsx src/pages/Partners.test.tsx src/pages/Governance.test.tsx src/pages/Outreach.test.tsx`，`6` 个 test files、`19` 个 tests 全部通过。
+    *   Phase 2 regression 通过：`cd frontend && npm run test:run -- src/pages/Newsletters.test.tsx src/pages/Publications.test.tsx src/pages/Videos.test.tsx src/pages/Partners.test.tsx src/pages/Governance.test.tsx src/pages/Outreach.test.tsx`，`6` 个 test files、`19` 个 tests 全部通过。
+    *   最终 full public-page regression 通过：`cd frontend && npm run test:run -- src/pages/Conferences.test.tsx src/pages/Grants.test.tsx src/pages/Schools.test.tsx src/pages/Scholars.test.tsx src/pages/Prizes.test.tsx src/pages/Newsletters.test.tsx src/pages/Publications.test.tsx src/pages/Videos.test.tsx src/pages/Partners.test.tsx src/pages/Governance.test.tsx src/pages/Outreach.test.tsx`，`11` 个 test files、`43` 个 tests 全部通过。
+    *   最终 build 通过：`cd frontend && npm run build`（`tsc -b && vite build`）。
+    *   browser acceptance 通过：本地 Vite dev server 在 `http://127.0.0.1:4176` 下抽查了 `/portal` 基准页，以及 `/newsletter`、`/publications`、`/videos`、`/partners`、`/admin/governance`、`/outreach`，并补看 detail surfaces `/newsletter/asiamath-monthly-briefing-april-2026`、`/publications/asiamath-school-notes-preview`、`/videos/asiamath-research-school-session-recap`；shared public masthead、page-title rhythm、card/meta/aside grammar 均可见，secondary public pages 明显比 `/portal` 更克制，且所有抽查页面均无 browser page errors。
+*   **边界与说明**:
+    *   本轮严格只完成 Phase 2：newsletter、publications、videos、partners、governance、outreach，以及支撑它们的 shared public-browse style layer / tests / progress log。
+    *   没有回头修改 Phase 1 页面实现，没有改 `WorkspaceShell`、apply flows、`/me/*`、reviewer / organizer / admin workflow、login / register，也没有扩散到 stale applicant session 修复之外的无关分支工作。
+
 ### 2026-04-27 (Session 37)
 *   **Agent 角色**: Coding Agent (UX follow-up note)
 *   **记录问题**: applicant workspace 缺少自然的 `back to portal` affordance

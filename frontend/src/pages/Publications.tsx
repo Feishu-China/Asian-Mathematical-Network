@@ -40,17 +40,17 @@ export default function Publications() {
         ) : null
       }
     >
-      <div className="publication-page">
-        <div className="publication-grid">
+      <div className="publication-page public-browse-page">
+        <div className="publication-grid public-browse-grid public-browse-grid--compact">
           {publicationPreviews.map((publication) => (
-            <article key={publication.id} className="publication-card">
-              <div className="publication-card__meta">
+            <article key={publication.id} className="publication-card public-browse-card">
+              <div className="publication-card__meta public-browse-meta">
                 <span>{publication.seriesLabel}</span>
                 <span>Static preview</span>
               </div>
               <h2>{publication.title}</h2>
-              <p className="publication-card__summary">{publication.summary}</p>
-              <div className="publication-card__actions">
+              <p className="publication-card__summary public-browse-copy">{publication.summary}</p>
+              <div className="publication-card__actions public-browse-actions">
                 <StatusBadge tone="neutral">Publication layer</StatusBadge>
                 <Link to={`/publications/${publication.slug}`} state={detailState}>
                   {publication.ctaLabel}
