@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
@@ -24,6 +26,14 @@ describe('foundation shells', () => {
     expect(screen.getByRole('navigation', { name: 'Public portal' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Portal' })).toBeInTheDocument();
     expect(screen.getByText('Portal body')).toBeInTheDocument();
+  });
+
+  it('defines the portal shell masthead as the sticky layer for public navigation', () => {
+    const css = readFileSync(resolve(process.cwd(), 'src/styles/layout.css'), 'utf8');
+
+    expect(css).toMatch(/\.page-shell__masthead\s*\{/);
+    expect(css).toMatch(/\.page-shell__masthead\s*\{[^}]*position:\s*sticky;/s);
+    expect(css).toMatch(/\.page-shell__masthead\s*\{[^}]*top:\s*0;/s);
   });
 
   it('renders portal shell header markers and content', () => {
