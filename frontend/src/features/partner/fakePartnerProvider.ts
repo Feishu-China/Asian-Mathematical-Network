@@ -3,25 +3,47 @@ import type { PartnerListItem, PartnerProvider } from './types';
 const partnerSeed: PartnerListItem[] = [
   {
     id: 'partner-001',
-    slug: 'institute-for-mathematical-systems-and-data',
-    title: 'Institute for Mathematical Systems and Data',
-    sectorLabel: 'Research and applied institute',
-    geographyLabel: 'Singapore and regional collaborations',
+    slug: 'national-university-of-singapore',
+    title: 'National University of Singapore',
+    sectorLabel: 'Member institution',
+    geographyLabel: 'Singapore',
     summary:
-      'Institutional collaboration, applied research pathways, and expertise matching can appear as part of the same Asiamath product surface.',
+      'A member institution participating in regional workshops, training programmes, and scholar collaboration across the network.',
     matchingFocus:
-      'Seeking scholars in optimization, geometry, and mathematical modeling for visiting labs, applied seminars, and collaborative supervision.',
+      'Active in geometry, analysis, and cross-institution training collaborations.',
   },
   {
     id: 'partner-002',
-    slug: 'asia-quant-mobility-consortium',
-    title: 'Asia Quant Mobility Consortium',
-    sectorLabel: 'Industry consortium',
-    geographyLabel: 'Hybrid cross-border network',
+    slug: 'indian-statistical-institute',
+    title: 'Indian Statistical Institute',
+    sectorLabel: 'Member institution',
+    geographyLabel: 'India',
     summary:
-      'A breadth-facing partner teaser that suggests internships, mentorship, and applied projects without requiring a live partner CRM.',
+      'A long-standing mathematical research institution contributing to training, collaboration, and network visibility.',
     matchingFocus:
-      'Interested in stochastic methods, combinatorics, and data-intensive research training collaborations.',
+      'Interested in combinatorics, probability, and joint student-facing programmes.',
+  },
+  {
+    id: 'partner-003',
+    slug: 'academia-sinica',
+    title: 'Academia Sinica',
+    sectorLabel: 'Member institution',
+    geographyLabel: 'Taiwan',
+    summary:
+      'A research anchor for scholar exchange, school visits, and advanced training partnerships.',
+    matchingFocus:
+      'Strong in PDE, analysis, and public-facing mathematical programming.',
+  },
+  {
+    id: 'partner-004',
+    slug: 'tsinghua-university',
+    title: 'Tsinghua University',
+    sectorLabel: 'Member institution',
+    geographyLabel: 'China',
+    summary:
+      'A network institution supporting conferences, thematic schools, and long-term academic exchange.',
+    matchingFocus:
+      'Interested in algebraic geometry, number theory, and collaborative supervision routes.',
   },
 ];
 

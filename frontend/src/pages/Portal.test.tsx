@@ -61,22 +61,38 @@ it('renders an opportunities section that combines conferences, grants, and scho
   );
   expect(
     within(opportunitiesSection as HTMLElement).getByRole('link', {
+      name: 'Seoul Number Theory Forum 2026',
+    })
+  ).toHaveAttribute(
+    'href',
+    '/conferences/seoul-number-theory-forum-2026'
+  );
+  expect(
+    within(opportunitiesSection as HTMLElement).getByRole('link', {
       name: 'Asia-Pacific Research School in Algebraic Geometry',
     })
   ).toHaveAttribute('href', '/schools/algebraic-geometry-research-school-2026');
-  expect(
-    within(opportunitiesSection as HTMLElement).getByRole('link', {
-      name: 'Discrete Mathematics Training Week 2026',
-    })
-  ).toHaveAttribute('href', '/schools/discrete-math-training-week-2026');
-  expect(within(opportunitiesSection as HTMLElement).getByText('Conference')).toBeInTheDocument();
+  expect(within(opportunitiesSection as HTMLElement).getAllByText('Conference')).not.toHaveLength(0);
   expect(within(opportunitiesSection as HTMLElement).getByText('Travel Grant')).toBeInTheDocument();
   expect(within(opportunitiesSection as HTMLElement).getAllByText('School')).not.toHaveLength(0);
   expect(within(opportunitiesSection as HTMLElement).getAllByText(/^Open$/i).length).toBeGreaterThan(0);
   expect(within(opportunitiesSection as HTMLElement).getAllByText(/^Upcoming$/i).length).toBeGreaterThan(0);
   expect(within(opportunitiesSection as HTMLElement).queryByText(/^Closed$/i)).not.toBeInTheDocument();
   expect(
+    within(opportunitiesSection as HTMLElement).queryByText(/current pathway/i)
+  ).not.toBeInTheDocument();
+  expect(
+    within(opportunitiesSection as HTMLElement).queryByText(
+      /live network front page|menu of disconnected modules/i
+    )
+  ).not.toBeInTheDocument();
+  expect(
     screen.queryByRole('heading', { name: /training programmes across the network/i })
+  ).not.toBeInTheDocument();
+  expect(
+    screen.queryByText(
+      /module index|placeholder|static preview|current application moment|m4 · academic directory|signals and memory|closing strip/i
+    )
   ).not.toBeInTheDocument();
 });
 
@@ -162,6 +178,65 @@ it('keeps scholars and expertise as a major homepage section after opportunities
   expect(
     within(scholarsSection as HTMLElement).getByRole('link', { name: 'Browse Scholar Directory' })
   ).toHaveAttribute('href', '/scholars');
+  expect(within(scholarsSection as HTMLElement).queryByText(/m4 · academic directory/i)).not.toBeInTheDocument();
+});
+
+it('renders concrete prize, outreach, and network examples instead of generic placeholders', async () => {
+  renderWithRouter(<Portal />, '/portal', '/portal');
+
+  expect(await screen.findByText('Asiamath Early Career Prize 2026')).toBeInTheDocument();
+  expect(screen.getByText('2026 cycle · Selection process')).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'Prof Reviewer' })).toHaveAttribute(
+    'href',
+    '/scholars/prof-reviewer'
+  );
+  expect(screen.getByText(/university of tokyo/i)).toBeInTheDocument();
+  expect(
+    screen.getByRole('link', { name: /tokyo public lecture: moduli after the workshop/i })
+  ).toHaveAttribute('href', '/outreach');
+  expect(
+    await screen.findByRole('link', {
+      name: /asiamath monthly briefing — april 2026/i,
+    })
+  ).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: /research mobility digest — march 2026/i })).toHaveAttribute(
+    'href',
+    '/newsletter'
+  );
+  expect(screen.getByRole('link', { name: /summer school bulletin — may 2026/i })).toHaveAttribute(
+    'href',
+    '/newsletter'
+  );
+  expect(screen.getByRole('link', { name: /algebraic geometry school notes/i })).toHaveAttribute(
+    'href',
+    '/publications'
+  );
+  expect(screen.getByRole('link', { name: /mobility and collaboration digest/i })).toHaveAttribute(
+    'href',
+    '/publications'
+  );
+  expect(screen.getByRole('link', { name: /network training reader/i })).toHaveAttribute(
+    'href',
+    '/publications'
+  );
+  expect(
+    screen.getByRole('link', { name: /algebraic geometry school session recap/i })
+  ).toHaveAttribute('href', '/videos');
+  expect(screen.getByRole('link', { name: /travel grant application explainer/i })).toHaveAttribute(
+    'href',
+    '/videos'
+  );
+  expect(screen.getByRole('link', { name: /poster session highlight reel/i })).toHaveAttribute(
+    'href',
+    '/videos'
+  );
+  expect(
+    screen.getByText(/recent issues, notes, and recordings from across the network/i)
+  ).toBeInTheDocument();
+  expect(
+    screen.getByText(/member institutions and collaborating organisations across the region/i)
+  ).toBeInTheDocument();
+  expect(screen.queryByText(/placeholder/i)).not.toBeInTheDocument();
 });
 
 it('defines viewport-sized homepage modules so each major section can occupy one screen responsively', () => {
@@ -182,4 +257,15 @@ it('defines equal-height opportunity sidebar cards for the editorial mix row', (
 
   expect(css).toMatch(/\.portal-home__opportunity-sidebar\s*\{[^}]*grid-auto-rows:\s*1fr;/s);
   expect(css).toMatch(/\.portal-home__opportunity-sidebar\s*>\s*\*\s*\{[^}]*height:\s*100%;/s);
+});
+
+it('defines equal-height network feed columns and equal-height feed rows', () => {
+  const css = readFileSync(resolve(process.cwd(), 'src/pages/Portal.css'), 'utf8');
+
+  expect(css).toMatch(/\.portal-home__network-grid\s*\{[^}]*grid-template-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\);/s);
+  expect(css).toMatch(/\.portal-home__network-grid\s*>\s*\*\s*\{[^}]*height:\s*100%;/s);
+  expect(css).toMatch(/\.portal-home__network-feed\s*\{[^}]*grid-template-rows:\s*auto 1fr;/s);
+  expect(css).toMatch(/\.portal-home__network-list\s*\{[^}]*grid-auto-rows:\s*1fr;/s);
+  expect(css).toMatch(/\.portal-home__network-list\s*>\s*\*\s*\{[^}]*height:\s*100%;/s);
+  expect(css).toMatch(/\.portal-home__network-summary\s*\{[^}]*-webkit-line-clamp:\s*4;/s);
 });

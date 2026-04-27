@@ -19,22 +19,24 @@ describe('partner public pages', () => {
 
     expect(screen.getByRole('navigation', { name: /public sections/i })).toBeInTheDocument();
     expect(
-      await screen.findByRole('heading', { name: 'Institute for Mathematical Systems and Data' })
+      await screen.findByRole('heading', { name: 'National University of Singapore' })
     ).toBeInTheDocument();
     expect(screen.getByText('Industry and partner network')).toBeInTheDocument();
-    expect(
-      screen.getByText(/Institutional collaboration, applied research pathways, and expertise matching/i)
-    ).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /sample matching flow/i })).toBeInTheDocument();
+    expect(screen.getAllByText('Member institution')).toHaveLength(4);
+    expect(screen.getByText('Singapore')).toBeInTheDocument();
     expect(
       screen.getByText(
-        /reviewing a scholar's public profile, research areas, and institution before requesting an introduction/i
+        /Institutional collaborations and member-network relationships across the Asiamath region/i
       )
     ).toBeInTheDocument();
-    expect(screen.getByText('Research and applied institute')).toBeInTheDocument();
-    expect(screen.getByText('Singapore and regional collaborations')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /collaboration pathway/i })).toBeInTheDocument();
     expect(
-      screen.getByText(/seeking scholars in optimization, geometry, and mathematical modeling/i)
+      screen.getByText(/regional workshops, training programmes, and scholar collaboration/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /Many collaborations begin with a public scholar profile, a clear research fit, and a visible institutional host across the network/i
+      )
     ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /view sample scholar profile/i })).toHaveAttribute(
       'href',

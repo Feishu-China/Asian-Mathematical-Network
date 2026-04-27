@@ -8,3 +8,8 @@ export type NewsletterIssue = {
   issueFocus: string;
   highlights: string[];
 };
+
+export type NewsletterProvider = {
+  listPublicIssues(): Promise<NewsletterIssue[]>;
+  getIssueBySlug(slug: string): Promise<NewsletterIssue | null>;
+};

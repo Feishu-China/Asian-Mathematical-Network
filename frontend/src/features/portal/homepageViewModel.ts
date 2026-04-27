@@ -2,10 +2,16 @@ import { conferenceProvider } from '../conference/conferenceProvider';
 import type { ConferenceListItem } from '../conference/types';
 import { grantProvider } from '../grant/grantProvider';
 import type { GrantListItem } from '../grant/types';
+import { newsletterProvider } from '../newsletter/newsletterProvider';
+import { outreachProvider } from '../outreach/outreachProvider';
+import { partnerProvider } from '../partner/partnerProvider';
 import { scholarDirectoryProvider } from '../profile/scholarDirectoryProvider';
 import type { PublicScholarSummary, ScholarExpertiseCluster } from '../profile/types';
+import { prizeProvider } from '../prize/prizeProvider';
+import { publicationProvider } from '../publication/publicationProvider';
 import { schoolProvider } from '../school/schoolProvider';
 import type { SchoolListItem } from '../school/types';
+import { videoProvider } from '../video/videoProvider';
 
 type OpportunityKind = 'conference' | 'grant' | 'school';
 type HomepageOpportunityState = 'Open' | 'Upcoming' | 'Closed';
@@ -39,6 +45,21 @@ export type FeaturedSchoolSpotlight = PortalOpportunityStory & {
   supportLabel: string;
 };
 
+export type PortalOpportunityRailCard = PortalOpportunityStory & {
+  supportLabel?: string;
+};
+
+export type PortalNetworkFeed = {
+  kind: 'Newsletter' | 'Publication' | 'Video';
+  href: string;
+  items: Array<{
+    title: string;
+    meta: string;
+    summary: string;
+    href: string;
+  }>;
+};
+
 export type PortalHomepageViewModel = {
   summary: {
     openConferences: number;
@@ -52,6 +73,7 @@ export type PortalHomepageViewModel = {
   };
   heroFeature: PortalHeroFeature | null;
   featuredOpportunities: FeaturedOpportunityCard[];
+  opportunityRail: PortalOpportunityRailCard[];
   schoolSpotlights: FeaturedSchoolSpotlight[];
   scholarTeaser: {
     clusters: ScholarExpertiseCluster[];
@@ -76,13 +98,7 @@ export type PortalHomepageViewModel = {
       href: string;
     }>;
   };
-  networkStories: Array<{
-    kind: 'Newsletter' | 'Publication' | 'Video';
-    title: string;
-    meta: string;
-    summary: string;
-    href: string;
-  }>;
+  networkFeeds: PortalNetworkFeed[];
   partnerStrip: Array<{
     label: string;
     href: string;
@@ -175,7 +191,13 @@ const getGrantHomepageState = (grant: GrantListItem): HomepageOpportunityState =
   return 'Upcoming';
 };
 
-const getSchoolHomepageState = (): 'Upcoming' => 'Upcoming';
+const getSchoolHomepageState = (school: SchoolListItem): HomepageOpportunityState => {
+  if (hasDatePassed(school.startDate)) {
+    return 'Closed';
+  }
+
+  return 'Upcoming';
+};
 
 const resolveGrantLocation = ({
   grant,
@@ -235,13 +257,16 @@ const toGrantStory = ({
     'Mobility support that keeps public opportunities connected to participation, not isolated from the programmes they enable.',
 });
 
-const toSchoolStory = (school: SchoolListItem): FeaturedSchoolSpotlight => ({
+const toSchoolStory = (
+  school: SchoolListItem,
+  statusLabel: 'Upcoming'
+): FeaturedSchoolSpotlight => ({
   kind: 'school',
   href: `/schools/${school.slug}`,
   title: school.title,
   location: school.locationText ?? 'Regional cohort',
   dateLabel: formatDateLabel(school.startDate),
-  statusLabel: getSchoolHomepageState(),
+  statusLabel,
   summary: school.summary,
   travelSupportAvailable: school.travelSupportAvailable,
   supportLabel: school.travelSupportAvailable
@@ -266,12 +291,14 @@ const buildHeroFeature = ({
   conferences: ConferenceListItem[];
   schools: SchoolListItem[];
 }): PortalHeroFeature | null => {
+  const callout =
+    'Programme details, linked travel support, and related training pathways are available from this call.';
+
   if (featuredConference && featuredConferenceState) {
     return {
       ...toConferenceStory(featuredConference, featuredConferenceState),
       eyebrow: 'Featured conference',
-      callout:
-        'Use the conference page to assess fit, then continue through grants or school pathways where mobility support is relevant.',
+      callout,
       supportLink: featuredGrant
         ? {
             href: `/grants/${featuredGrant.slug}`,
@@ -290,22 +317,40 @@ const buildHeroFeature = ({
         statusLabel: featuredGrantState,
       }),
       eyebrow: 'Featured grant',
-      callout:
-        'Mobility support remains visible as part of the public network story instead of being buried inside the application flow.',
+      callout,
     };
   }
 
   if (featuredSchool) {
     return {
-      ...toSchoolStory(featuredSchool),
+      ...toSchoolStory(featuredSchool, 'Upcoming'),
       eyebrow: 'Featured school',
-      callout:
-        'Schools stay within the main opportunities narrative so training, mentoring, and exchange read as part of one network.',
+      callout,
     };
   }
 
   return null;
 };
+
+const resolveSupportingResult = <T>(result: PromiseSettledResult<T>, fallback: T): T =>
+  result.status === 'fulfilled' ? result.value : fallback;
+
+const toNetworkFeedItem = ({
+  title,
+  meta,
+  summary,
+  href,
+}: {
+  title: string;
+  meta: string;
+  summary: string;
+  href: string;
+}) => ({
+  title,
+  meta,
+  summary,
+  href,
+});
 
 export const loadPortalHomepageViewModel = async (): Promise<PortalHomepageViewModel> => {
   const [conferences, grants, schools, scholarDirectory] = await Promise.all([
@@ -314,6 +359,29 @@ export const loadPortalHomepageViewModel = async (): Promise<PortalHomepageViewM
     schoolProvider.listPublicSchools(),
     scholarDirectoryProvider.getDirectoryViewModel(),
   ]);
+
+  const [
+    prizesResult,
+    partnersResult,
+    outreachProgramsResult,
+    newslettersResult,
+    publicationsResult,
+    videosResult,
+  ] = await Promise.allSettled([
+    prizeProvider.listPublicPrizes(),
+    partnerProvider.listPublicPartners(),
+    outreachProvider.listPublicPrograms(),
+    newsletterProvider.listPublicIssues(),
+    publicationProvider.listPublications(),
+    videoProvider.listPublicVideos(),
+  ]);
+
+  const prizes = resolveSupportingResult(prizesResult, []);
+  const partners = resolveSupportingResult(partnersResult, []);
+  const outreachPrograms = resolveSupportingResult(outreachProgramsResult, []);
+  const newsletters = resolveSupportingResult(newslettersResult, []);
+  const publications = resolveSupportingResult(publicationsResult, []);
+  const videos = resolveSupportingResult(videosResult, []);
 
   const visibleConferences = conferences
     .map((conference) => ({
@@ -343,9 +411,23 @@ export const loadPortalHomepageViewModel = async (): Promise<PortalHomepageViewM
       } => item.statusLabel !== 'Closed'
     );
 
+  const visibleSchools = schools
+    .map((school) => ({
+      school,
+      statusLabel: getSchoolHomepageState(school),
+    }))
+    .filter(
+      (
+        item
+      ): item is {
+        school: SchoolListItem;
+        statusLabel: 'Upcoming';
+      } => item.statusLabel !== 'Closed'
+    );
+
   const featuredConference = visibleConferences[0];
   const featuredGrant = visibleGrants[0];
-  const featuredSchool = schools[0];
+  const featuredSchool = visibleSchools[0];
 
   const featuredCards: FeaturedOpportunityCard[] = [];
   if (featuredConference) {
@@ -364,10 +446,67 @@ export const loadPortalHomepageViewModel = async (): Promise<PortalHomepageViewM
     );
   }
 
-  const schoolSpotlights = schools.slice(0, 2).map(toSchoolStory);
+  const schoolSpotlights = visibleSchools
+    .slice(0, 2)
+    .map((item) => toSchoolStory(item.school, item.statusLabel));
+  const additionalConferenceCards = visibleConferences
+    .slice(1, 2)
+    .map((item) => toConferenceStory(item.conference, item.statusLabel));
+  const grantRailCards = featuredGrant
+    ? [
+        toGrantStory({
+          grant: featuredGrant.grant,
+          conferences,
+          schools,
+          statusLabel: featuredGrant.statusLabel,
+        }),
+      ]
+    : [];
+  const opportunityRail = [...additionalConferenceCards, ...grantRailCards, ...schoolSpotlights].slice(
+    0,
+    3
+  );
   const openConferences = conferences.filter((item) => item.isApplicationOpen).length;
   const openGrants = grants.filter((item) => item.isApplicationOpen).length;
-  const openSchools = schools.length;
+  const openSchools = visibleSchools.length;
+  const networkFeeds: PortalNetworkFeed[] = [
+    {
+      kind: 'Newsletter' as const,
+      href: '/newsletter',
+      items: newsletters.slice(0, 3).map((item) =>
+        toNetworkFeedItem({
+          title: item.title,
+          meta: item.issueLabel,
+          summary: item.summary,
+          href: '/newsletter',
+        })
+      ),
+    },
+    {
+      kind: 'Publication' as const,
+      href: '/publications',
+      items: publications.slice(0, 3).map((item) =>
+        toNetworkFeedItem({
+          title: item.title,
+          meta: item.seriesLabel,
+          summary: item.summary,
+          href: '/publications',
+        })
+      ),
+    },
+    {
+      kind: 'Video' as const,
+      href: '/videos',
+      items: videos.slice(0, 3).map((item) =>
+        toNetworkFeedItem({
+          title: item.title,
+          meta: item.seriesLabel,
+          summary: item.summary,
+          href: '/videos',
+        })
+      ),
+    },
+  ].filter((feed) => feed.items.length > 0);
 
   return {
     summary: {
@@ -378,18 +517,19 @@ export const loadPortalHomepageViewModel = async (): Promise<PortalHomepageViewM
       memberInstitutions: 38,
       countries: 12,
       scholarsInNetwork: 840,
-      note: 'Travel support, conferences, and cohort-based schools are edited together here so the homepage reads like a network, not a module index.',
+      note: 'Current cycle includes the Singapore workshop, linked travel support, and July training cohorts.',
     },
     heroFeature: buildHeroFeature({
       featuredConference: featuredConference?.conference,
       featuredConferenceState: featuredConference?.statusLabel,
       featuredGrant: featuredGrant?.grant,
       featuredGrantState: featuredGrant?.statusLabel,
-      featuredSchool,
+      featuredSchool: featuredSchool?.school,
       conferences,
       schools,
     }),
     featuredOpportunities: featuredCards.slice(0, 2),
+    opportunityRail,
     schoolSpotlights,
     scholarTeaser: {
       clusters: scholarDirectory.clusters.slice(0, 4),
@@ -398,79 +538,28 @@ export const loadPortalHomepageViewModel = async (): Promise<PortalHomepageViewM
     prizeTeaser: {
       title: 'Prize archive & nominations',
       summary:
-        'Recognition pages should show how the network remembers scholarship, teaching, and long-form contribution beyond the active call cycle.',
+        'Current and recent prize cycles across the network, with public-facing records of recognition and committee release.',
       href: '/prizes',
-      items: [
-        {
-          label: 'Asiamath Prize in Pure Mathematics',
-          meta: '2026 nomination cycle',
-        },
-        {
-          label: 'Prize for Mathematics Education',
-          meta: 'Archive preview',
-        },
-        {
-          label: 'Regional Collaboration Citation',
-          meta: 'Editorial placeholder',
-        },
-      ],
+      items: prizes.slice(0, 3).map((item) => ({
+        label: item.title,
+        meta: `${item.cycleLabel} · ${item.stageLabel}`,
+      })),
     },
     outreachTeaser: {
       title: 'Outreach & engagement',
       summary:
-        'Public-facing programmes can extend the network beyond applications through lectures, school-facing work, and media circulation.',
+        'Public lectures, school visits, and classroom-facing programmes extend network activity beyond the application cycle.',
       href: '/outreach',
-      links: [
-        {
-          label: 'Public lecture series',
-          description: 'Preview how community programmes sit alongside the research-facing network.',
-          href: '/outreach',
-        },
-        {
-          label: 'School-facing pathways',
-          description: 'Connect scholar expertise to classrooms and early talent pipelines.',
-          href: '/outreach',
-        },
-        {
-          label: 'Media recap samples',
-          description: 'Bridge outreach activity into videos, newsletters, and public memory.',
-          href: '/videos',
-        },
-      ],
+      links: outreachPrograms.slice(0, 3).map((item) => ({
+        label: item.title,
+        description: item.summary,
+        href: '/outreach',
+      })),
     },
-    networkStories: [
-      {
-        kind: 'Newsletter',
-        title: 'Network update: new mobility round and member-institution notes',
-        meta: 'Newsletter · Editorial preview',
-        summary:
-          'A homepage feed can surface public reporting, not only application funnels, so visitors understand the network as a living scholarly system.',
-        href: '/newsletter',
-      },
-      {
-        kind: 'Publication',
-        title: 'Regional training note: how schools support early-career mathematical exchange',
-        meta: 'Publication · Placeholder feature',
-        summary:
-          'Schools, grants, and scholar profiles can resolve into durable public documentation rather than disappearing after the call closes.',
-        href: '/publications',
-      },
-      {
-        kind: 'Video',
-        title: 'Asiamath conversations: collaboration, mobility, and research communities',
-        meta: 'Video · Sample archive',
-        summary:
-          'Video and recap content give the homepage a stronger editorial afterlife beyond the current application window.',
-        href: '/videos',
-      },
-    ],
-    partnerStrip: [
-      { label: 'University of Tokyo', href: '/partners' },
-      { label: 'Academia Sinica', href: '/partners' },
-      { label: 'National University of Singapore', href: '/partners' },
-      { label: 'Tsinghua University', href: '/partners' },
-      { label: 'Indian Statistical Institute', href: '/partners' },
-      { label: 'Seoul National University', href: '/partners' },
-    ],
+    networkFeeds,
+    partnerStrip: partners.slice(0, 4).map((item) => ({
+      label: item.title,
+      href: '/partners',
+    })),
   };
 };

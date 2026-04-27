@@ -48,7 +48,7 @@ export default function Partners() {
       masthead={<PublicPortalNav />}
       eyebrow="Applied collaboration"
       title="Partners"
-      description="A breadth-facing surface for institutions, applied collaborations, and expertise-matching direction without building a live partner system in d0."
+      description="Institutional collaborations and member-network relationships across the Asiamath region."
       badges={
         <>
           <RoleBadge role="visitor" />
@@ -69,10 +69,10 @@ export default function Partners() {
       }
       aside={
         <div className="partner-detail-card partner-teaser-card public-browse-card public-browse-aside-card">
-          <h2>Sample matching flow</h2>
+          <h2>Collaboration pathway</h2>
           <p className="public-browse-copy">
-            A future partner workflow could start by reviewing a scholar&apos;s public profile,
-            research areas, and institution before requesting an introduction.
+            Many collaborations begin with a public scholar profile, a clear research fit, and a
+            visible institutional host across the network.
           </p>
           <Link
             className="public-browse-primary-link"

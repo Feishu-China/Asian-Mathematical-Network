@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { render } from '@testing-library/react';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -7,21 +7,25 @@ import { renderWithRouter } from '../test/renderWithRouter';
 import Newsletters from './Newsletters';
 import Videos from './Videos';
 import VideoDetail from './VideoDetail';
+import { videoProvider } from '../features/video/videoProvider';
 
-describe('video preview pages', () => {
-  it('renders the video archive as a static breadth surface', async () => {
+describe('video pages', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('renders the video archive with provider-backed records', async () => {
     renderWithRouter(<Videos />, '/videos', '/videos');
 
     expect(
-      await screen.findByRole('heading', { name: 'Asiamath Research School Session Recap' })
+      await screen.findByRole('heading', { name: 'Algebraic Geometry School Session Recap' })
     ).toBeInTheDocument();
-    expect(screen.getByText('Video archive')).toBeInTheDocument();
     expect(
-      screen.getByText(/Session recaps, scholar spotlights, and community explainers/i)
+      screen.getByText(/Browse recorded sessions, explainers, and media recaps/i)
     ).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /watch preview/i })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /watch recap/i })).toHaveAttribute(
       'href',
-      '/videos/asiamath-research-school-session-recap'
+      '/videos/algebraic-geometry-school-session-recap'
     );
   });
 
@@ -47,7 +51,7 @@ describe('video preview pages', () => {
     );
 
     expect(
-      await screen.findByRole('heading', { name: 'Asiamath Research School Session Recap' })
+      await screen.findByRole('heading', { name: 'Algebraic Geometry School Session Recap' })
     ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /back to school/i })).toHaveAttribute(
       'href',
@@ -58,12 +62,12 @@ describe('video preview pages', () => {
   it('renders video detail with recap framing and a parent return link', async () => {
     renderWithRouter(
       <VideoDetail />,
-      '/videos/asiamath-research-school-session-recap',
+      '/videos/algebraic-geometry-school-session-recap',
       '/videos/:slug'
     );
 
     expect(
-      await screen.findByRole('heading', { name: 'Asiamath Research School Session Recap' })
+      await screen.findByRole('heading', { name: 'Algebraic Geometry School Session Recap' })
     ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /back to videos/i })).toHaveAttribute(
       'href',
@@ -71,17 +75,17 @@ describe('video preview pages', () => {
     );
     expect(screen.getByRole('heading', { name: /video focus/i })).toBeInTheDocument();
     expect(
-      screen.getByText(/shows how school activity can turn into a reusable content layer/i)
+      screen.getByText(/The recap shows how school activity becomes a reusable public memory layer/i)
     ).toBeInTheDocument();
-    expect(screen.getByText('Session recap preview')).toBeInTheDocument();
-    expect(screen.getByText('Speaker highlight snippet')).toBeInTheDocument();
+    expect(screen.getByText('Session recap')).toBeInTheDocument();
+    expect(screen.getByText('Speaker segment')).toBeInTheDocument();
   });
 
-  it('preserves a return link to video detail when moving from a video preview into newsletter', async () => {
+  it('preserves a return link to video detail when moving from the archive into newsletter', async () => {
     const user = userEvent.setup();
 
     render(
-      <MemoryRouter initialEntries={['/videos/asiamath-research-school-session-recap']}>
+      <MemoryRouter initialEntries={['/videos/algebraic-geometry-school-session-recap']}>
         <Routes>
           <Route path="/videos/:slug" element={<VideoDetail />} />
           <Route path="/newsletter" element={<Newsletters />} />
@@ -89,12 +93,12 @@ describe('video preview pages', () => {
       </MemoryRouter>
     );
 
-    await screen.findByRole('link', { name: /continue to editorial layer/i });
-    await user.click(screen.getByRole('link', { name: /continue to editorial layer/i }));
+    await screen.findByRole('link', { name: /open newsletter archive/i });
+    await user.click(screen.getByRole('link', { name: /open newsletter archive/i }));
 
     expect(await screen.findByRole('link', { name: /back to video/i })).toHaveAttribute(
       'href',
-      '/videos/asiamath-research-school-session-recap'
+      '/videos/algebraic-geometry-school-session-recap'
     );
   });
 
@@ -128,8 +132,8 @@ describe('video preview pages', () => {
       '/schools/algebraic-geometry-research-school-2026'
     );
 
-    await user.click(screen.getByRole('link', { name: /watch preview/i }));
-    await user.click(await screen.findByRole('link', { name: /continue to editorial layer/i }));
+    await user.click(screen.getByRole('link', { name: /watch recap/i }));
+    await user.click(await screen.findByRole('link', { name: /open newsletter archive/i }));
     await user.click(await screen.findByRole('link', { name: /back to video/i }));
     await user.click(await screen.findByRole('link', { name: /back to videos/i }));
 
@@ -137,5 +141,31 @@ describe('video preview pages', () => {
       'href',
       '/schools/algebraic-geometry-research-school-2026'
     );
+  });
+
+  it('renders an error state when the video list request fails', async () => {
+    vi.spyOn(videoProvider, 'listPublicVideos').mockRejectedValueOnce(new Error('Backend unavailable'));
+
+    renderWithRouter(<Videos />, '/videos', '/videos');
+
+    expect(await screen.findByText('Video archive unavailable')).toBeInTheDocument();
+    expect(screen.getByText(/We could not load the public video archive right now/i)).toBeInTheDocument();
+  });
+
+  it('renders an error state when the video detail request fails', async () => {
+    vi.spyOn(videoProvider, 'getVideoBySlug').mockRejectedValueOnce(new Error('Backend unavailable'));
+
+    renderWithRouter(
+      <VideoDetail />,
+      '/videos/algebraic-geometry-school-session-recap',
+      '/videos/:slug'
+    );
+
+    expect(await screen.findByText('Video archive unavailable')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /back to videos/i })).toHaveAttribute(
+      'href',
+      '/videos'
+    );
+    expect(screen.getByText(/We could not load this video right now/i)).toBeInTheDocument();
   });
 });

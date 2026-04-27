@@ -8,3 +8,8 @@ export type PublicationPreview = {
   publicationFocus: string;
   highlights: string[];
 };
+
+export type PublicationProvider = {
+  listPublications(): Promise<PublicationPreview[]>;
+  getPublicationBySlug(slug: string): Promise<PublicationPreview | null>;
+};

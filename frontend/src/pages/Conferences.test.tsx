@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { screen } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import { conferenceProvider } from '../features/conference/conferenceProvider';
 import { renderWithRouter } from '../test/renderWithRouter';
 import { resetConferenceFakeState } from '../features/conference/fakeConferenceProvider';
@@ -19,9 +19,14 @@ describe('conference public pages', () => {
   it('renders the public conference list and hides organizer-only drafts', async () => {
     renderWithRouter(<Conferences />, '/conferences', '/conferences');
 
-    expect(await screen.findByRole('heading', { name: 'Asiamath 2026 Workshop' })).toBeInTheDocument();
+    const workshopHeading = await screen.findByRole('heading', { name: 'Asiamath 2026 Workshop' });
+    const workshopCard = workshopHeading.closest('article');
+
+    expect(workshopHeading).toBeInTheDocument();
     expect(screen.queryByText('Organizer Draft 2026')).not.toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /view details/i })).toHaveAttribute(
+    expect(screen.getByRole('heading', { name: 'Seoul Number Theory Forum 2026' })).toBeInTheDocument();
+    expect(workshopCard).not.toBeNull();
+    expect(within(workshopCard as HTMLElement).getByRole('link', { name: /view details/i })).toHaveAttribute(
       'href',
       '/conferences/asiamath-2026-workshop'
     );
@@ -30,13 +35,17 @@ describe('conference public pages', () => {
   it('keeps the shared public browse header, metadata row, and detail CTA visible on the list page', async () => {
     renderWithRouter(<Conferences />, '/conferences', '/conferences');
 
+    const workshopHeading = await screen.findByRole('heading', { name: 'Asiamath 2026 Workshop' });
+    const workshopCard = workshopHeading.closest('article');
+
     expect(screen.getByRole('navigation', { name: /public sections/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Conferences' })).toBeInTheDocument();
-    expect(await screen.findByRole('heading', { name: 'Asiamath 2026 Workshop' })).toBeInTheDocument();
+    expect(workshopHeading).toBeInTheDocument();
     expect(screen.getByText('Singapore')).toBeInTheDocument();
     expect(screen.getByText('2026-08-10')).toBeInTheDocument();
     expect(screen.getByText('Applications open')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /view details/i })).toHaveAttribute(
+    expect(workshopCard).not.toBeNull();
+    expect(within(workshopCard as HTMLElement).getByRole('link', { name: /view details/i })).toHaveAttribute(
       'href',
       '/conferences/asiamath-2026-workshop'
     );

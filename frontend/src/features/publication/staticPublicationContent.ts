@@ -3,29 +3,38 @@ import type { PublicationPreview } from './types';
 export const publicationPreviews: PublicationPreview[] = [
   {
     id: 'publication-001',
-    slug: 'asiamath-school-notes-preview',
-    title: 'Asiamath School Notes Preview',
+    slug: 'algebraic-geometry-school-notes',
+    title: 'Algebraic Geometry School Notes',
     seriesLabel: 'School notes',
-    ctaLabel: 'Read preview',
+    ctaLabel: 'Read notes',
     summary:
-      'Working papers, lecture notes, and research digests presented as a static publication layer rather than a live repository.',
+      'Lecture notes and reading guidance from the 2026 algebraic geometry school, prepared for regional cohort use.',
     publicationFocus:
-      'Shows how school outputs can become a reusable publication layer for later citation, discovery, and editorial linking.',
-    highlights: ['Lecture notes preview', 'Research digest teaser', 'Citation layer placeholder'],
+      'The notes capture how the school taught core topics, structured the cohort, and extended workshop themes into training material.',
+    highlights: ['Lecture notes set', 'Reading list', 'Cohort study prompts'],
   },
   {
     id: 'publication-002',
-    slug: 'mobility-research-digest-preview',
-    title: 'Mobility Research Digest Preview',
-    seriesLabel: 'Digest preview',
+    slug: 'mobility-and-collaboration-digest',
+    title: 'Mobility and Collaboration Digest',
+    seriesLabel: 'Research digest',
     ctaLabel: 'Read digest',
     summary:
-      'A static preview for short-form digests that connect grants, conference travel, and regional opportunity framing.',
+      'A short-form digest connecting travel support, conference participation, and regional collaboration planning.',
     publicationFocus:
-      'Shows how grant and mobility stories can be archived as publication-style outputs before a full repository exists.',
-    highlights: ['Mobility digest snapshot', 'Regional callout notes', 'Archive metadata placeholder'],
+      'This digest records how mobility funding helps turn conference attendance into longer collaboration across institutions.',
+    highlights: ['Mobility case note', 'Collaboration route map', 'Follow-up reading'],
+  },
+  {
+    id: 'publication-003',
+    slug: 'network-training-reader',
+    title: 'Network Training Reader',
+    seriesLabel: 'Teaching reader',
+    ctaLabel: 'Read reader',
+    summary:
+      'A compact reader collecting lecture excerpts, exercise sets, and discussion prompts from the 2026 training programme.',
+    publicationFocus:
+      'The reader turns workshop material into a reusable reference for new participants joining the Asiamath network.',
+    highlights: ['Lecture excerpt pack', 'Exercise set', 'Discussion prompts'],
   },
 ];
-
-export const getPublicationBySlug = (slug: string) =>
-  publicationPreviews.find((publication) => publication.slug === slug) ?? null;

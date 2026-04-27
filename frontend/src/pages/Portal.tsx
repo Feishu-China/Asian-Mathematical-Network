@@ -83,9 +83,7 @@ export default function Portal() {
     : [];
 
   const leadOpportunity = homepageModel?.featuredOpportunities[0] ?? null;
-  const opportunityDigest = homepageModel
-    ? [...homepageModel.featuredOpportunities.slice(1), ...homepageModel.schoolSpotlights]
-    : [];
+  const opportunityDigest = homepageModel?.opportunityRail ?? [];
 
   return (
     <PortalShell masthead={<PublicPortalNav />}>
@@ -179,8 +177,8 @@ export default function Portal() {
             <p className="portal-home__section-kicker">Open calls and pathways</p>
             <h2 id="portal-home-opportunities-heading">Opportunities</h2>
             <p>
-              Conferences, mobility support, and schools are edited together here so the homepage
-              reads like a live network front page instead of a menu of disconnected modules.
+              Conferences, travel support, and summer schools show how the current cycle connects
+              researchers with events, funding, and training across the network.
             </p>
           </div>
           <Link to="/opportunities" state={portalReturnState} className="portal-home__section-link">
@@ -215,15 +213,6 @@ export default function Portal() {
             </article>
 
             <div className="portal-home__opportunity-sidebar">
-              <article className="portal-home__editorial-note surface-card">
-                <p className="portal-home__section-kicker">Editorial mix</p>
-                <h3>Travel, training, and participation stay in one conversation</h3>
-                <p>
-                  Schools no longer sit in their own homepage block. They now strengthen the main
-                  opportunity narrative alongside conferences and grants.
-                </p>
-              </article>
-
               {opportunityDigest.map((story) => (
                 <article
                   key={story.href}
@@ -261,7 +250,7 @@ export default function Portal() {
       <section className="portal-home__scholars" aria-labelledby="portal-home-scholars-heading">
         <div className="portal-home__section-heading">
           <div className="portal-home__section-copy">
-            <p className="portal-home__section-kicker">M4 · Academic directory</p>
+            <p className="portal-home__section-kicker">Researchers across the network</p>
             <h2 id="portal-home-scholars-heading">Scholars & expertise</h2>
             <p>
               The network is made visible through people as much as through calls. Public scholar
@@ -364,26 +353,37 @@ export default function Portal() {
         <div className="portal-home__closing-main">
           <div className="portal-home__section-heading">
             <div className="portal-home__section-copy">
-              <p className="portal-home__section-kicker">Signals and memory</p>
+              <p className="portal-home__section-kicker">Recent network updates</p>
               <h2 id="portal-home-network-heading">From the Network</h2>
-              <p>
-                A network homepage should carry news, publications, and media traces, not only the
-                current application moment.
-              </p>
+              <p>Recent issues, notes, and recordings from across the network.</p>
             </div>
           </div>
 
           {homepageModel ? (
             <div className="portal-home__network-grid">
-              {homepageModel.networkStories.map((story) => (
-                <article key={story.title} className="portal-home__network-card surface-card">
-                  <p className="portal-home__network-kind">{story.kind}</p>
-                  <h3>{story.title}</h3>
-                  <p className="portal-home__network-meta">{story.meta}</p>
-                  <p className="portal-home__network-summary">{story.summary}</p>
-                  <Link to={story.href} state={portalReturnState}>
-                    Open {story.kind.toLowerCase()}
-                  </Link>
+              {homepageModel.networkFeeds.map((feed) => (
+                <article key={feed.kind} className="portal-home__network-feed surface-card">
+                  <div className="portal-home__network-feed-header">
+                    <p className="portal-home__network-kind">{feed.kind}</p>
+                    <Link to={feed.href} state={portalReturnState}>
+                      Open {feed.kind.toLowerCase()}
+                    </Link>
+                  </div>
+                  <ul className="portal-home__network-list">
+                    {feed.items.map((item) => (
+                      <li key={item.title} className="portal-home__network-list-item">
+                        <Link
+                          to={item.href}
+                          state={portalReturnState}
+                          className="portal-home__network-item-title"
+                        >
+                          {item.title}
+                        </Link>
+                        <p className="portal-home__network-meta">{item.meta}</p>
+                        <p className="portal-home__network-summary">{item.summary}</p>
+                      </li>
+                    ))}
+                  </ul>
                 </article>
               ))}
             </div>
@@ -396,12 +396,9 @@ export default function Portal() {
 
         <div className="portal-home__partners-block">
           <div className="portal-home__section-copy portal-home__section-copy--centered">
-            <p className="portal-home__section-kicker">Closing strip</p>
+            <p className="portal-home__section-kicker">Regional collaboration</p>
             <h2 id="portal-home-partners-heading">Institutions & partners</h2>
-            <p>
-              The homepage closes by signalling institutional breadth and partner-facing trust
-              rather than ending on a final grid of module links.
-            </p>
+            <p>Member institutions and collaborating organisations across the region.</p>
           </div>
 
           {homepageModel ? (
