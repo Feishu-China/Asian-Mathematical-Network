@@ -3,12 +3,6 @@
   gap: var(--space-6);
 }
 
-.logout-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
 .welcome-card {
   display: flex;
   align-items: center;
