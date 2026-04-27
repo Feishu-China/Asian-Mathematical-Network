@@ -776,6 +776,7 @@ export const getMyApplicationDetail = async (req: Request, res: Response) => {
           },
         },
         decision: true,
+        postVisitReport: true,
       },
     });
 
