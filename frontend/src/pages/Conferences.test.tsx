@@ -42,15 +42,15 @@ describe('conference public pages', () => {
     );
   });
 
-  it('shows a return link to my applications when an applicant token is present', async () => {
+  it('shows a return link to the dashboard when an applicant token is present', async () => {
     localStorage.setItem('token', 'applicant-1');
 
     renderWithRouter(<Conferences />, '/conferences', '/conferences');
 
     expect(await screen.findByRole('heading', { name: 'Asiamath 2026 Workshop' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /back to my applications/i })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /back to dashboard/i })).toHaveAttribute(
       'href',
-      '/me/applications'
+      '/dashboard'
     );
   });
 

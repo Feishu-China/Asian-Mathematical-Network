@@ -158,7 +158,15 @@ export const httpReviewProvider: ReviewProvider = {
   },
 
   async getMyApplicationDetail(applicationId) {
-    const response = await fetchMyApplicationDetail(readToken(), applicationId);
-    return fromTransportApplicantApplicationDetail(response.data.application);
+    try {
+      const response = await fetchMyApplicationDetail(readToken(), applicationId);
+      return fromTransportApplicantApplicationDetail(response.data.application);
+    } catch (error) {
+      return rethrowCodedError(
+        error,
+        { 401: 'UNAUTHORIZED', 404: 'NOT_FOUND' },
+        'Application not found.'
+      );
+    }
   },
 };

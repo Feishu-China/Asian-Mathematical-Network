@@ -72,6 +72,23 @@ describe('Dashboard page', () => {
     );
   });
 
+  it('keeps the dashboard badge scoped to the applicant workspace even for organizer-capable accounts', async () => {
+    localStorage.setItem('token', 'dashboard-token');
+    mockedGetMe.mockResolvedValueOnce({
+      user: {
+        email: 'demo.organizer@asiamath.org',
+        status: 'active',
+        role: 'organizer',
+      },
+    });
+
+    renderWithRouter(<Dashboard />, '/dashboard', '/dashboard');
+
+    expect(await screen.findByRole('heading', { name: /dashboard/i })).toBeInTheDocument();
+    expect(screen.getByText('Role: Applicant')).toBeInTheDocument();
+    expect(screen.queryByText('Role: Organizer')).not.toBeInTheDocument();
+  });
+
   it('renders the shared applicant account menu and logs out to the portal', async () => {
     const user = userEvent.setup();
     localStorage.setItem('token', 'dashboard-token');
@@ -90,6 +107,7 @@ describe('Dashboard page', () => {
     );
 
     await user.click(await screen.findByRole('button', { name: 'Account' }));
+    expect(screen.getByRole('link', { name: 'My Dashboard' })).toHaveAttribute('href', '/dashboard');
     expect(screen.getByRole('link', { name: 'My Applications' })).toHaveAttribute(
       'href',
       '/me/applications'
@@ -116,6 +134,21 @@ describe('Dashboard page', () => {
     expect(screen.getByRole('link', { name: /restart from portal/i })).toHaveAttribute(
       'href',
       '/portal'
+    );
+  });
+
+  it('provides stable public exits from the dashboard hub', async () => {
+    localStorage.setItem('token', 'dashboard-token');
+
+    renderWithRouter(<Dashboard />, '/dashboard', '/dashboard');
+
+    expect(await screen.findByRole('link', { name: /back to portal/i })).toHaveAttribute(
+      'href',
+      '/portal'
+    );
+    expect(screen.getByRole('link', { name: /browse opportunities/i })).toHaveAttribute(
+      'href',
+      '/opportunities'
     );
   });
 });

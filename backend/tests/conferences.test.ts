@@ -427,6 +427,22 @@ describe('Conference API', () => {
     expect(submitRes.status).toBe(200);
     expect(submitRes.body.data.application.status).toBe('submitted');
 
+    const applicantDetailRes = await request(app)
+      .get(`/api/v1/me/applications/${applicationId}`)
+      .set('Authorization', `Bearer ${applicantRes.body.accessToken}`);
+
+    expect(applicantDetailRes.status).toBe(200);
+    expect(applicantDetailRes.body.data.application).toMatchObject({
+      id: applicationId,
+      application_type: 'conference_application',
+      conference_id: conferenceId,
+      conference_title: 'Organizer Conference 2026',
+      viewer_status: 'under_review',
+      statement: 'Updated draft statement.',
+      submitted_at: expect.any(String),
+      released_decision: null,
+    });
+
     const storedApplication = await prisma.application.findUnique({
       where: { id: applicationId },
     });

@@ -245,6 +245,44 @@ describe('MyApplications page', () => {
     );
   });
 
+  it('unwraps a self-referential return context back to the dashboard instead of linking to the current page', async () => {
+    localStorage.setItem('token', 'test-token');
+    seedDashboardDemoState();
+
+    render(
+      <MemoryRouter
+        initialEntries={[
+          {
+            pathname: '/me/applications',
+            state: {
+              returnContext: {
+                to: '/me/applications',
+                label: 'Back to my applications',
+                state: {
+                  returnContext: {
+                    to: '/dashboard',
+                    label: 'Back to dashboard',
+                  },
+                },
+              },
+            },
+          },
+        ]}
+      >
+        <Routes>
+          <Route path="/me/applications" element={<MyApplications />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByRole('heading', { name: /presenter-safe walkthrough/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /back to dashboard/i })).toHaveAttribute(
+      'href',
+      '/dashboard'
+    );
+    expect(screen.queryByRole('link', { name: /back to my applications/i })).not.toBeInTheDocument();
+  });
+
   it('links the walkthrough shortcut to the first real application when records exist', async () => {
     localStorage.setItem('token', 'test-token');
     setDashboardFakeState([submittedConferenceApp, draftGrantApp]);

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { WorkspaceShell } from '../components/layout/WorkspaceShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
@@ -8,6 +8,8 @@ import { DemoStatePanel } from '../features/demo/DemoStatePanel';
 import { DemoStatusNotice } from '../features/demo/DemoStatusNotice';
 import { ProfileForm } from '../features/profile/ProfileForm';
 import { isUnauthorizedSessionError } from '../features/auth/sessionErrors';
+import { DASHBOARD_RETURN_CONTEXT } from '../features/demo/demoWalkthrough';
+import { readReturnContext } from '../features/navigation/returnContext';
 import {
   buildScholarRoute,
   formatDateTime,
@@ -25,12 +27,14 @@ import './Profile.css';
 export const routePath = '/me/profile';
 
 export default function MeProfile() {
+  const location = useLocation();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<EditableProfile | null>(null);
   const [loadState, setLoadState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [status, setStatus] = useState<'loading' | 'idle' | 'saving' | 'saved' | 'error'>(
     'loading'
   );
+  const returnContext = readReturnContext(location.state);
   const accountMenu = buildWorkspaceAccountMenu(() => {
     localStorage.removeItem('token');
     navigate('/portal');
@@ -129,6 +133,15 @@ export default function MeProfile() {
             <StatusBadge tone={badgeTone}>{badgeLabel}</StatusBadge>
           </>
         }
+        actions={
+          <Link
+            to={returnContext?.to ?? DASHBOARD_RETURN_CONTEXT.to}
+            state={returnContext?.state}
+            className="my-applications__section-link"
+          >
+            {returnContext?.label ?? DASHBOARD_RETURN_CONTEXT.label}
+          </Link>
+        }
         accountMenu={accountMenu}
       >
         <div className="profile-page">
@@ -166,6 +179,15 @@ export default function MeProfile() {
           <PageModeBadge mode="real-aligned" />
           <StatusBadge tone={badgeTone}>{badgeLabel}</StatusBadge>
         </>
+      }
+      actions={
+        <Link
+          to={returnContext?.to ?? DASHBOARD_RETURN_CONTEXT.to}
+          state={returnContext?.state}
+          className="my-applications__section-link"
+        >
+          {returnContext?.label ?? DASHBOARD_RETURN_CONTEXT.label}
+        </Link>
       }
       accountMenu={accountMenu}
     >

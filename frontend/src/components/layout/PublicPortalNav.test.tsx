@@ -28,6 +28,7 @@ describe('PublicPortalNav', () => {
 
     renderWithRouter(<PublicPortalNav />, '/portal', '/portal');
 
+    expect(screen.queryByRole('link', { name: 'Opportunities' })).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Conferences' })).toHaveAttribute(
       'href',
       '/conferences'
@@ -78,9 +79,11 @@ describe('PublicPortalNav', () => {
 
     expect(screen.getByRole('button', { name: 'Account' })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Sign in' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'My Dashboard' })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Account' }));
 
+    expect(screen.getByRole('link', { name: 'My Dashboard' })).toHaveAttribute('href', '/dashboard');
     expect(screen.getByRole('link', { name: 'My Applications' })).toHaveAttribute(
       'href',
       '/me/applications'

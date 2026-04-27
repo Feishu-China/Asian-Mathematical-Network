@@ -64,6 +64,9 @@ export default function Portal() {
             research participation, training, and regional scholarly exchange.
           </p>
           <div className="portal-home__actions">
+            <Link to="/opportunities" state={portalReturnState} className="conference-primary-link">
+              Browse opportunities
+            </Link>
             <Link to="/conferences" state={portalReturnState} className="conference-primary-link">
               Browse Conferences
             </Link>

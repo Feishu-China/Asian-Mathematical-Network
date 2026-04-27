@@ -15,18 +15,16 @@ import {
   DASHBOARD_RETURN_CONTEXT,
   demoWalkthroughCopy,
   MY_APPLICATIONS_RETURN_CONTEXT,
+  OPPORTUNITIES_RETURN_CONTEXT,
 } from '../features/demo/demoWalkthrough';
 import { toReturnToState } from '../features/navigation/authReturn';
 import { buildWorkspaceAccountMenu } from '../features/navigation/workspaceAccountMenu';
 import './Dashboard.css';
 
-type DashboardRole = 'visitor' | 'applicant' | 'reviewer' | 'organizer' | 'admin';
-
 type DashboardData = {
   user?: {
     email?: string | null;
     status?: string | null;
-    role?: string | null;
   };
 };
 
@@ -43,15 +41,6 @@ const VIEWER_STATUS_LABELS: Record<ViewerStatus, string> = {
   under_review: 'Under review',
   result_released: 'Result released',
 };
-
-const toRole = (role?: string | null): DashboardRole =>
-  role === 'visitor' ||
-  role === 'applicant' ||
-  role === 'reviewer' ||
-  role === 'organizer' ||
-  role === 'admin'
-    ? role
-    : 'applicant';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -142,9 +131,23 @@ export default function Dashboard() {
       description="A stable working surface for authenticated participation across the Asiamath network."
       badges={
         <>
-          <RoleBadge role={toRole(userData?.user?.role)} />
+          <RoleBadge role="applicant" />
           <PageModeBadge mode="real-aligned" />
           <StatusBadge tone="success">{userData?.user?.status || 'active'}</StatusBadge>
+        </>
+      }
+      actions={
+        <>
+          <Link to="/portal" className="dashboard-shell-link dashboard-shell-link--secondary">
+            Back to portal
+          </Link>
+          <Link
+            to="/opportunities"
+            state={buildChainedReturnState(OPPORTUNITIES_RETURN_CONTEXT, DASHBOARD_RETURN_CONTEXT)}
+            className="dashboard-shell-link"
+          >
+            Browse opportunities
+          </Link>
         </>
       }
       accountMenu={accountMenu}

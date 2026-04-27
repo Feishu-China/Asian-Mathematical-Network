@@ -56,15 +56,15 @@ describe('grant public pages', () => {
     );
   });
 
-  it('shows a return link to my applications on the grant list when an applicant token is present', async () => {
+  it('shows a return link to the dashboard on the grant list when an applicant token is present', async () => {
     localStorage.setItem('token', 'applicant-1');
 
     renderWithRouter(<Grants />, '/grants', '/grants');
 
     expect(await screen.findByRole('heading', { name: 'Asiamath 2026 Travel Grant' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /back to my applications/i })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /back to dashboard/i })).toHaveAttribute(
       'href',
-      '/me/applications'
+      '/dashboard'
     );
   });
 

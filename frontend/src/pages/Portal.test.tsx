@@ -19,6 +19,10 @@ it('renders a compact public homepage hero with sign-in and discovery actions', 
   ).toBeInTheDocument();
   expect(screen.getByRole('heading', { name: /network at a glance/i })).toBeInTheDocument();
   expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute('href', '/login');
+  expect(screen.getByRole('link', { name: 'Browse opportunities' })).toHaveAttribute(
+    'href',
+    '/opportunities'
+  );
   expect(screen.getByRole('link', { name: 'Browse Conferences' })).toHaveAttribute(
     'href',
     '/conferences'

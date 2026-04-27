@@ -6,6 +6,7 @@ import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
 import { DemoStatePanel } from '../features/demo/DemoStatePanel';
+import { DASHBOARD_RETURN_CONTEXT } from '../features/demo/demoWalkthrough';
 import { readReturnContext, toReturnContextState } from '../features/navigation/returnContext';
 import { GrantListCard } from '../features/grant/GrantListCard';
 import { grantProvider } from '../features/grant/grantProvider';
@@ -70,8 +71,8 @@ export default function Grants() {
             {returnContext.label}
           </Link>
         ) : hasApplicantSession ? (
-          <Link to="/me/applications" className="my-applications__section-link">
-            Back to my applications
+          <Link to={DASHBOARD_RETURN_CONTEXT.to} className="my-applications__section-link">
+            {DASHBOARD_RETURN_CONTEXT.label}
           </Link>
         ) : null
       }

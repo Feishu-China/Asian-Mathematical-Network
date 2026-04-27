@@ -2,12 +2,12 @@ import { useEffect, useId, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { ChevronDown } from 'lucide-react';
 import { PORTAL_RETURN_CONTEXT } from '../../features/demo/demoWalkthrough';
-import { buildApplicantAccountMenu } from '../../features/navigation/accountMenu';
 import { toReturnToState } from '../../features/navigation/authReturn';
 import {
   readReturnContext,
   toReturnContextState,
 } from '../../features/navigation/returnContext';
+import { buildWorkspaceAccountMenu } from '../../features/navigation/workspaceAccountMenu';
 import './PublicPortalNav.css';
 
 const publicLinks = [
@@ -46,7 +46,7 @@ export function PublicPortalNav() {
     setAccountMenuOpen(false);
   };
 
-  const accountMenu = buildApplicantAccountMenu(() => {
+  const accountMenu = buildWorkspaceAccountMenu(() => {
     localStorage.removeItem('token');
     setHasApplicantSession(false);
     closeMenus();

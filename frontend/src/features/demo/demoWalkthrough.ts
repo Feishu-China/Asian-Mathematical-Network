@@ -20,6 +20,11 @@ export const MY_APPLICATIONS_RETURN_CONTEXT: ReturnContext = {
   label: 'Back to my applications',
 };
 
+export const OPPORTUNITIES_RETURN_CONTEXT: ReturnContext = {
+  to: '/opportunities',
+  label: 'Back to opportunities',
+};
+
 export const buildChainedReturnState = (
   returnContext: ReturnContext,
   parentContext: ReturnContext | null

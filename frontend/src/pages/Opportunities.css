@@ -1,0 +1,36 @@
+.opportunities-page {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.opportunities-page__intro {
+  display: grid;
+  gap: 0.85rem;
+  padding: 1.5rem;
+}
+
+.opportunities-page__note {
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.opportunities-page__grid {
+  align-items: stretch;
+}
+
+.opportunities-page__card {
+  display: grid;
+  gap: 0.9rem;
+  min-height: 100%;
+}
+
+.opportunities-page__card h2 {
+  font-size: clamp(1.4rem, 2vw, 1.8rem);
+}
+
+.opportunities-page__count {
+  font-size: clamp(2rem, 3vw, 2.8rem);
+  line-height: 1;
+  font-weight: 700;
+  color: var(--color-navy-800);
+}

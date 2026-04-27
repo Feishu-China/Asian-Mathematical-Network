@@ -4,6 +4,10 @@ import { PortalShell } from '../components/layout/PortalShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
+import {
+  buildChainedReturnState,
+  OPPORTUNITIES_RETURN_CONTEXT,
+} from '../features/demo/demoWalkthrough';
 import { readReturnContext, toReturnContextState } from '../features/navigation/returnContext';
 import { getNewsletterBySlug } from '../features/newsletter/staticNewsletterContent';
 import './Newsletter.css';
@@ -48,14 +52,12 @@ export default function NewsletterDetail() {
           <p className="public-browse-copy">{issue.issueFocus}</p>
           <Link
             className="public-browse-primary-link"
-            to="/conferences"
-            state={{
-              returnContext: {
-                to: `/newsletter/${issue.slug}`,
-                label: 'Back to newsletter issue',
-                state: toReturnContextState(returnContext),
-              },
-            }}
+            to="/opportunities"
+            state={buildChainedReturnState(OPPORTUNITIES_RETURN_CONTEXT, {
+              to: `/newsletter/${issue.slug}`,
+              label: 'Back to newsletter issue',
+              state: toReturnContextState(returnContext),
+            })}
           >
             Return to opportunities
           </Link>

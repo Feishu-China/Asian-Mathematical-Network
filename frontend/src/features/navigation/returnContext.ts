@@ -35,3 +35,17 @@ export const toReturnContextState = (
         returnContext,
       }
     : undefined;
+
+export const resolveReturnContext = (
+  state: unknown,
+  currentPath: string,
+  fallback: ReturnContext
+): ReturnContext => {
+  let returnContext = readReturnContext(state);
+
+  while (returnContext?.to === currentPath) {
+    returnContext = readReturnContext(returnContext.state);
+  }
+
+  return returnContext ?? fallback;
+};

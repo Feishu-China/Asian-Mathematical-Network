@@ -27,6 +27,10 @@ describe('me profile page', () => {
     renderWithRouter(<MeProfile />, '/me/profile');
 
     expect(await screen.findByRole('heading', { name: /profile/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /back to dashboard/i })).toHaveAttribute(
+      'href',
+      '/dashboard'
+    );
     expect(screen.getByText(/authenticated \/me surface/i)).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /public scholar preview/i })).toBeInTheDocument();
     expect(screen.getByText('/scholars/alice-chen-demo')).toBeInTheDocument();

@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { render } from '@testing-library/react';
 import { screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import Conferences from './Conferences';
+import Opportunities from './Opportunities';
 import { renderWithRouter } from '../test/renderWithRouter';
 import Newsletters from './Newsletters';
 import NewsletterDetail from './NewsletterDetail';
@@ -93,14 +93,14 @@ describe('newsletter preview pages', () => {
     );
   });
 
-  it('preserves a return link to the newsletter issue when moving into conferences', async () => {
+  it('preserves a return link to the newsletter issue when moving into opportunities', async () => {
     const user = userEvent.setup();
 
     render(
       <MemoryRouter initialEntries={['/newsletter/asiamath-monthly-briefing-april-2026']}>
         <Routes>
           <Route path="/newsletter/:slug" element={<NewsletterDetail />} />
-          <Route path="/conferences" element={<Conferences />} />
+          <Route path="/opportunities" element={<Opportunities />} />
         </Routes>
       </MemoryRouter>
     );
@@ -112,5 +112,6 @@ describe('newsletter preview pages', () => {
       'href',
       '/newsletter/asiamath-monthly-briefing-april-2026'
     );
+    expect(screen.getByRole('heading', { name: /browse opportunities/i })).toBeInTheDocument();
   });
 });

@@ -22,7 +22,10 @@ import {
   MY_APPLICATIONS_RETURN_CONTEXT,
 } from '../features/demo/demoWalkthrough';
 import { toReturnToState } from '../features/navigation/authReturn';
-import { readReturnContext, type ReturnContextState } from '../features/navigation/returnContext';
+import {
+  resolveReturnContext,
+  type ReturnContextState,
+} from '../features/navigation/returnContext';
 import { buildWorkspaceAccountMenu } from '../features/navigation/workspaceAccountMenu';
 import './MyApplications.css';
 
@@ -104,7 +107,7 @@ export default function MyApplications() {
   const location = useLocation();
   const [items, setItems] = useState<MyApplication[] | null>(null);
   const [hasError, setHasError] = useState(false);
-  const returnContext = readReturnContext(location.state);
+  const returnContext = resolveReturnContext(location.state, routePath, DASHBOARD_RETURN_CONTEXT);
   const accountMenu = buildWorkspaceAccountMenu(() => {
     localStorage.removeItem('token');
     navigate('/portal');
@@ -181,11 +184,11 @@ export default function MyApplications() {
       }
       actions={
         <Link
-          to={returnContext?.to ?? DASHBOARD_RETURN_CONTEXT.to}
-          state={returnContext?.state}
+          to={returnContext.to}
+          state={returnContext.state}
           className="my-applications__section-link"
         >
-          {returnContext?.label ?? DASHBOARD_RETURN_CONTEXT.label}
+          {returnContext.label}
         </Link>
       }
       accountMenu={accountMenu}

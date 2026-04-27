@@ -7,6 +7,7 @@ import { RoleBadge } from '../components/ui/RoleBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
 import { ConferenceListCard } from '../features/conference/ConferenceListCard';
 import { DemoStatePanel } from '../features/demo/DemoStatePanel';
+import { DASHBOARD_RETURN_CONTEXT } from '../features/demo/demoWalkthrough';
 import { readReturnContext, toReturnContextState } from '../features/navigation/returnContext';
 import { conferenceProvider } from '../features/conference/conferenceProvider';
 import type { ConferenceListItem } from '../features/conference/types';
@@ -69,8 +70,8 @@ export default function Conferences() {
             {returnContext.label}
           </Link>
         ) : hasApplicantSession ? (
-          <Link to="/me/applications" className="my-applications__section-link">
-            Back to my applications
+          <Link to={DASHBOARD_RETURN_CONTEXT.to} className="my-applications__section-link">
+            {DASHBOARD_RETURN_CONTEXT.label}
           </Link>
         ) : null
       }

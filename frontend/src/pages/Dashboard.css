@@ -3,6 +3,33 @@
   gap: var(--space-6);
 }
 
+.dashboard-shell-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 999px;
+  background: var(--color-navy-700);
+  color: #fff;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.dashboard-shell-link:hover {
+  background: var(--color-navy-800);
+}
+
+.dashboard-shell-link--secondary {
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid var(--border-strong);
+  color: var(--color-navy-900);
+}
+
+.dashboard-shell-link--secondary:hover {
+  background: rgba(255, 255, 255, 0.9);
+}
+
 .welcome-card {
   display: flex;
   align-items: center;
