@@ -77,9 +77,9 @@ export default function SchoolDetail() {
       }
       aside={
         school ? (
-          <div className="school-detail-card school-teaser-card">
+          <div className="school-detail-card school-teaser-card public-browse-card public-browse-aside-card">
             <h2>Travel support teaser</h2>
-            <p>{school.travelSupportTeaser}</p>
+            <p className="public-browse-copy">{school.travelSupportTeaser}</p>
             <Link
               className="school-primary-link"
               to="/grants"
@@ -97,7 +97,7 @@ export default function SchoolDetail() {
         ) : null
       }
     >
-      <div className="school-page school-detail-page">
+      <div className="school-page school-detail-page public-browse-page">
         {school === undefined ? (
           <DemoStatePanel
             badgeLabel="Loading"
@@ -121,14 +121,14 @@ export default function SchoolDetail() {
           />
         ) : (
           <>
-            <section className="school-detail-card">
+            <section className="school-detail-card public-browse-card">
               <h2>Training positioning</h2>
-              <p>{school.positioning}</p>
+              <p className="public-browse-copy">{school.positioning}</p>
             </section>
 
-            <section className="school-detail-card">
+            <section className="school-detail-card public-browse-card">
               <h2>Audience and program outline</h2>
-              <p>{school.audience}</p>
+              <p className="public-browse-copy">{school.audience}</p>
               <ul className="school-outline-list">
                 {school.programOutline.map((item) => (
                   <li key={item}>{item}</li>
@@ -136,9 +136,9 @@ export default function SchoolDetail() {
               </ul>
             </section>
 
-            <section className="school-detail-card">
+            <section className="school-detail-card public-browse-card">
               <h2>Outputs teaser</h2>
-              <p>{school.outputsTeaser}</p>
+              <p className="public-browse-copy">{school.outputsTeaser}</p>
               <div className="school-output-links">
                 <Link
                   to="/videos"

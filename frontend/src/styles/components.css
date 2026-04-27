@@ -94,7 +94,10 @@
   background: rgba(42, 70, 111, 0.08);
 }
 
-.conference-primary-link {
+.conference-primary-link,
+.school-primary-link,
+.prize-primary-link,
+.public-browse-primary-link {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -104,16 +107,23 @@
   border-radius: var(--radius-pill);
   background: var(--color-navy-800);
   color: #fff;
+  -webkit-text-fill-color: #fff;
   font-weight: 600;
+  line-height: 1.2;
   text-decoration: none;
+  text-shadow: 0 1px 0 rgba(7, 14, 28, 0.18);
   transition:
     background-color 180ms ease,
     box-shadow 180ms ease,
     transform 180ms ease;
 }
 
-.conference-primary-link:hover {
+.conference-primary-link:hover,
+.school-primary-link:hover,
+.prize-primary-link:hover,
+.public-browse-primary-link:hover {
   color: #fff;
+  -webkit-text-fill-color: #fff;
   background: var(--color-navy-900);
   box-shadow: var(--shadow-sm);
   transform: translateY(-1px);
@@ -250,7 +260,10 @@
   }
 
   .conference-form-actions button,
-  .conference-primary-link {
+  .conference-primary-link,
+  .school-primary-link,
+  .prize-primary-link,
+  .public-browse-primary-link {
     width: 100%;
     justify-content: center;
   }

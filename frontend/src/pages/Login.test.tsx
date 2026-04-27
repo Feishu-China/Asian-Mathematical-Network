@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { render, screen } from '@testing-library/react';
@@ -86,5 +88,15 @@ describe('Login', () => {
     await user.click(screen.getByRole('link', { name: 'Sign up' }));
 
     expect(screen.getAllByText('{"returnTo":"/schools"}').length).toBeGreaterThan(0);
+  });
+
+  it('uses light-surface footer colors for the auth helper copy and link', () => {
+    const css = readFileSync(resolve(process.cwd(), 'src/pages/Auth.css'), 'utf8');
+
+    expect(css).toMatch(/\.auth-footer\s*\{/);
+    expect(css).toMatch(/\.auth-footer\s*\{[^}]*color:\s*var\(--color-text-muted\);/s);
+    expect(css).toMatch(/\.auth-footer a\s*\{/);
+    expect(css).toMatch(/\.auth-footer a\s*\{[^}]*color:\s*var\(--color-navy-700\);/s);
+    expect(css).toMatch(/\.auth-footer a\s*\{[^}]*text-decoration-color:\s*rgba\(42,\s*70,\s*111,\s*0\.35\);/s);
   });
 });

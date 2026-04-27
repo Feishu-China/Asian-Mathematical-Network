@@ -76,7 +76,7 @@ export default function Grants() {
         ) : null
       }
     >
-      <div className="conference-page">
+      <div className="conference-page public-browse-page">
         {items === null ? (
           <DemoStatePanel
             badgeLabel={hasError ? 'Error' : 'Loading'}
@@ -96,7 +96,7 @@ export default function Grants() {
             tone="neutral"
           />
         ) : (
-          <div className="conference-grid">
+          <div className="conference-grid public-browse-grid">
             {sortByPreferredOpportunity(items, preferredOpportunityType).map((grant) => (
               <GrantListCard key={grant.id} grant={grant} detailState={detailState} />
             ))}

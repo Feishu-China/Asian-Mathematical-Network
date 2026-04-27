@@ -65,10 +65,15 @@
 .auth-footer {
   margin-top: 1.4rem;
   text-align: center;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--color-text-muted);
 }
 
 .auth-footer a {
-  color: #fff;
-  text-decoration-color: rgba(255, 255, 255, 0.35);
+  color: var(--color-navy-700);
+  font-weight: 600;
+  text-decoration-color: rgba(42, 70, 111, 0.35);
+}
+
+.auth-footer a:hover {
+  color: var(--color-navy-900);
 }

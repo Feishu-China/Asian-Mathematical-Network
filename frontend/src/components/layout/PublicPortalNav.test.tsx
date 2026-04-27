@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { beforeEach, describe, expect, it } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { render, screen, within } from '@testing-library/react';
@@ -39,7 +41,12 @@ describe('PublicPortalNav', () => {
     expect(screen.getByRole('link', { name: 'Scholars' })).toHaveAttribute('href', '/scholars');
     expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute('href', '/login');
 
-    await user.click(screen.getByRole('button', { name: 'Resources' }));
+    const resourcesTrigger = screen.getByRole('button', { name: 'Resources' });
+
+    await user.click(resourcesTrigger);
+
+    expect(resourcesTrigger).toHaveAttribute('aria-expanded', 'true');
+    expect(resourcesTrigger.className).toContain('portal-nav__link--expanded');
 
     const resourceMenu = screen.getByRole('menu');
 
@@ -126,5 +133,23 @@ describe('PublicPortalNav', () => {
 
     expect(screen.getByText(/"to":"\/portal"/)).toBeInTheDocument();
     expect(screen.getByText(/"label":"Back to portal"/)).toBeInTheDocument();
+  });
+
+  it('defines a dedicated hover override for the resources trigger so it does not inherit the global button hover fill', () => {
+    const css = readFileSync(resolve(process.cwd(), 'src/components/layout/PublicPortalNav.css'), 'utf8');
+
+    expect(css).toMatch(/\.portal-nav__link--button:hover\s*\{/);
+    expect(css).toMatch(/\.portal-nav__link--button:hover\s*\{[^}]*background:\s*rgba\(15,\s*31,\s*61,\s*0\.06\);/s);
+    expect(css).toMatch(/\.portal-nav__link--button:hover\s*\{[^}]*box-shadow:\s*none;/s);
+    expect(css).toMatch(/\.portal-nav__link--button:hover\s*\{[^}]*transform:\s*none;/s);
+  });
+
+  it('defines a dedicated hover override for the account trigger so it does not inherit the global button hover fill', () => {
+    const css = readFileSync(resolve(process.cwd(), 'src/components/layout/PublicPortalNav.css'), 'utf8');
+
+    expect(css).toMatch(/\.portal-nav__account-trigger:hover\s*\{/);
+    expect(css).toMatch(/\.portal-nav__account-trigger:hover\s*\{[^}]*background:\s*rgba\(255,\s*255,\s*255,\s*0\.92\);/s);
+    expect(css).toMatch(/\.portal-nav__account-trigger:hover\s*\{[^}]*box-shadow:\s*none;/s);
+    expect(css).toMatch(/\.portal-nav__account-trigger:hover\s*\{[^}]*transform:\s*none;/s);
   });
 });

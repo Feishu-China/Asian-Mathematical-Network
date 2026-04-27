@@ -16,7 +16,7 @@ export function PublicScholarCard({ profile }: Props) {
     .join(' · ');
 
   return (
-    <article className="scholar-card">
+    <article className="scholar-card public-browse-card">
       <header className="scholar-header">
         <div>
           <p className="scholar-kicker">Public scholar profile</p>

@@ -27,6 +27,21 @@ describe('conference public pages', () => {
     );
   });
 
+  it('keeps the shared public browse header, metadata row, and detail CTA visible on the list page', async () => {
+    renderWithRouter(<Conferences />, '/conferences', '/conferences');
+
+    expect(screen.getByRole('navigation', { name: /public sections/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Conferences' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Asiamath 2026 Workshop' })).toBeInTheDocument();
+    expect(screen.getByText('Singapore')).toBeInTheDocument();
+    expect(screen.getByText('2026-08-10')).toBeInTheDocument();
+    expect(screen.getByText('Applications open')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /view details/i })).toHaveAttribute(
+      'href',
+      '/conferences/asiamath-2026-workshop'
+    );
+  });
+
   it('shows a return link to my applications when an applicant token is present', async () => {
     localStorage.setItem('token', 'applicant-1');
 

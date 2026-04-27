@@ -14,6 +14,7 @@ describe('prize public pages', () => {
   it('renders the prize archive as a governance-oriented breadth surface', async () => {
     renderWithRouter(<Prizes />, '/prizes', '/prizes');
 
+    expect(screen.getByRole('navigation', { name: /public sections/i })).toBeInTheDocument();
     expect(await screen.findByRole('heading', { name: /prize pathways/i })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /browse prize archive/i })).toHaveAttribute(
       'href',
@@ -31,6 +32,29 @@ describe('prize public pages', () => {
     expect(
       screen.getAllByText(/open the detail view to see the governance and selection-process preview/i)
     ).toHaveLength(2);
+  });
+
+  it('keeps the hub copy, archive cards, and detail teaser links available through the prize flow', async () => {
+    renderWithRouter(
+      <PrizeDetail />,
+      '/prizes/asiamath-early-career-prize-2026',
+      '/prizes/:slug'
+    );
+
+    expect(
+      await screen.findByRole('heading', { name: 'Asiamath Early Career Prize 2026' })
+    ).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /selection process preview/i })).toBeInTheDocument();
+    expect(screen.getByText('Nominations preview')).toBeInTheDocument();
+    expect(screen.getByText('Confidential review concept')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /view governance preview/i })).toHaveAttribute(
+      'href',
+      '/admin/governance'
+    );
+    expect(screen.getByRole('link', { name: /view sample laureate profile/i })).toHaveAttribute(
+      'href',
+      '/scholars/prof-reviewer'
+    );
   });
 
   it('renders prize detail with nomination and review concept preview', async () => {

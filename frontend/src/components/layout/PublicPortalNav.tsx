@@ -117,9 +117,12 @@ export function PublicPortalNav() {
               <div className="portal-nav__dropdown">
                 <button
                   type="button"
-                  className="portal-nav__link portal-nav__link--button"
+                  className={`portal-nav__link portal-nav__link--button${resourcesOpen ? ' portal-nav__link--expanded' : ''}`}
                   aria-expanded={resourcesOpen}
-                  onClick={() => setResourcesOpen((value) => !value)}
+                  onClick={() => {
+                    setAccountMenuOpen(false);
+                    setResourcesOpen((value) => !value);
+                  }}
                 >
                   Resources
                 </button>
