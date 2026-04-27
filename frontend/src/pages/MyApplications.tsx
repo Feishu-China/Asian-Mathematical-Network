@@ -12,6 +12,7 @@ import type {
   ReleasedDecisionFinalStatus,
   ViewerStatus,
 } from '../features/dashboard/types';
+import { isUnauthorizedSessionError } from '../features/auth/sessionErrors';
 import { DemoShortcutPanel } from '../features/demo/DemoShortcutPanel';
 import {
   buildChainedReturnState,
@@ -144,11 +145,19 @@ export default function MyApplications() {
           setItems(value);
         }
       })
-      .catch(() => {
-        if (active) {
-          setHasError(true);
-          setItems([]);
+      .catch((error) => {
+        if (!active) {
+          return;
         }
+
+        if (isUnauthorizedSessionError(error)) {
+          localStorage.removeItem('token');
+          navigate('/login', { state: toReturnToState(location.pathname) });
+          return;
+        }
+
+        setHasError(true);
+        setItems([]);
       });
 
     return () => {

@@ -175,6 +175,26 @@ describe('MyApplications page', () => {
     expect(screen.queryByText(/you have no travel grant applications yet/i)).not.toBeInTheDocument();
   });
 
+  it('clears a stale session and redirects to /login when the applications request is unauthorized', async () => {
+    localStorage.setItem('token', 'applicant-1');
+    const unauthorizedError = Object.assign(new Error('Unauthorized'), { code: 'UNAUTHORIZED' });
+    vi.spyOn(dashboardProvider, 'listMyApplications').mockRejectedValueOnce(unauthorizedError);
+
+    render(
+      <MemoryRouter initialEntries={['/me/applications']}>
+        <Routes>
+          <Route path="/me/applications" element={<MyApplications />} />
+          <Route path="/login" element={<LoginStateProbe />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('{"returnTo":"/me/applications"}')).toBeInTheDocument();
+    });
+    expect(localStorage.getItem('token')).toBeNull();
+  });
+
   it('renders the seeded demo application flow when demo state is loaded', async () => {
     localStorage.setItem('token', 'test-token');
     seedDashboardDemoState();

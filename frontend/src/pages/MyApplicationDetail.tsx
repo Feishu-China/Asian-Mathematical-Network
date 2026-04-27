@@ -6,6 +6,7 @@ import { RoleBadge } from '../components/ui/RoleBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
 import { DemoStatePanel } from '../features/demo/DemoStatePanel';
 import { DemoShortcutPanel } from '../features/demo/DemoShortcutPanel';
+import { isUnauthorizedSessionError } from '../features/auth/sessionErrors';
 import {
   DASHBOARD_RETURN_CONTEXT,
   demoWalkthroughCopy,
@@ -97,10 +98,18 @@ export default function MyApplicationDetail() {
         }
       })
       .catch((error) => {
-        if (active) {
-          setApplication(null);
-          setLoadState(isNotFoundError(error) ? 'not_found' : 'error');
+        if (!active) {
+          return;
         }
+
+        if (isUnauthorizedSessionError(error)) {
+          localStorage.removeItem('token');
+          navigate('/login', { state: toReturnToState(location.pathname) });
+          return;
+        }
+
+        setApplication(null);
+        setLoadState(isNotFoundError(error) ? 'not_found' : 'error');
       });
 
     return () => {

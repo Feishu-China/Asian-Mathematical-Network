@@ -97,6 +97,24 @@ describe('MyApplicationDetail page', () => {
     );
   });
 
+  it('clears a stale session and redirects to /login when the detail request is unauthorized', async () => {
+    localStorage.setItem('token', 'applicant-1');
+    const unauthorizedError = Object.assign(new Error('Unauthorized'), { code: 'UNAUTHORIZED' });
+    vi.spyOn(reviewProvider, 'getMyApplicationDetail').mockRejectedValueOnce(unauthorizedError);
+
+    render(
+      <MemoryRouter initialEntries={['/me/applications/review-application-1']}>
+        <Routes>
+          <Route path="/me/applications/:id" element={<MyApplicationDetail />} />
+          <Route path="/login" element={<LoginStateProbe />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByText('{"returnTo":"/me/applications/review-application-1"}')).toBeInTheDocument();
+    expect(localStorage.getItem('token')).toBeNull();
+  });
+
   it('redirects to /login with a returnTo state when no applicant session is present', async () => {
     render(
       <MemoryRouter initialEntries={['/me/applications/review-application-1']}>

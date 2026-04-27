@@ -199,6 +199,14 @@ describe('GET /api/v1/me/applications', () => {
     expect(res.status).toBe(401);
   });
 
+  it('returns 401 when the Bearer token is malformed', async () => {
+    const res = await request(app)
+      .get('/api/v1/me/applications')
+      .set('Authorization', 'Bearer applicant-1');
+
+    expect(res.status).toBe(401);
+  });
+
   it('returns an empty list when the user has no applications', async () => {
     const res = await request(app)
       .get('/api/v1/me/applications')

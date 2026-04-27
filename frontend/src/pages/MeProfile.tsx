@@ -7,6 +7,7 @@ import { StatusBadge } from '../components/ui/StatusBadge';
 import { DemoStatePanel } from '../features/demo/DemoStatePanel';
 import { DemoStatusNotice } from '../features/demo/DemoStatusNotice';
 import { ProfileForm } from '../features/profile/ProfileForm';
+import { isUnauthorizedSessionError } from '../features/auth/sessionErrors';
 import {
   buildScholarRoute,
   formatDateTime,
@@ -54,8 +55,14 @@ export default function MeProfile() {
         setLoadState('ready');
         setStatus('idle');
       })
-      .catch(() => {
+      .catch((error) => {
         if (cancelled) {
+          return;
+        }
+
+        if (isUnauthorizedSessionError(error)) {
+          localStorage.removeItem('token');
+          navigate('/login', { state: toReturnToState('/me/profile') });
           return;
         }
 
@@ -75,7 +82,13 @@ export default function MeProfile() {
       const nextProfile = await profileProvider.updateMyProfile(values);
       setProfile(nextProfile);
       setStatus('saved');
-    } catch {
+    } catch (error) {
+      if (isUnauthorizedSessionError(error)) {
+        localStorage.removeItem('token');
+        navigate('/login', { state: toReturnToState('/me/profile') });
+        return;
+      }
+
       setStatus('error');
     }
   };

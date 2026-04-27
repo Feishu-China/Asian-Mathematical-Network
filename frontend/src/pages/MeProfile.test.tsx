@@ -1,12 +1,20 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import userEvent from '@testing-library/user-event';
-import { screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { renderWithRouter } from '../test/renderWithRouter';
 import MeProfile from './MeProfile';
 import {
   resetProfileFakeState,
   seedProfileFakeState,
 } from '../features/profile/fakeProfileProvider';
+import { profileProvider } from '../features/profile/profileProvider';
+
+function LoginStateProbe() {
+  const location = useLocation();
+
+  return <div>{JSON.stringify(location.state)}</div>;
+}
 
 describe('me profile page', () => {
   beforeEach(() => {
@@ -62,5 +70,24 @@ describe('me profile page', () => {
     expect(
       screen.getByText(/the private editor and public scholar preview now reflect the latest profile fields/i)
     ).toBeInTheDocument();
+  });
+
+  it('clears a stale session and redirects to /login when the profile request is unauthorized', async () => {
+    const unauthorizedError = Object.assign(new Error('Unauthorized'), { code: 'UNAUTHORIZED' });
+    vi.spyOn(profileProvider, 'getMyProfile').mockRejectedValueOnce(unauthorizedError);
+
+    render(
+      <MemoryRouter initialEntries={['/me/profile']}>
+        <Routes>
+          <Route path="/me/profile" element={<MeProfile />} />
+          <Route path="/login" element={<LoginStateProbe />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('{"returnTo":"/me/profile"}')).toBeInTheDocument();
+    });
+    expect(localStorage.getItem('token')).toBeNull();
   });
 });
