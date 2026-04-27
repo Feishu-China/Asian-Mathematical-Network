@@ -290,6 +290,13 @@ export const serializeApplicantApplicationDetail = (application: {
   conference?: { title: string } | null;
   grant?: { title: string; linkedConference?: { title: string } | null } | null;
   decision: InternalDecisionRecord | null;
+  postVisitReport?: {
+    id: string;
+    status: string;
+    reportNarrative: string;
+    attendanceConfirmed: boolean;
+    submittedAt: Date | null;
+  } | null;
 }) => {
   const viewerStatus = getApplicantViewerStatus(
     application.status,
@@ -308,6 +315,15 @@ export const serializeApplicantApplicationDetail = (application: {
           released_at: application.decision.releasedAt?.toISOString() ?? null,
         }
       : null;
+  const postVisitReport = application.postVisitReport
+    ? {
+        id: application.postVisitReport.id,
+        status: application.postVisitReport.status,
+        report_narrative: application.postVisitReport.reportNarrative,
+        attendance_confirmed: application.postVisitReport.attendanceConfirmed,
+        submitted_at: application.postVisitReport.submittedAt?.toISOString() ?? null,
+      }
+    : null;
 
   return {
     id: application.id,
@@ -329,6 +345,7 @@ export const serializeApplicantApplicationDetail = (application: {
     files: [],
     submitted_at: application.submittedAt?.toISOString() ?? null,
     released_decision: releasedDecision,
-    post_visit_report_status: null,
+    post_visit_report: postVisitReport,
+    post_visit_report_status: postVisitReport?.status ?? null,
   };
 };

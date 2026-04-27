@@ -6,7 +6,7 @@
   "scripts": {
     "start": "DATABASE_URL=file:./dev.db ts-node src/index.ts",
     "dev": "DATABASE_URL=file:./dev.db nodemon src/index.ts",
-    "test": "mkdir -p prisma && touch prisma/test.db && DATABASE_URL=file:./test.db prisma migrate reset --force --skip-seed --skip-generate && DATABASE_URL=file:./test.db jest --runInBand"
+    "test": "mkdir -p prisma && touch prisma/test.db && DATABASE_URL=file:./test.db prisma migrate reset --force --skip-seed && DATABASE_URL=file:./test.db jest --runInBand"
   },
   "keywords": [],
   "author": "",
