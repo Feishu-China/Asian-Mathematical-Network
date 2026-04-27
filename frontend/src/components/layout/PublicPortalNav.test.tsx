@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { beforeEach, describe, expect, it } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { render, screen, within } from '@testing-library/react';
@@ -131,5 +133,14 @@ describe('PublicPortalNav', () => {
 
     expect(screen.getByText(/"to":"\/portal"/)).toBeInTheDocument();
     expect(screen.getByText(/"label":"Back to portal"/)).toBeInTheDocument();
+  });
+
+  it('defines a dedicated hover override for the resources trigger so it does not inherit the global button hover fill', () => {
+    const css = readFileSync(resolve(process.cwd(), 'src/components/layout/PublicPortalNav.css'), 'utf8');
+
+    expect(css).toMatch(/\.portal-nav__link--button:hover\s*\{/);
+    expect(css).toMatch(/\.portal-nav__link--button:hover\s*\{[^}]*background:\s*rgba\(15,\s*31,\s*61,\s*0\.06\);/s);
+    expect(css).toMatch(/\.portal-nav__link--button:hover\s*\{[^}]*box-shadow:\s*none;/s);
+    expect(css).toMatch(/\.portal-nav__link--button:hover\s*\{[^}]*transform:\s*none;/s);
   });
 });
