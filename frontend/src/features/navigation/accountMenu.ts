@@ -17,7 +17,7 @@ export type AccountMenu = {
   items: AccountMenuItem[];
 };
 
-export const applicantAccountLinks: AccountMenuLinkItem[] = [
+export const applicantAccountLinks = [
   {
     kind: 'link',
     to: '/me/applications',
@@ -28,7 +28,7 @@ export const applicantAccountLinks: AccountMenuLinkItem[] = [
     to: '/me/profile',
     label: 'My Profile',
   },
-];
+ ] as const;
 
 export const buildApplicantAccountMenu = (onLogout: () => void): AccountMenu => ({
   label: 'Account',

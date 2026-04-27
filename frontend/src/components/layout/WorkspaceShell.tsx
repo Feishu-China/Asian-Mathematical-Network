@@ -1,4 +1,4 @@
-import { useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronDown } from 'lucide-react';
 import type { ReactNode } from 'react';
@@ -10,11 +10,41 @@ type WorkspaceAccountMenuProps = {
 
 function WorkspaceAccountMenu({ menu }: WorkspaceAccountMenuProps) {
   const menuId = useId();
+  const triggerId = useId();
+  const rootRef = useRef<HTMLDivElement | null>(null);
   const [open, setOpen] = useState(false);
 
   const closeMenu = () => {
     setOpen(false);
   };
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const root = rootRef.current;
+
+      if (root && !root.contains(event.target as Node)) {
+        closeMenu();
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        closeMenu();
+      }
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [open]);
 
   const renderItem = (item: AccountMenuItem) => {
     if (item.kind === 'link') {
@@ -41,10 +71,12 @@ function WorkspaceAccountMenu({ menu }: WorkspaceAccountMenuProps) {
   };
 
   return (
-    <div className="workspace-account-menu">
+    <div className="workspace-account-menu" ref={rootRef}>
       <button
+        id={triggerId}
         type="button"
         className="workspace-account-menu__trigger"
+        aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={menuId}
         onClick={() => setOpen((value) => !value)}
@@ -53,7 +85,7 @@ function WorkspaceAccountMenu({ menu }: WorkspaceAccountMenuProps) {
         <ChevronDown size={18} aria-hidden="true" />
       </button>
       {open ? (
-        <div id={menuId} className="workspace-account-menu__panel">
+        <div id={menuId} className="workspace-account-menu__panel" role="menu" aria-labelledby={triggerId}>
           {menu.items.map(renderItem)}
         </div>
       ) : null}

@@ -102,15 +102,24 @@ describe('foundation shells', () => {
     );
 
     expect(screen.getByRole('button', { name: 'Account' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Account' })).toHaveAttribute('aria-haspopup', 'menu');
     expect(screen.queryByRole('link', { name: 'My Applications' })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Account' }));
 
+    expect(screen.getByRole('menu')).toHaveAttribute(
+      'aria-labelledby',
+      screen.getByRole('button', { name: 'Account' }).id
+    );
     expect(screen.getByRole('link', { name: 'My Applications' })).toHaveAttribute(
       'href',
       '/me/applications'
     );
     expect(screen.getByRole('link', { name: 'My Profile' })).toHaveAttribute('href', '/me/profile');
     expect(screen.getByRole('button', { name: 'Log out' })).toBeInTheDocument();
+
+    await user.keyboard('{Escape}');
+
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
   });
 });
