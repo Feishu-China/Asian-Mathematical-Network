@@ -61,7 +61,7 @@ describe('Login', () => {
       password: 'secret123',
     });
     expect(localStorage.getItem('token')).toBe('token-1');
-    expect(screen.getByText('Schools destination')).toBeInTheDocument();
+    expect(await screen.findByText('Schools destination')).toBeInTheDocument();
   });
 
   it('preserves returnTo when switching to Register', async () => {

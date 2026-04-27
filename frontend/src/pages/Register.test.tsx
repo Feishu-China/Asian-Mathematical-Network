@@ -63,7 +63,7 @@ describe('Register', () => {
       password: 'secret123',
     });
     expect(localStorage.getItem('token')).toBe('token-2');
-    expect(screen.getByText('Grant destination')).toBeInTheDocument();
+    expect(await screen.findByText('Grant destination')).toBeInTheDocument();
   });
 
   it('preserves returnTo when switching to Login', async () => {
