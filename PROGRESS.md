@@ -10,6 +10,26 @@
 
 ## 📅 Handoff 历史记录
 
+### 2026-04-27 (Session 39)
+*   **Agent 角色**: Coding Agent (Applicant workspace bugfix)
+*   **完成 Feature**: `PORTAL` local applicant workspace schema-drift repair
+*   **问题现象**:
+    *   在 real backend + real-aligned frontend 下，applicant 提交 conference application 后回到 `/me/applications`，页面会落到 `My applications unavailable` error state。
+*   **根因定位**:
+    *   通过 `npm run test:portal:int` 复现后确认，真实失败点不是前端 return flow，而是 backend `GET /api/v1/me/applications` 返回 `500`.
+    *   进一步排查发现 `listMyApplications()` 新 include 的 `postVisitReport` relation 依赖 `PostVisitReport` 表；本地 `dev.db` 在某些开发机会话中没有应用 `20260426021200_add_post_visit_report_model` migration，于是 Prisma 在读 applicant dashboard 时直接报表不存在。
+    *   这属于 local dev database schema drift，不是 submit payload 或 MyApplications page 自身的展示逻辑错误。
+*   **变更记录**:
+    *   `backend/package.json` 的 `start` / `dev` 脚本现在都会先执行 `prisma migrate deploy`，确保本地 backend 在启动前把 `dev.db` 迁到当前 schema，而不是继续带着旧 SQLite 结构提供 API。
+    *   `backend/tests/databaseConfig.test.ts` 补了配置级约束，锁定 backend `dev` / `start` 必须先跑 migration，防止以后再次出现“新 relation 已入代码、旧 dev.db 未迁移”的同类回归。
+*   **验证记录**:
+    *   按 TDD 先补失败测试，再执行 `cd backend && npm test -- --runInBand tests/databaseConfig.test.ts`，确认新增约束在旧脚本配置下先失败。
+    *   修复脚本后再次执行 `cd backend && npm test -- --runInBand tests/databaseConfig.test.ts`，`3` 个 tests 全部通过。
+    *   对当前 local `dev.db` 手动执行一次 `cd backend && DATABASE_URL=file:./dev.db ./node_modules/.bin/prisma migrate deploy`，确认 `20260426021200_add_post_visit_report_model` 已成功应用。
+    *   复跑真实 applicant integration：`npm run test:portal:int`，conference submit -> grant submit -> `/api/v1/me/applications` -> detail reads 全链路通过，不再返回 `500`。
+*   **边界与说明**:
+    *   本轮没有改 conference apply / MyApplications 的产品逻辑，也没有扩展 review / dashboard data contract；修的是 local backend boot discipline，避免 dev schema drift 把 applicant workspace 打挂。
+
 ### 2026-04-27 (Session 38)
 *   **Agent 角色**: Coding Agent (Public page visual unification Phase 2)
 *   **完成 Feature**: `PORTAL` public browse visual unification, Phase 2 only

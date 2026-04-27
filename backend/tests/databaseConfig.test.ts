@@ -20,4 +20,15 @@ describe('backend database configuration', () => {
 
     expect(packageJson.scripts?.test).toContain('DATABASE_URL=file:./test.db');
   });
+
+  it('runs Prisma migrations before booting the dev and start servers', () => {
+    const packageJson = JSON.parse(
+      fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8')
+    ) as {
+      scripts?: Record<string, string>;
+    };
+
+    expect(packageJson.scripts?.dev).toContain('prisma migrate deploy');
+    expect(packageJson.scripts?.start).toContain('prisma migrate deploy');
+  });
 });
