@@ -10,6 +10,18 @@
 
 ## 📅 Handoff 历史记录
 
+### 2026-04-27 (Session 36)
+*   **Agent 角色**: Coding Agent (UX follow-up note)
+*   **记录问题**: applicant workspace 缺少自然的 `back to portal` affordance
+*   **问题说明**:
+    *   当前从 `Account` 下拉进入 `My Applications` 或 `My Profile` 后，用户缺少稳定、自然、始终可见的返回 `Portal` 入口。
+    *   `Dashboard` 中现有的 `Restart from portal` 更像 demo walkthrough affordance，而不是产品级的全局导航能力，因此不能视为该问题已被解决。
+*   **设计判断**:
+    *   这个问题应视为 workspace-shell 级别的 IA / navigation gap，而不是 `Account` 菜单本身的问题。
+    *   更合理的修正方向是在 applicant workspace 顶层 shell 中提供公共浏览面的稳定出口，例如可感知的 `Portal` / `Browse opportunities` 入口，或让品牌位承担明确的 public-home return 语义。
+    *   不建议把 `Portal` 塞进 `Account` 下拉里，因为它属于主导航回流，不属于账户动作。
+*   **下一步**: 在继续 `public page visual unification` 之前，先为 applicant workspace 补一个简短 spec / implementation delta，明确 `portal return affordance` 应该落在 `WorkspaceShell` 而不是 dashboard-only CTA。
+
 ### 2026-04-27 (Session 35)
 *   **Agent 角色**: Coding Agent (Account menu / auth return baseline repair)
 *   **完成 Feature**: `PORTAL` account-menu + auth-return-flow baseline repair
