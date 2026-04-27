@@ -10,6 +10,33 @@
 
 ## 📅 Handoff 历史记录
 
+### 2026-04-27 (Session 35)
+*   **Agent 角色**: Coding Agent (Account menu / auth return baseline repair)
+*   **完成 Feature**: `PORTAL` account-menu + auth-return-flow baseline repair
+*   **变更记录**:
+    *   `frontend/src/features/navigation/accountMenu.ts` 与 `authReturn.ts` 新增共享 applicant account IA 与 `returnTo` helper；`WorkspaceShell.tsx` 正式接入可选 `accountMenu` 契约，修复 clean worktree 因 `Shell.test.tsx` 先于实现落地而导致的 build baseline 断裂。
+    *   `frontend/src/components/layout/PublicPortalNav.tsx` 改为消费共享 applicant account menu；public-shell `Log out` 现在会清 token 并停留在当前 public route，而不是强制跳回 `/portal`。`Login.tsx` / `Register.tsx` 同时改为通过共享 helper 读取和透传 `returnTo`。
+    *   `frontend/src/features/navigation/workspaceAccountMenu.ts` 作为薄适配层接入 shared applicant account IA，并把 `Account` 菜单 rollout 到 applicant-owned workspace surfaces：`Dashboard`、`MyApplications`、`MyApplicationDetail`、`MeProfile`、signed-in `ConferenceApply`、signed-in `GrantApply`。
+    *   applicant protected-route / auth-entry 行为收口：`Dashboard`、`MyApplications`、`MyApplicationDetail`、`MeProfile` 现在在未登录时会带 `returnTo` 跳到 `Login`；signed-out `ConferenceApply` / `GrantApply` 的 `Go to login` CTA 也会保留原目标页。
+    *   移除了 dashboard-local logout affordance 和残留 `.logout-btn` 样式；同时补强 `WorkspaceShell` account menu 的可访问性语义与 dismiss 行为（`aria-haspopup="menu"`、Escape dismiss、outside-click dismiss），并把静态 applicant link 列表收口成不可变定义。
+    *   新增或扩展测试：`Login.test.tsx`、`Register.test.tsx`、`Dashboard.test.tsx`、`MyApplications.test.tsx`、`MyApplicationDetail.test.tsx`、`ConferenceApply.test.tsx`、`GrantApply.test.tsx`，锁定 public-origin auth return、workspace logout、protected-route `returnTo`、以及 signed-in applicant account menu 可见性。
+*   **验证记录**:
+    *   clean worktree preflight 先复现旧基线问题：`cd frontend && npm run build` 因 `Shell.test.tsx` 中的 `accountMenu` 契约与 committed `WorkspaceShell` 实现不一致而失败。
+    *   Unit A focused verification 通过：`cd frontend && npm run test:run -- src/components/layout/Shell.test.tsx src/components/layout/PublicPortalNav.test.tsx src/pages/Login.test.tsx src/pages/Register.test.tsx`，`4` 个 test files、`12` 个 tests 全部通过；随后 `cd frontend && npm run build` 通过。
+    *   Unit B focused verification 通过：`cd frontend && npm run test:run -- src/pages/Dashboard.test.tsx src/pages/MyApplications.test.tsx src/pages/MyApplicationDetail.test.tsx src/pages/ConferenceApply.test.tsx src/pages/GrantApply.test.tsx`，`5` 个 test files、`36` 个 tests 全部通过；随后 `cd frontend && npm run build` 通过。
+    *   最终整组 targeted regression 通过：`cd frontend && npm run test:run -- src/components/layout/Shell.test.tsx src/components/layout/PublicPortalNav.test.tsx src/pages/Login.test.tsx src/pages/Register.test.tsx src/pages/Dashboard.test.tsx src/pages/MyApplications.test.tsx src/pages/MyApplicationDetail.test.tsx src/pages/ConferenceApply.test.tsx src/pages/GrantApply.test.tsx`，`9` 个 test files、`48` 个 tests 全部通过。
+    *   最终 `cd frontend && npm run build`（`tsc -b && vite build`）通过，无类型或构建错误。
+    *   browser-level acceptance 通过：
+        *   signed-in `/schools` 可见 `Account`，点击 `Log out` 后仍停留在 `/schools`，且 `Sign in` 恢复可见，`localStorage.token` 被清空。
+        *   signed-in `/me/applications` 可见 `Account`；点击 `Log out` 后回到 `/portal`，且 `localStorage.token` 被清空。
+        *   上述浏览器交互后 `agent-browser` console errors 为空。
+    *   final verification 过程中发现 `Register.test.tsx` 在大批量 suite 下存在时序性假红；根因是成功跳转断言使用同步 `getByText`。已在 `Login.test.tsx` / `Register.test.tsx` 中改成 `findByText`，复跑整组 regression 后稳定通过。
+*   **边界与说明**:
+    *   本轮只修 account-menu / auth-return-flow 基线，不涉及 public-page visual unification、homepage palette、或 reviewer / organizer / admin account menu。
+    *   `MeProfile` 的 protected-route 行为已收口，但本轮没有新增单独的 `MeProfile.test.tsx`；相关 deterministic redirect 主要通过代码审查与 scoped route behavior 一致性确认。
+    *   browser acceptance 对 auth return 的“成功后回原页”更多依赖 Vitest，因为本地浏览器验收环境没有稳定的 live auth backend 参与整条登录成功链路。
+*   **下一步**: 在此基线已恢复后，重新回到 `docs/superpowers/plans/2026-04-27-public-page-visual-unification-implementation.md` 的 `Phase 1`，用新的 clean worktree 执行 public browse surfaces 的 body-style unification，而不再被 `WorkspaceShell/accountMenu` 的 preflight blocker 卡住。
+
 ### 2026-04-27 (Session 34)
 *   **Agent 角色**: Coding Agent (Homepage UI priority pass)
 *   **完成 Feature**: `PORTAL` homepage readability / hierarchy refinement
