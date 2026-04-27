@@ -39,7 +39,12 @@ describe('PublicPortalNav', () => {
     expect(screen.getByRole('link', { name: 'Scholars' })).toHaveAttribute('href', '/scholars');
     expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute('href', '/login');
 
-    await user.click(screen.getByRole('button', { name: 'Resources' }));
+    const resourcesTrigger = screen.getByRole('button', { name: 'Resources' });
+
+    await user.click(resourcesTrigger);
+
+    expect(resourcesTrigger).toHaveAttribute('aria-expanded', 'true');
+    expect(resourcesTrigger.className).toContain('portal-nav__link--expanded');
 
     const resourceMenu = screen.getByRole('menu');
 
