@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useLocation, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { WorkspaceShell } from '../components/layout/WorkspaceShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
@@ -8,7 +8,9 @@ import { ConferenceApplyForm } from '../features/conference/ConferenceApplyForm'
 import { conferenceProvider } from '../features/conference/conferenceProvider';
 import { DemoStatePanel } from '../features/demo/DemoStatePanel';
 import { DemoStatusNotice } from '../features/demo/DemoStatusNotice';
+import { toReturnToState } from '../features/navigation/authReturn';
 import { readReturnContext, toReturnContextState } from '../features/navigation/returnContext';
+import { buildWorkspaceAccountMenu } from '../features/navigation/workspaceAccountMenu';
 import type {
   ConferenceApplication,
   ConferenceApplicationValues,
@@ -22,7 +24,15 @@ export const routePath = '/conferences/:slug/apply';
 export default function ConferenceApply() {
   const { slug = '' } = useParams();
   const location = useLocation();
+  const navigate = useNavigate();
   const returnContext = readReturnContext(location.state);
+  const isSignedIn = Boolean(localStorage.getItem('token'));
+  const accountMenu = isSignedIn
+    ? buildWorkspaceAccountMenu(() => {
+        localStorage.removeItem('token');
+        navigate('/portal');
+      })
+    : undefined;
   const [conference, setConference] = useState<ConferenceDetail | null | undefined>(undefined);
   const [loadState, setLoadState] = useState<'loading' | 'ready' | 'not_found' | 'error'>(
     'loading'
@@ -111,8 +121,6 @@ export default function ConferenceApply() {
     };
   }, [slug]);
 
-  const isSignedIn = Boolean(localStorage.getItem('token'));
-
   if (loadState !== 'ready' || !conference) {
     return (
       <WorkspaceShell
@@ -132,6 +140,7 @@ export default function ConferenceApply() {
             </StatusBadge>
           </>
         }
+        accountMenu={accountMenu}
       >
         <div className="conference-page">
           {loadState === 'loading' ? (
@@ -172,7 +181,11 @@ export default function ConferenceApply() {
               description="You need an authenticated session before creating a draft."
               tone="info"
               actions={
-                <Link className="conference-primary-link" to="/login">
+                <Link
+                  className="conference-primary-link"
+                  to="/login"
+                  state={toReturnToState(location.pathname)}
+                >
                   Go to login
                 </Link>
               }
@@ -195,6 +208,7 @@ export default function ConferenceApply() {
             <PageModeBadge mode="real-aligned" />
           </>
         }
+        accountMenu={accountMenu}
       >
         <div className="conference-page">
           <DemoStatePanel
@@ -203,7 +217,11 @@ export default function ConferenceApply() {
             description="You need an authenticated session before creating a draft."
             tone="info"
             actions={
-              <Link className="conference-primary-link" to="/login">
+              <Link
+                className="conference-primary-link"
+                to="/login"
+                state={toReturnToState(location.pathname)}
+              >
                 Go to login
               </Link>
             }
@@ -296,6 +314,7 @@ export default function ConferenceApply() {
           </StatusBadge>
         </>
       }
+      accountMenu={accountMenu}
       aside={
         <div className="conference-detail-card stack-sm">
           <h3>Event snapshot</h3>

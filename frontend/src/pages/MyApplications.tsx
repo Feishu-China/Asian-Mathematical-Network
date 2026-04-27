@@ -20,7 +20,9 @@ import {
   DEMO_PRIMARY_CONFERENCE_LIST_PATH,
   MY_APPLICATIONS_RETURN_CONTEXT,
 } from '../features/demo/demoWalkthrough';
+import { toReturnToState } from '../features/navigation/authReturn';
 import { readReturnContext, type ReturnContextState } from '../features/navigation/returnContext';
+import { buildWorkspaceAccountMenu } from '../features/navigation/workspaceAccountMenu';
 import './MyApplications.css';
 
 export const routePath = '/me/applications';
@@ -102,6 +104,10 @@ export default function MyApplications() {
   const [items, setItems] = useState<MyApplication[] | null>(null);
   const [hasError, setHasError] = useState(false);
   const returnContext = readReturnContext(location.state);
+  const accountMenu = buildWorkspaceAccountMenu(() => {
+    localStorage.removeItem('token');
+    navigate('/portal');
+  });
   const sectionReturnState = buildChainedReturnState(MY_APPLICATIONS_RETURN_CONTEXT, returnContext);
   const primaryWalkthroughShortcut =
     items && items.length > 0
@@ -124,7 +130,7 @@ export default function MyApplications() {
     let active = true;
 
     if (!localStorage.getItem('token')) {
-      navigate('/login');
+      navigate('/login', { state: toReturnToState(location.pathname) });
       return;
     }
 
@@ -148,7 +154,7 @@ export default function MyApplications() {
     return () => {
       active = false;
     };
-  }, [navigate]);
+  }, [location.pathname, navigate]);
 
   const buckets = items ? splitByKind(items) : null;
 
@@ -173,6 +179,7 @@ export default function MyApplications() {
           {returnContext?.label ?? DASHBOARD_RETURN_CONTEXT.label}
         </Link>
       }
+      accountMenu={accountMenu}
     >
       {items === null ? (
         <DemoStatePanel

@@ -3,7 +3,7 @@ import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as authApi from '../api/auth';
 import { render } from '@testing-library/react';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { renderWithRouter } from '../test/renderWithRouter';
 import { conferenceProvider } from '../features/conference/conferenceProvider';
 import {
@@ -15,6 +15,12 @@ import { fakeGrantProvider, resetGrantFakeState } from '../features/grant/fakeGr
 import Grants from './Grants';
 import GrantDetail from './GrantDetail';
 import GrantApply from './GrantApply';
+
+function LoginStateProbe() {
+  const location = useLocation();
+
+  return <div>{JSON.stringify(location.state)}</div>;
+}
 
 vi.mock('../api/auth', async () => {
   const actual = await vi.importActual<typeof import('../api/auth')>('../api/auth');
@@ -63,14 +69,25 @@ describe('grant apply page', () => {
   });
 
   it('shows an authentication prompt when no token is present', async () => {
-    renderWithRouter(
-      <GrantApply />,
-      '/grants/asiamath-2026-travel-grant/apply',
-      '/grants/:slug/apply'
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter initialEntries={['/grants/asiamath-2026-travel-grant/apply']}>
+        <Routes>
+          <Route path="/grants/:slug/apply" element={<GrantApply />} />
+          <Route path="/login" element={<LoginStateProbe />} />
+        </Routes>
+      </MemoryRouter>
     );
 
     expect(await screen.findByText('Role: Visitor')).toBeInTheDocument();
     expect(await screen.findByText(/sign in to start a grant application/i)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('link', { name: /go to login/i }));
+
+    expect(
+      screen.getByText('{"returnTo":"/grants/asiamath-2026-travel-grant/apply"}')
+    ).toBeInTheDocument();
   });
 
   it('shows a prerequisite warning when no submitted conference application exists', async () => {
@@ -174,6 +191,19 @@ describe('grant apply page', () => {
     expect(screen.getByText(/submitted and under review/i)).toBeInTheDocument();
     expect(screen.getByText('Applicant view: under review')).toBeInTheDocument();
     expect(screen.queryByText(/^Released outcome$/)).not.toBeInTheDocument();
+  });
+
+  it('renders the shared applicant account menu for signed-in applicants', async () => {
+    localStorage.setItem('token', 'grant-applicant-eligible');
+
+    renderWithRouter(
+      <GrantApply />,
+      '/grants/asiamath-2026-travel-grant/apply',
+      '/grants/:slug/apply'
+    );
+
+    await screen.findByRole('heading', { name: /travel grant application/i });
+    expect(screen.getByRole('button', { name: 'Account' })).toBeInTheDocument();
   });
 
   it('hydrates an existing grant draft when the page reloads', async () => {

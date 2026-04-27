@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { WorkspaceShell } from '../components/layout/WorkspaceShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
@@ -16,20 +16,32 @@ import {
   PUBLIC_PROFILE_FIELD_LABELS,
 } from '../features/profile/profilePresentation';
 import { profileProvider } from '../features/profile/profileProvider';
+import { toReturnToState } from '../features/navigation/authReturn';
+import { buildWorkspaceAccountMenu } from '../features/navigation/workspaceAccountMenu';
 import type { EditableProfile, ProfileFormValues } from '../features/profile/types';
 import './Profile.css';
 
 export const routePath = '/me/profile';
 
 export default function MeProfile() {
+  const navigate = useNavigate();
   const [profile, setProfile] = useState<EditableProfile | null>(null);
   const [loadState, setLoadState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [status, setStatus] = useState<'loading' | 'idle' | 'saving' | 'saved' | 'error'>(
     'loading'
   );
+  const accountMenu = buildWorkspaceAccountMenu(() => {
+    localStorage.removeItem('token');
+    navigate('/portal');
+  });
 
   useEffect(() => {
     let cancelled = false;
+
+    if (!localStorage.getItem('token')) {
+      navigate('/login', { state: toReturnToState('/me/profile') });
+      return;
+    }
 
     profileProvider
       .getMyProfile()
@@ -54,7 +66,7 @@ export default function MeProfile() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [navigate]);
 
   const handleSave = async (values: ProfileFormValues) => {
     setStatus('saving');
@@ -104,6 +116,7 @@ export default function MeProfile() {
             <StatusBadge tone={badgeTone}>{badgeLabel}</StatusBadge>
           </>
         }
+        accountMenu={accountMenu}
       >
         <div className="profile-page">
           <DemoStatePanel
@@ -141,6 +154,7 @@ export default function MeProfile() {
           <StatusBadge tone={badgeTone}>{badgeLabel}</StatusBadge>
         </>
       }
+      accountMenu={accountMenu}
     >
       <div className="profile-page">
         {status === 'saved' ? (

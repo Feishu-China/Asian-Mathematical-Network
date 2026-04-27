@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from '@testing-library/react';
 import { screen, waitFor } from '@testing-library/react';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
+import userEvent from '@testing-library/user-event';
 import { dashboardProvider } from '../features/dashboard/dashboardProvider';
 import { renderWithRouter } from '../test/renderWithRouter';
 import {
@@ -77,6 +78,12 @@ const releasedAcceptedApp: MyApplication = {
   postVisitReportStatus: null,
 };
 
+function LoginStateProbe() {
+  const location = useLocation();
+
+  return <div>{JSON.stringify(location.state)}</div>;
+}
+
 describe('MyApplications page', () => {
   beforeEach(() => {
     localStorage.clear();
@@ -88,11 +95,48 @@ describe('MyApplications page', () => {
   });
 
   it('redirects to /login when no token is present', async () => {
-    renderWithRouter(<MyApplications />, '/me/applications', '/me/applications');
+    render(
+      <MemoryRouter initialEntries={['/me/applications']}>
+        <Routes>
+          <Route path="/me/applications" element={<MyApplications />} />
+          <Route path="/login" element={<LoginStateProbe />} />
+        </Routes>
+      </MemoryRouter>
+    );
 
     await waitFor(() => {
-      expect(screen.queryByText(/Loading your applications/i)).not.toBeInTheDocument();
+      expect(screen.getByText('{"returnTo":"/me/applications"}')).toBeInTheDocument();
     });
+  });
+
+  it('renders the shared applicant account menu and logs out to the portal', async () => {
+    const user = userEvent.setup();
+    localStorage.setItem('token', 'test-token');
+
+    function PortalProbe() {
+      return <div>Portal destination</div>;
+    }
+
+    render(
+      <MemoryRouter initialEntries={['/me/applications']}>
+        <Routes>
+          <Route path="/me/applications" element={<MyApplications />} />
+          <Route path="/portal" element={<PortalProbe />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await user.click(await screen.findByRole('button', { name: 'Account' }));
+    expect(screen.getByRole('link', { name: 'My Applications' })).toHaveAttribute(
+      'href',
+      '/me/applications'
+    );
+    expect(screen.getByRole('link', { name: 'My Profile' })).toHaveAttribute('href', '/me/profile');
+
+    await user.click(screen.getByRole('button', { name: 'Log out' }));
+
+    expect(localStorage.getItem('token')).toBeNull();
+    expect(screen.getByText('Portal destination')).toBeInTheDocument();
   });
 
   it('shows empty hints in both sections when the user has no applications', async () => {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useLocation, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { getMe } from '../api/auth';
 import { WorkspaceShell } from '../components/layout/WorkspaceShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
@@ -20,7 +20,9 @@ import {
   buildSyntheticSchoolParticipation,
   getLinkedOpportunityCopy,
 } from '../features/grant/linkedOpportunity';
+import { toReturnToState } from '../features/navigation/authReturn';
 import { readReturnContext, toReturnContextState } from '../features/navigation/returnContext';
+import { buildWorkspaceAccountMenu } from '../features/navigation/workspaceAccountMenu';
 import { grantProvider } from '../features/grant/grantProvider';
 import type {
   GrantApplication,
@@ -43,7 +45,15 @@ type GrantPrerequisite = {
 export default function GrantApply() {
   const { slug = '' } = useParams();
   const location = useLocation();
+  const navigate = useNavigate();
   const returnContext = readReturnContext(location.state);
+  const isSignedIn = Boolean(localStorage.getItem('token'));
+  const accountMenu = isSignedIn
+    ? buildWorkspaceAccountMenu(() => {
+        localStorage.removeItem('token');
+        navigate('/portal');
+      })
+    : undefined;
   const [grant, setGrant] = useState<GrantDetail | null | undefined>(undefined);
   const [loadState, setLoadState] = useState<'loading' | 'ready' | 'not_found' | 'error'>(
     'loading'
@@ -131,8 +141,6 @@ export default function GrantApply() {
     };
   }, [slug]);
 
-  const isSignedIn = Boolean(localStorage.getItem('token'));
-
   if (loadState !== 'ready' || !grant) {
     return (
       <WorkspaceShell
@@ -148,10 +156,11 @@ export default function GrantApply() {
                 ? 'Unavailable'
                 : loadState === 'error'
                   ? 'Load failed'
-                  : 'Grant applicant slice'}
+                : 'Grant applicant slice'}
             </StatusBadge>
           </>
         }
+        accountMenu={accountMenu}
       >
         <div className="conference-page">
           {loadState === 'loading' ? (
@@ -206,6 +215,7 @@ export default function GrantApply() {
             <StatusBadge tone="info">Grant applicant slice</StatusBadge>
           </>
         }
+        accountMenu={accountMenu}
       >
         <div className="conference-page">
           <DemoStatePanel
@@ -214,7 +224,11 @@ export default function GrantApply() {
             description="You need an authenticated session before creating a draft."
             tone="info"
             actions={
-              <Link className="conference-primary-link" to="/login">
+              <Link
+                className="conference-primary-link"
+                to="/login"
+                state={toReturnToState(location.pathname)}
+              >
                 Go to login
               </Link>
             }
@@ -349,6 +363,7 @@ export default function GrantApply() {
           <StatusBadge tone={shellStatusTone}>Grant applicant slice</StatusBadge>
         </>
       }
+      accountMenu={accountMenu}
       aside={
         <div className="conference-page">
           <GrantApplicationSummaryCard

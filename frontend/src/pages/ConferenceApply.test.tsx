@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { render } from '@testing-library/react';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { renderWithRouter } from '../test/renderWithRouter';
 import {
   fakeConferenceProvider,
@@ -12,6 +12,12 @@ import Conferences from './Conferences';
 import ConferenceDetail from './ConferenceDetail';
 import ConferenceApply from './ConferenceApply';
 
+function LoginStateProbe() {
+  const location = useLocation();
+
+  return <div>{JSON.stringify(location.state)}</div>;
+}
+
 describe('conference apply page', () => {
   beforeEach(() => {
     localStorage.clear();
@@ -19,13 +25,24 @@ describe('conference apply page', () => {
   });
 
   it('shows an authentication prompt when no token is present', async () => {
-    renderWithRouter(
-      <ConferenceApply />,
-      '/conferences/asiamath-2026-workshop/apply',
-      '/conferences/:slug/apply'
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter initialEntries={['/conferences/asiamath-2026-workshop/apply']}>
+        <Routes>
+          <Route path="/conferences/:slug/apply" element={<ConferenceApply />} />
+          <Route path="/login" element={<LoginStateProbe />} />
+        </Routes>
+      </MemoryRouter>
     );
 
     expect(await screen.findByText(/sign in to start a conference application/i)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('link', { name: /go to login/i }));
+
+    expect(
+      screen.getByText('{"returnTo":"/conferences/asiamath-2026-workshop/apply"}')
+    ).toBeInTheDocument();
   });
 
   it('creates a draft and submits it for an authenticated applicant', async () => {
@@ -50,6 +67,19 @@ describe('conference apply page', () => {
 
     await user.click(screen.getByRole('button', { name: /submit application/i }));
     expect(await screen.findByText(/application submitted/i)).toBeInTheDocument();
+  });
+
+  it('renders the shared applicant account menu for signed-in applicants', async () => {
+    localStorage.setItem('token', 'applicant-1');
+
+    renderWithRouter(
+      <ConferenceApply />,
+      '/conferences/asiamath-2026-workshop/apply',
+      '/conferences/:slug/apply'
+    );
+
+    await screen.findByRole('heading', { name: /conference application/i });
+    expect(screen.getByRole('button', { name: 'Account' })).toBeInTheDocument();
   });
 
   it('hydrates an existing draft when the page reloads', async () => {

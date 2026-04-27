@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { LogOut, User } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { User } from 'lucide-react';
 import { WorkspaceShell } from '../components/layout/WorkspaceShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
@@ -16,6 +16,8 @@ import {
   demoWalkthroughCopy,
   MY_APPLICATIONS_RETURN_CONTEXT,
 } from '../features/demo/demoWalkthrough';
+import { toReturnToState } from '../features/navigation/authReturn';
+import { buildWorkspaceAccountMenu } from '../features/navigation/workspaceAccountMenu';
 import './Dashboard.css';
 
 type DashboardRole = 'visitor' | 'applicant' | 'reviewer' | 'organizer' | 'admin';
@@ -53,16 +55,21 @@ const toRole = (role?: string | null): DashboardRole =>
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [userData, setUserData] = useState<DashboardData | null>(null);
   const [applications, setApplications] = useState<MyApplication[]>([]);
   const [applicationsError, setApplicationsError] = useState(false);
   const [loading, setLoading] = useState(true);
+  const accountMenu = buildWorkspaceAccountMenu(() => {
+    localStorage.removeItem('token');
+    navigate('/portal');
+  });
 
   useEffect(() => {
     const fetchMe = async () => {
       const token = localStorage.getItem('token');
       if (!token) {
-        navigate('/login');
+        navigate('/login', { state: toReturnToState(location.pathname) });
         return;
       }
       try {
@@ -86,18 +93,13 @@ export default function Dashboard() {
         }
       } catch {
         localStorage.removeItem('token');
-        navigate('/login');
+        navigate('/login', { state: toReturnToState(location.pathname) });
       } finally {
         setLoading(false);
       }
     };
     fetchMe();
-  }, [navigate]);
-
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    navigate('/login');
-  };
+  }, [location.pathname, navigate]);
 
   const latestApplication = applications[0] ?? null;
   const applicationCountLabel =
@@ -118,6 +120,7 @@ export default function Dashboard() {
             <StatusBadge tone="info">Loading</StatusBadge>
           </>
         }
+        accountMenu={accountMenu}
       >
         <div className="dashboard-page">
           <DemoStatePanel
@@ -144,12 +147,7 @@ export default function Dashboard() {
           <StatusBadge tone="success">{userData?.user?.status || 'active'}</StatusBadge>
         </>
       }
-      actions={
-        <button className="logout-btn" onClick={handleLogout}>
-          <LogOut size={18} />
-          <span>Logout</span>
-        </button>
-      }
+      accountMenu={accountMenu}
     >
       <div className="dashboard-page">
         <div className="welcome-card">

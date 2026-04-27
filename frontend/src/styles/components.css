@@ -84,15 +84,13 @@
   gap: 0.75rem;
 }
 
-.conference-form-actions button + button,
-.logout-btn {
+.conference-form-actions button + button {
   border-color: var(--border-strong);
   background: rgba(255, 255, 255, 0.62);
   color: var(--color-navy-800);
 }
 
-.conference-form-actions button + button:hover,
-.logout-btn:hover {
+.conference-form-actions button + button:hover {
   background: rgba(42, 70, 111, 0.08);
 }
 
@@ -252,8 +250,7 @@
   }
 
   .conference-form-actions button,
-  .conference-primary-link,
-  .logout-btn {
+  .conference-primary-link {
     width: 100%;
     justify-content: center;
   }

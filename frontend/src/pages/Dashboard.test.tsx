@@ -1,5 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { render } from '@testing-library/react';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import * as authApi from '../api/auth';
 import { renderWithRouter } from '../test/renderWithRouter';
 import { resetDashboardFakeState, seedDashboardDemoState } from '../features/dashboard/fakeDashboardProvider';
@@ -67,6 +70,36 @@ describe('Dashboard page', () => {
       'href',
       '/me/applications'
     );
+  });
+
+  it('renders the shared applicant account menu and logs out to the portal', async () => {
+    const user = userEvent.setup();
+    localStorage.setItem('token', 'dashboard-token');
+
+    function PortalProbe() {
+      return <div>Portal destination</div>;
+    }
+
+    render(
+      <MemoryRouter initialEntries={['/dashboard']}>
+        <Routes>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/portal" element={<PortalProbe />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await user.click(await screen.findByRole('button', { name: 'Account' }));
+    expect(screen.getByRole('link', { name: 'My Applications' })).toHaveAttribute(
+      'href',
+      '/me/applications'
+    );
+    expect(screen.getByRole('link', { name: 'My Profile' })).toHaveAttribute('href', '/me/profile');
+
+    await user.click(screen.getByRole('button', { name: 'Log out' }));
+
+    expect(localStorage.getItem('token')).toBeNull();
+    expect(screen.getByText('Portal destination')).toBeInTheDocument();
   });
 
   it('shows presenter-safe continuation shortcuts for the demo flow', async () => {

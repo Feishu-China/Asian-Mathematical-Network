@@ -11,7 +11,9 @@ import {
   demoWalkthroughCopy,
   PORTAL_RETURN_CONTEXT,
 } from '../features/demo/demoWalkthrough';
+import { toReturnToState } from '../features/navigation/authReturn';
 import { readReturnContext } from '../features/navigation/returnContext';
+import { buildWorkspaceAccountMenu } from '../features/navigation/workspaceAccountMenu';
 import { reviewProvider } from '../features/review/reviewProvider';
 import type {
   ApplicantApplicationDetail,
@@ -66,6 +68,10 @@ export default function MyApplicationDetail() {
     'loading'
   );
   const returnContext = readReturnContext(location.state);
+  const accountMenu = buildWorkspaceAccountMenu(() => {
+    localStorage.removeItem('token');
+    navigate('/portal');
+  });
   const backLink = returnContext ?? {
     to: '/me/applications',
     label: 'Back to my applications',
@@ -75,7 +81,7 @@ export default function MyApplicationDetail() {
     let active = true;
 
     if (!localStorage.getItem('token')) {
-      navigate('/login');
+      navigate('/login', { state: toReturnToState(location.pathname) });
       return;
     }
 
@@ -100,7 +106,7 @@ export default function MyApplicationDetail() {
     return () => {
       active = false;
     };
-  }, [id, navigate]);
+  }, [id, location.pathname, navigate]);
 
   return (
     <WorkspaceShell
@@ -136,6 +142,7 @@ export default function MyApplicationDetail() {
           {backLink.label}
         </Link>
       }
+      accountMenu={accountMenu}
       aside={
         application ? (
           <div className="application-detail__aside-stack">

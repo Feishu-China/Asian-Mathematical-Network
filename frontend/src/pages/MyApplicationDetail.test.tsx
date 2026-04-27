@@ -1,9 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { resetReviewFakeState } from '../features/review/fakeReviewProvider';
 import { reviewProvider } from '../features/review/reviewProvider';
 import MyApplicationDetail from './MyApplicationDetail';
+
+function LoginStateProbe() {
+  const location = useLocation();
+
+  return <div>{JSON.stringify(location.state)}</div>;
+}
 
 describe('MyApplicationDetail page', () => {
   beforeEach(() => {
@@ -89,5 +95,18 @@ describe('MyApplicationDetail page', () => {
       'href',
       '/me/applications'
     );
+  });
+
+  it('redirects to /login with a returnTo state when no applicant session is present', async () => {
+    render(
+      <MemoryRouter initialEntries={['/me/applications/review-application-1']}>
+        <Routes>
+          <Route path="/me/applications/:id" element={<MyApplicationDetail />} />
+          <Route path="/login" element={<LoginStateProbe />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByText('{"returnTo":"/me/applications/review-application-1"}')).toBeInTheDocument();
   });
 });
