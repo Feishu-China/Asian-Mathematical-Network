@@ -143,4 +143,13 @@ describe('PublicPortalNav', () => {
     expect(css).toMatch(/\.portal-nav__link--button:hover\s*\{[^}]*box-shadow:\s*none;/s);
     expect(css).toMatch(/\.portal-nav__link--button:hover\s*\{[^}]*transform:\s*none;/s);
   });
+
+  it('defines a dedicated hover override for the account trigger so it does not inherit the global button hover fill', () => {
+    const css = readFileSync(resolve(process.cwd(), 'src/components/layout/PublicPortalNav.css'), 'utf8');
+
+    expect(css).toMatch(/\.portal-nav__account-trigger:hover\s*\{/);
+    expect(css).toMatch(/\.portal-nav__account-trigger:hover\s*\{[^}]*background:\s*rgba\(255,\s*255,\s*255,\s*0\.92\);/s);
+    expect(css).toMatch(/\.portal-nav__account-trigger:hover\s*\{[^}]*box-shadow:\s*none;/s);
+    expect(css).toMatch(/\.portal-nav__account-trigger:hover\s*\{[^}]*transform:\s*none;/s);
+  });
 });

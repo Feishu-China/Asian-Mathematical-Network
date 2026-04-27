@@ -260,6 +260,19 @@
   cursor: pointer;
 }
 
+.portal-nav__toggle:hover,
+.portal-nav__account-trigger:hover {
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--color-navy-950);
+  -webkit-text-fill-color: var(--color-navy-950);
+  box-shadow: none;
+  transform: none;
+}
+
+.portal-nav__account-trigger[aria-expanded='true'] {
+  background: rgba(255, 255, 255, 0.92);
+}
+
 .portal-nav__account-menu {
   position: absolute;
   top: calc(100% + 0.75rem);
