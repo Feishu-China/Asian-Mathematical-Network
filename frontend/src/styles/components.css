@@ -94,7 +94,10 @@
   background: rgba(42, 70, 111, 0.08);
 }
 
-.conference-primary-link {
+.conference-primary-link,
+.school-primary-link,
+.prize-primary-link,
+.public-browse-primary-link {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -112,7 +115,10 @@
     transform 180ms ease;
 }
 
-.conference-primary-link:hover {
+.conference-primary-link:hover,
+.school-primary-link:hover,
+.prize-primary-link:hover,
+.public-browse-primary-link:hover {
   color: #fff;
   background: var(--color-navy-900);
   box-shadow: var(--shadow-sm);
@@ -250,7 +256,10 @@
   }
 
   .conference-form-actions button,
-  .conference-primary-link {
+  .conference-primary-link,
+  .school-primary-link,
+  .prize-primary-link,
+  .public-browse-primary-link {
     width: 100%;
     justify-content: center;
   }

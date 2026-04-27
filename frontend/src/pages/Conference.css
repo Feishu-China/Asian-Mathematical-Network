@@ -1,24 +1,24 @@
-.conference-page {
+.conference-page:not(.public-browse-page) {
   display: grid;
   gap: var(--space-6);
   text-align: left;
 }
 
-.conference-grid {
+.conference-grid:not(.public-browse-grid) {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: var(--space-5);
 }
 
-.conference-card,
-.conference-detail-card {
+.conference-card:not(.public-browse-card),
+.conference-detail-card:not(.public-browse-card) {
   display: grid;
   gap: var(--space-4);
   padding: 1.5rem;
 }
 
-.conference-card-meta,
-.conference-card-actions {
+.conference-card-meta:not(.public-browse-meta),
+.conference-card-actions:not(.public-browse-actions) {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
@@ -26,13 +26,13 @@
   align-items: flex-start;
 }
 
-.conference-card-meta {
+.conference-card-meta:not(.public-browse-meta) {
   color: var(--color-text-muted);
   font-size: 0.95rem;
 }
 
-.conference-card-subtitle,
-.conference-muted-note {
+.conference-card-subtitle:not(.public-browse-copy),
+.conference-muted-note:not(.public-browse-copy) {
   color: var(--color-text-muted);
 }
 

@@ -71,9 +71,9 @@ export default function PrizeDetail() {
       }
       aside={
         prize ? (
-          <div className="prize-detail-card prize-teaser-card">
+          <div className="prize-detail-card prize-teaser-card public-browse-card public-browse-aside-card">
             <h2>Selection process preview</h2>
-            <p>{prize.selectionPreview}</p>
+            <p className="public-browse-copy">{prize.selectionPreview}</p>
             <Link
               className="prize-primary-link"
               to="/admin/governance"
@@ -104,7 +104,7 @@ export default function PrizeDetail() {
         ) : null
       }
     >
-      <div className="prize-page prize-detail-page">
+      <div className="prize-page prize-detail-page public-browse-page">
         {prize === undefined ? (
           <DemoStatePanel
             badgeLabel="Loading"
@@ -128,17 +128,17 @@ export default function PrizeDetail() {
           />
         ) : (
           <>
-            <section className="prize-detail-card">
+            <section className="prize-detail-card public-browse-card">
               <h2>Recognition positioning</h2>
-              <p>{prize.positioning}</p>
+              <p className="public-browse-copy">{prize.positioning}</p>
             </section>
 
-            <section className="prize-detail-card">
+            <section className="prize-detail-card public-browse-card">
               <h2>Audience and evaluation context</h2>
-              <p>{prize.audience}</p>
+              <p className="public-browse-copy">{prize.audience}</p>
             </section>
 
-            <section className="prize-detail-card">
+            <section className="prize-detail-card public-browse-card">
               <h2>Governance signals</h2>
               <ul className="prize-signal-list">
                 {prize.governanceSignals.map((item) => (

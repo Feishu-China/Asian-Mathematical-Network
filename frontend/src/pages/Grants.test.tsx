@@ -39,6 +39,23 @@ describe('grant public pages', () => {
     );
   });
 
+  it('keeps the shared public browse header, grant metadata, and detail CTA visible on the list page', async () => {
+    renderWithRouter(<Grants />, '/grants', '/grants');
+
+    expect(screen.getByRole('navigation', { name: /public sections/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Travel grants' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: 'Asiamath 2026 Travel Grant' })
+    ).toBeInTheDocument();
+    expect(screen.getByText('Conference travel grant')).toBeInTheDocument();
+    expect(screen.getByText('Post-visit reporting required')).toBeInTheDocument();
+    expect(screen.getAllByRole('link', { name: /view details/i })).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ href: expect.stringContaining('/grants/asiamath-2026-travel-grant') }),
+      ])
+    );
+  });
+
   it('shows a return link to my applications on the grant list when an applicant token is present', async () => {
     localStorage.setItem('token', 'applicant-1');
 

@@ -80,8 +80,8 @@ export default function ConferenceDetail() {
       aside={
         conference ? (
           <>
-            <div className="conference-detail-card conference-cta-card">
-              <p>
+            <div className="conference-detail-card conference-cta-card public-browse-card public-browse-aside-card">
+              <p className="public-browse-copy">
                 Conference applications remain separate from travel-grant applications in the MVP.
               </p>
               {conference.isApplicationOpen ? (
@@ -93,14 +93,14 @@ export default function ConferenceDetail() {
                   Apply for conference
                 </Link>
               ) : (
-                <div className="conference-muted-note">
+                <div className="conference-muted-note public-browse-copy">
                   This conference is no longer accepting applications.
                 </div>
               )}
             </div>
-            <div className="conference-detail-card conference-scholar-card">
+            <div className="conference-detail-card conference-scholar-card public-browse-card public-browse-aside-card">
               <h2>Related scholar context</h2>
-              <p>
+              <p className="public-browse-copy">
                 Show how one public scholar profile can support speaker, organiser, and review
                 context across the wider platform demo.
               </p>
@@ -122,7 +122,7 @@ export default function ConferenceDetail() {
         ) : null
       }
     >
-      <div className="conference-page conference-detail-page">
+      <div className="conference-page conference-detail-page public-browse-page">
         {conference === undefined ? (
           <DemoStatePanel
             badgeLabel="Loading"
@@ -145,7 +145,7 @@ export default function ConferenceDetail() {
             tone="neutral"
           />
         ) : (
-          <section className="conference-detail-card">
+          <section className="conference-detail-card public-browse-card">
             <h2>Event snapshot</h2>
             <dl>
               <div>

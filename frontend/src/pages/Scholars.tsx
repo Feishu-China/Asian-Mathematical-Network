@@ -82,7 +82,7 @@ export default function Scholars() {
         ) : null
       }
     >
-      <div className="scholar-directory-page">
+      <div className="scholar-directory-page public-browse-page">
         {scholars === null ? (
           <DemoStatePanel
             badgeLabel={hasError ? 'Error' : 'Loading'}
@@ -112,7 +112,7 @@ export default function Scholars() {
                 <p className="page-shell__eyebrow">Featured scholars</p>
                 <h2 id="scholar-list-heading">Public scholar profiles</h2>
               </div>
-              <div className="scholar-directory-page__grid">
+              <div className="scholar-directory-page__grid public-browse-grid">
                 {scholars.map((scholar) => (
                   <ScholarSummaryCard
                     key={scholar.slug}

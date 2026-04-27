@@ -14,7 +14,7 @@ export function ScholarSummaryCard({ scholar, detailState }: Props) {
     .join(' · ');
 
   return (
-    <article className="surface-card scholar-summary-card">
+    <article className="surface-card scholar-summary-card public-browse-card">
       <p className="scholar-summary-card__eyebrow">Public scholar profile</p>
       <Link
         className="scholar-summary-card__title"
@@ -23,8 +23,12 @@ export function ScholarSummaryCard({ scholar, detailState }: Props) {
       >
         {scholar.fullName}
       </Link>
-      <p className="scholar-summary-card__meta">{metaLine || 'Scholar profile available'}</p>
-      <p className="scholar-summary-card__summary">{scholar.bio ?? 'Research profile available.'}</p>
+      <p className="scholar-summary-card__meta public-browse-copy">
+        {metaLine || 'Scholar profile available'}
+      </p>
+      <p className="scholar-summary-card__summary public-browse-copy">
+        {scholar.bio ?? 'Research profile available.'}
+      </p>
       <ul className="scholar-summary-card__keywords">
         {scholar.researchKeywords.slice(0, 3).map((keyword) => (
           <li key={keyword}>{keyword}</li>

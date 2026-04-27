@@ -75,7 +75,7 @@ export default function Conferences() {
         ) : null
       }
     >
-      <div className="conference-page">
+      <div className="conference-page public-browse-page">
         {items === null ? (
           <DemoStatePanel
             badgeLabel={hasError ? 'Error' : 'Loading'}
@@ -95,7 +95,7 @@ export default function Conferences() {
             tone="neutral"
           />
         ) : (
-          <div className="conference-grid">
+          <div className="conference-grid public-browse-grid">
             {items.map((conference) => (
               <ConferenceListCard key={conference.id} conference={conference} detailState={detailState} />
             ))}

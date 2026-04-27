@@ -81,6 +81,30 @@
   align-items: center;
 }
 
+.page-shell--portal .page-shell__header {
+  gap: var(--space-3);
+  margin-bottom: clamp(1.85rem, 3vw, 2.75rem);
+}
+
+.page-shell--portal .page-shell__badges {
+  gap: 0.6rem 0.75rem;
+}
+
+.page-shell--portal .page-shell__title-group {
+  gap: 0.72rem;
+  max-width: min(62ch, 100%);
+}
+
+.page-shell--portal .page-shell__description {
+  max-width: 60ch;
+  font-size: 1.03rem;
+  line-height: 1.68;
+}
+
+.page-shell--portal .page-shell__actions {
+  align-self: start;
+}
+
 .workspace-account-menu {
   position: relative;
 }
@@ -169,6 +193,10 @@
 
 .page-shell__content--with-aside {
   grid-template-columns: minmax(0, 1.8fr) minmax(260px, 0.95fr);
+}
+
+.page-shell--portal .page-shell__content--with-aside {
+  grid-template-columns: minmax(0, 1.72fr) minmax(280px, 0.95fr);
 }
 
 .page-shell__main,

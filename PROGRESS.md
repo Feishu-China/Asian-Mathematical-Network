@@ -10,6 +10,29 @@
 
 ## 📅 Handoff 历史记录
 
+### 2026-04-27 (Session 36)
+*   **Agent 角色**: Coding Agent (Public page visual unification Phase 1)
+*   **完成 Feature**: `PORTAL` public browse visual unification, Phase 1 only
+*   **变更记录**:
+    *   新增 `frontend/src/styles/public-browse.css`，抽出 Phase 1 public browse 共享语法层，统一 visitor-facing 主链路页面的 body style language：page body rhythm、list/detail card padding、meta row、CTA row、aside card 以及 public action link treatment。
+    *   `frontend/src/index.css` 接入新的 shared layer；`frontend/src/styles/layout.css` 收紧 `PortalShell` 的 public header rhythm；`frontend/src/styles/components.css` 把 `school` / `prize` primary link 拉到与 `conference-primary-link` 同一 CTA grammar。
+    *   `frontend/src/pages/Conferences.tsx`、`ConferenceDetail.tsx`、`Grants.tsx`、`GrantDetail.tsx`、`Schools.tsx`、`SchoolDetail.tsx`、`Prizes.tsx`、`PrizeDetail.tsx`、`Scholars.tsx`、`ScholarProfile.tsx` 以及对应 list/detail 展示组件补上 shared public-browse class hooks，让 Phase 1 主链路公共页都走同一套 shared public-browse primitives，而不迁移到 `WorkspaceShell`。
+    *   `frontend/src/pages/Conference.css` 仅对 public-browse-in-scope 元素让位给 shared layer，保留非本次范围的 conference/grant apply、editor、review 等页面继续走原规则；`School.css`、`Prize.css`、`Scholars.css`、`Profile.css` 删除或收窄只属于 public browse 的重复规则，保留 route-specific 内容结构。
+    *   `frontend/src/pages/Conferences.test.tsx`、`Grants.test.tsx`、`Prizes.test.tsx` 先补 contract tests，再实现样式统一，锁定 public masthead、标题、元信息、CTA 以及 prize hub/detail teaser 链路。
+*   **验证记录**:
+    *   preflight baseline 通过：`cd frontend && npm run test:run -- src/pages/Conferences.test.tsx src/pages/Grants.test.tsx src/pages/Schools.test.tsx src/pages/Scholars.test.tsx src/pages/Prizes.test.tsx src/pages/Newsletters.test.tsx src/pages/Publications.test.tsx src/pages/Videos.test.tsx src/pages/Partners.test.tsx src/pages/Governance.test.tsx src/pages/Outreach.test.tsx`，`11` 个 test files、`40` 个 tests 全部通过。
+    *   preflight build 通过：`cd frontend && npm run build`。
+    *   新增 contract tests 后执行通过：`cd frontend && npm run test:run -- src/pages/Conferences.test.tsx src/pages/Grants.test.tsx src/pages/Prizes.test.tsx`，`3` 个 test files、`19` 个 tests 全部通过。
+    *   Phase 1 regression 通过：`cd frontend && npm run test:run -- src/pages/Conferences.test.tsx src/pages/Grants.test.tsx src/pages/Schools.test.tsx src/pages/Scholars.test.tsx src/pages/Prizes.test.tsx src/pages/ConferenceDetail.test.tsx src/pages/ScholarProfile.test.tsx`，`7` 个 test files、`29` 个 tests 全部通过。
+    *   最终 build 通过：`cd frontend && npm run build`（`tsc -b && vite build`）。
+    *   browser acceptance 通过：本地 Vite dev server 在 `http://127.0.0.1:4176` 下成功加载 `/conferences`、`/grants`、`/schools`、`/scholars`、`/prizes`，并抽查了 detail surfaces：`/conferences/asiamath-2026-shanghai`、`/grants/integration-grant-2026-travel-support`、`/schools/algebraic-geometry-research-school-2026`、`/prizes/asiamath-early-career-prize-2026`；shared masthead、title rhythm、card/aside hierarchy 均可见，控制台无 runtime errors。`/scholars/prof-reviewer` 在当前 dev data 下呈现 unavailable state，但 header / empty-state surface 正常，且无 console errors。
+*   **边界与说明**:
+    *   本轮严格只做 Phase 1：`/conferences`、`/conferences/:slug`、`/grants`、`/grants/:slug`、`/schools`、`/schools/:slug`、`/scholars`、`/scholars/:slug`、`/prizes`、`/prizes/:slug`。
+    *   没有进入 Phase 2；`newsletter / publications / videos / partners / governance / outreach` 的 public breadth surfaces 未在本轮修改。
+    *   没有改 `WorkspaceShell`、apply flows、`/me/*`、reviewer / organizer / admin workflow、login / register，也没有触碰 account-menu 那批无关工作。
+    *   homepage dark hero 仍只属于 `/portal`；本轮统一的是 secondary public pages 的 body language，而不是把二级 public pages 改成第二个 homepage hero。
+*   **下一步**: 如需继续 public browse 统一，下一轮可按既有 spec/plan 做 Phase 2，把 newsletter / publications / videos / partners / outreach / governance 拉到同一 shared public-browse grammar。
+
 ### 2026-04-27 (Session 35)
 *   **Agent 角色**: Coding Agent (Account menu / auth return baseline repair)
 *   **完成 Feature**: `PORTAL` account-menu + auth-return-flow baseline repair

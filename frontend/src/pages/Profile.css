@@ -4,7 +4,8 @@
 }
 
 .profile-context-grid,
-.profile-empty-card {
+.profile-empty-card,
+.scholar-card {
   width: 100%;
   max-width: var(--layout-narrow);
 }
@@ -16,7 +17,7 @@
 }
 
 .profile-context-card,
-.profile-empty-card {
+.profile-empty-card:not(.public-browse-card) {
   display: grid;
   gap: 0.9rem;
   padding: 1.25rem;
@@ -27,7 +28,7 @@
 }
 
 .profile-card,
-.scholar-card {
+.scholar-card:not(.public-browse-card) {
   width: 100%;
   max-width: var(--layout-narrow);
   padding: 1.75rem;
@@ -178,9 +179,9 @@
 
 @media (max-width: 768px) {
   .profile-card,
-  .scholar-card,
+  .scholar-card:not(.public-browse-card),
   .profile-context-card,
-  .profile-empty-card {
+  .profile-empty-card:not(.public-browse-card) {
     padding: 1.2rem;
   }
 

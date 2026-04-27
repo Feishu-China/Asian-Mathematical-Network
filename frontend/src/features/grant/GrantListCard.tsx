@@ -11,16 +11,16 @@ type Props = {
 
 export function GrantListCard({ grant, detailState }: Props) {
   return (
-    <article className="conference-card">
-      <div className="conference-card-meta">
+    <article className="conference-card public-browse-card">
+      <div className="conference-card-meta public-browse-meta">
         <span>{getLinkedOpportunityCopy(grant.linkedOpportunityType).grantTypeLabel}</span>
         <span>{grant.applicationDeadline || 'Deadline pending'}</span>
       </div>
       <h2>{grant.title}</h2>
-      <p className="conference-card-subtitle">
+      <p className="conference-card-subtitle public-browse-copy">
         {grant.reportRequired ? 'Post-visit reporting required' : 'No post-visit report required'}
       </p>
-      <div className="conference-card-actions">
+      <div className="conference-card-actions public-browse-actions">
         <StatusBadge tone={grant.isApplicationOpen ? 'success' : 'neutral'}>
           {grant.isApplicationOpen ? 'Applications open' : 'Applications closed'}
         </StatusBadge>

@@ -78,7 +78,7 @@ export default function Schools() {
         ) : null
       }
     >
-      <div className="school-page">
+      <div className="school-page public-browse-page">
         {items === null ? (
           <DemoStatePanel
             badgeLabel={hasError ? 'Error' : 'Loading'}
@@ -98,17 +98,17 @@ export default function Schools() {
             tone="neutral"
           />
         ) : (
-          <div className="school-grid">
+          <div className="school-grid public-browse-grid">
             {items.map((school) => (
-              <article key={school.id} className="school-card">
-                <div className="school-card__meta">
+              <article key={school.id} className="school-card public-browse-card">
+                <div className="school-card__meta public-browse-meta">
                   <span>{school.locationText || 'Location pending'}</span>
                   <span>{school.startDate || 'Date pending'}</span>
                 </div>
                 <h2>{school.title}</h2>
-                <p className="school-card__subtitle">{school.shortLabel}</p>
-                <p className="school-card__summary">{school.summary}</p>
-                <div className="school-card__actions">
+                <p className="school-card__subtitle public-browse-copy">{school.shortLabel}</p>
+                <p className="school-card__summary public-browse-copy">{school.summary}</p>
+                <div className="school-card__actions public-browse-actions">
                   <StatusBadge tone={school.travelSupportAvailable ? 'success' : 'neutral'}>
                     {school.travelSupportAvailable
                       ? 'Travel support available'

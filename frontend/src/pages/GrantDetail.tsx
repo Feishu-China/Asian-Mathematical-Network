@@ -85,10 +85,10 @@ export default function GrantDetail() {
       }
       aside={
         grantDetail && linkedOpportunityCopy ? (
-          <div className="conference-detail-card conference-cta-card stack-sm">
+          <div className="conference-detail-card conference-cta-card public-browse-card public-browse-aside-card stack-sm">
             <h2>Applicant handoff</h2>
-            <p>{linkedOpportunityCopy.handoffSummary}</p>
-            <p className="conference-muted-note">
+            <p className="public-browse-copy">{linkedOpportunityCopy.handoffSummary}</p>
+            <p className="conference-muted-note public-browse-copy">
               {linkedOpportunityCopy.handoffHint}
             </p>
             {grantDetail.isApplicationOpen ? (
@@ -100,13 +100,15 @@ export default function GrantDetail() {
                 Start grant application
               </Link>
             ) : (
-              <div className="conference-muted-note">This grant is no longer accepting applications.</div>
+              <div className="conference-muted-note public-browse-copy">
+                This grant is no longer accepting applications.
+              </div>
             )}
           </div>
         ) : null
       }
     >
-      <div className="conference-page conference-detail-page">
+      <div className="conference-page conference-detail-page public-browse-page">
         {hasError ? (
           <DemoStatePanel
             badgeLabel="Error"
@@ -129,7 +131,7 @@ export default function GrantDetail() {
             tone="neutral"
           />
         ) : (
-          <section className="conference-detail-card">
+          <section className="conference-detail-card public-browse-card">
             <h2>Support snapshot</h2>
             <dl>
               <div>

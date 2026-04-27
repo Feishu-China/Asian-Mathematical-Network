@@ -71,9 +71,9 @@ export default function ScholarProfile() {
           ) : null
         }
       >
-        <div className="profile-page">
+        <div className="profile-page public-browse-page">
           <DemoStatePanel
-            className="profile-empty-card"
+            className="profile-empty-card public-browse-card"
             badgeLabel={loadError ? 'Error' : 'Unavailable'}
             title={loadError ? 'Profile failed to load' : 'Profile unavailable'}
             description={
@@ -112,7 +112,7 @@ export default function ScholarProfile() {
         ) : null
       }
     >
-      <div className="profile-page">
+      <div className="profile-page public-browse-page">
         {profile === undefined ? (
           <DemoStatePanel
             badgeLabel="Loading"
