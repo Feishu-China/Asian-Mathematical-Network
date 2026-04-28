@@ -10,6 +10,23 @@
 
 ## 📅 Handoff 历史记录
 
+### 2026-04-27 (PostgreSQL deployment slice)
+*   **Agent 角色**: Coding Agent (Deployment and database migration)
+*   **完成 Slice**: `demo/d0` PostgreSQL baseline + Vercel/Railway split deployment preview
+*   **变更记录**:
+    *   Prisma datasource 改为 PostgreSQL，并重建 active migration 历史。
+    *   backend `start` / `dev` / `test` 改为环境变量驱动，不再依赖 SQLite 文件库。
+    *   seed / integration 脚本移除 SQLite fallback，改为显式要求 `DATABASE_URL`。
+    *   frontend API client 改为 `VITE_API_BASE_URL` 可配置，Vercel 增加 SPA rewrite 配置。
+*   **验证记录**:
+    *   backend Jest suite 通过 PostgreSQL test database 运行。
+    *   `npm run test:portal:int` 与 `npm run test:grant:int` 在 PostgreSQL development database 上通过。
+    *   Railway backend preview 可启动并执行 `prisma migrate deploy`。
+    *   Vercel frontend preview 可通过配置的 Railway API origin 访问真实后端。
+*   **边界与说明**:
+    *   本轮未迁移旧 SQLite 数据。
+    *   backend 生产运行时暂时保留 `ts-node`，后续再切换到 `tsc + node dist`。
+
 ### 2026-04-27 (Session 39)
 *   **Agent 角色**: Coding Agent (Applicant workspace bugfix)
 *   **完成 Feature**: `PORTAL` local applicant workspace schema-drift repair
