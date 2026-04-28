@@ -4,11 +4,41 @@
 
 ## 当前项目状态
 *   **最新版本**: V4.0-Optimized
-*   **总览**: `AUTH`、`PROFILE`、`CONF`、`GRANT` 与 `REVIEW` 五个 Epic 已完成；`PORTAL` Epic 的 applicant-safe dashboard contract 已完成，且本地 demo 分支已补齐 public breadth slice：重建后的 `/portal`、新的 `/scholars` 公共目录、conference / prize 对 `M4` scholar context 的可见复用、首页高保真视觉对齐、以及 public portal 返回链修复都已落地。`test:portal:int` 现已在本地 PostgreSQL + real backend/frontend 环境下通过，并覆盖 released applicant dashboard/detail + post-visit report 真链路；browser-level acceptance 也已在真实登录态下完成 `/portal`、`/me/applications`、grant detail 目检。当前 `PORTAL` 主闭环剩余重点为 scholar-directory real-data 接通，以及后续若需要再单独收口 dev proxy 指向 `3000` 的本地体验差异。
+*   **总览**: `AUTH`、`PROFILE`、`CONF`、`GRANT`、`REVIEW` 与 `PORTAL` 六个 Epic 现在都已完成到当前 feature-list 口径；`/portal`、`/me/applications`、grant post-visit report、以及 public scholar directory / portal scholar teaser 的 real-data 链路都已落地并完成本地验证。当前剩余事项已不再是 feature-list 缺口，主要是后续如有需要再单独收口本地 dev proxy 默认仍指向 `3000` 的开发体验差异。
 
 ---
 
 ## 📅 Handoff 历史记录
+
+### 2026-04-28 (Session 45)
+*   **Agent 角色**: Coding Agent (`INT-PROFILE-002` scholar directory real-data integration)
+*   **关联 Feature**: `INT-PROFILE-002`
+*   **问题现象**:
+    *   `/scholars` 与 `/portal` 的 scholar teaser 虽然界面已经存在，但 `frontend/src/features/profile/scholarDirectoryProvider.ts` 在 real mode 下仍直接返回 `directorySeed`，导致 public scholar directory 不是实际公开 profile 数据。
+    *   后端当前只有 `GET /api/v1/scholars/:slug` public detail route，没有 public scholar directory list endpoint，因此前端没有真实数据源可以切换。
+*   **变更记录**:
+    *   backend 新增 `GET /api/v1/scholars`，路由位于 `backend/src/routes/scholars.ts`，实现位于 `backend/src/controllers/profile.ts`，返回 `data.scholars` 与 `data.clusters`，只包含 `is_profile_public = true` 的公开 profile。
+    *   `backend/src/serializers/profile.ts` 新增 public scholar summary serializer；directory payload 会回传 `primary_msc_code`，供前端卡片与 cluster 逻辑复用。
+    *   backend scholar cluster 现按公开 profile 的 primary MSC / 关键词做最小归类，当前覆盖 `Algebraic Geometry`、`Number Theory`、`PDE`、`Topology` 四类，用于 `/scholars` 与 `/portal` teaser 的真实数据展示。
+    *   frontend `src/api/profile.ts` 新增 `fetchScholarDirectory()`；`src/features/profile/profileMappers.ts` 新增 scholar summary / cluster transport mapper；`src/features/profile/scholarDirectoryProvider.ts` 在 fake mode 下保持 seed 行为，在 real mode 下改为调用真实 `/scholars` API。
+    *   `docs/planning/asiamath-feature-list-v4.0-optimized.json` 已新增并完成 `INT-PROFILE-002`，当前 feature list 口径下所有 feature 均为 `completed`。
+*   **验证记录**:
+    *   按 TDD 先补失败测试：
+        *   `frontend/src/features/profile/scholarDirectoryProvider.test.ts` 在 real mode 下要求 provider 调用真实 API 而不是继续回 seed。
+        *   `backend/tests/profile.test.ts` 要求 `GET /api/v1/scholars` 返回公开 scholar 列表与 expertise clusters，并排除 hidden profile。
+    *   前端定向测试通过：`npm run test:run --workspace frontend -- src/features/profile/scholarDirectoryProvider.test.ts`
+    *   后端定向测试通过：先对 `postgresql://agent:agent@127.0.0.1:5432/asiamath_test?schema=public` 执行 `../node_modules/.bin/prisma migrate reset --force --skip-seed`，再执行 `DATABASE_URL="postgresql://agent:agent@127.0.0.1:5432/asiamath_test?schema=public" ../node_modules/.bin/jest --runInBand tests/profile.test.ts`
+    *   前端关联回归通过：`npm run test:run --workspace frontend -- src/features/profile/scholarDirectoryProvider.test.ts src/pages/Scholars.test.tsx src/features/portal/homepageViewModel.test.ts src/pages/Portal.test.tsx`
+    *   前端 build 通过：`npm run build --workspace frontend`
+    *   real runtime verification 通过：
+        *   isolated backend: `PORT=3002 DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:5433/asiamath_dev?schema=public" node -e 'const app=require("./dist/app").default; ...'`
+        *   isolated frontend: `VITE_API_BASE_URL="http://127.0.0.1:3002/api/v1" npm run dev --workspace frontend -- --host 127.0.0.1 --port 5176`
+        *   `curl http://127.0.0.1:3002/api/v1/scholars` 实际返回 `Aisha Rahman` / `Ravi Iyer` 及 `Number Theory` / `PDE` clusters，不再是前端 seed。
+        *   `agent-browser` 抽查 `http://127.0.0.1:5176/scholars`：可见 `Aisha Rahman`、`Ravi Iyer`、`Number Theory`、`PDE`，console 无错误。
+        *   `agent-browser` 抽查 `http://127.0.0.1:5176/portal`：`Scholars & expertise` teaser 同样展示 `Aisha Rahman`、`Ravi Iyer` 与真实 cluster，console 无错误。
+*   **边界与说明**:
+    *   本轮只解决 public scholar directory / portal scholar teaser 的 real-data 接通，没有改 public scholar detail contract 本身，也没有扩展 profile search / filtering / pagination。
+    *   当前 scholar cluster 是基于公开 profile 的 primary MSC / 关键词做最小静态归类，足够支撑当前 `/scholars` 与 `/portal` 展示，但还不是完整 taxonomy 系统。
 
 ### 2026-04-28 (Session 44)
 *   **Agent 角色**: Coding Agent (`PORTAL` browser-level acceptance close-out)

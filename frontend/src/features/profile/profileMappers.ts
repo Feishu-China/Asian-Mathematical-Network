@@ -1,4 +1,10 @@
-import type { EditableProfile, ProfileFormValues, PublicScholarProfile } from './types';
+import type {
+  EditableProfile,
+  ProfileFormValues,
+  PublicScholarProfile,
+  PublicScholarSummary,
+  ScholarExpertiseCluster,
+} from './types';
 
 type TransportMsc = {
   code: string;
@@ -37,6 +43,25 @@ type TransportPublicProfile = Omit<
   | 'verified_at'
   | 'created_at'
 >;
+
+type TransportPublicScholarSummary = {
+  slug: string;
+  full_name: string;
+  title: string | null;
+  institution_name_raw: string | null;
+  country_code: string | null;
+  research_keywords: string[];
+  primary_msc_code: string | null;
+  bio: string | null;
+};
+
+type TransportScholarExpertiseCluster = {
+  id: string;
+  label: string;
+  summary: string;
+  scholar_count: number;
+  institution_count: number;
+};
 
 export const fromTransportProfile = (profile: TransportProfile): EditableProfile => ({
   userId: profile.user_id,
@@ -82,6 +107,29 @@ export const fromTransportPublicProfile = (
   })),
   orcidId: profile.orcid_id,
   updatedAt: profile.updated_at,
+});
+
+export const fromTransportPublicScholarSummary = (
+  scholar: TransportPublicScholarSummary
+): PublicScholarSummary => ({
+  slug: scholar.slug,
+  fullName: scholar.full_name,
+  title: scholar.title,
+  institutionNameRaw: scholar.institution_name_raw,
+  countryCode: scholar.country_code,
+  researchKeywords: scholar.research_keywords,
+  primaryMscCode: scholar.primary_msc_code,
+  bio: scholar.bio,
+});
+
+export const fromTransportScholarExpertiseCluster = (
+  cluster: TransportScholarExpertiseCluster
+): ScholarExpertiseCluster => ({
+  id: cluster.id,
+  label: cluster.label,
+  summary: cluster.summary,
+  scholarCount: cluster.scholar_count,
+  institutionCount: cluster.institution_count,
 });
 
 export const toTransportUpdatePayload = (values: ProfileFormValues) => ({
