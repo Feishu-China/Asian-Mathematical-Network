@@ -1,8 +1,4 @@
-import axios from 'axios';
-
-const api = axios.create({
-  baseURL: '/api/v1',
-});
+import { api } from './client';
 
 export const login = async (data: any) => {
   const response = await api.post('/auth/login', data);
