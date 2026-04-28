@@ -4,11 +4,59 @@
 
 ## 当前项目状态
 *   **最新版本**: V4.0-Optimized
-*   **总览**: `AUTH`、`PROFILE`、`CONF`、`GRANT` 与 `REVIEW` 五个 Epic 已完成；`PORTAL` Epic 的 applicant-safe dashboard contract 已完成，且本地 demo 分支已补齐 public breadth slice：重建后的 `/portal`、新的 `/scholars` 公共目录、conference / prize 对 `M4` scholar context 的可见复用、首页高保真视觉对齐、以及 public portal 返回链修复都已落地。`INT-PORTAL-001`、browser-level acceptance 与 scholar-directory real-data 接通仍需单独验证。
+*   **总览**: `AUTH`、`PROFILE`、`CONF`、`GRANT` 与 `REVIEW` 五个 Epic 已完成；`PORTAL` Epic 的 applicant-safe dashboard contract 已完成，且本地 demo 分支已补齐 public breadth slice：重建后的 `/portal`、新的 `/scholars` 公共目录、conference / prize 对 `M4` scholar context 的可见复用、首页高保真视觉对齐、以及 public portal 返回链修复都已落地。`test:portal:int` 现已在本地 PostgreSQL + real backend/frontend 环境下通过，并覆盖 released applicant dashboard/detail + post-visit report 真链路；browser-level acceptance 也已在真实登录态下完成 `/portal`、`/me/applications`、grant detail 目检。当前 `PORTAL` 主闭环剩余重点为 scholar-directory real-data 接通，以及后续若需要再单独收口 dev proxy 指向 `3000` 的本地体验差异。
 
 ---
 
 ## 📅 Handoff 历史记录
+
+### 2026-04-28 (Session 44)
+*   **Agent 角色**: Coding Agent (`PORTAL` browser-level acceptance close-out)
+*   **关联 Feature**: `INT-PORTAL-001` browser evidence close-out only
+*   **问题现象**:
+    *   Session 43 虽然已经让 `test:portal:int` 在 real backend/frontend 环境下通过，但仍缺浏览器层证据，无法确认 applicant 在真实登录态下的 `/portal`、`/me/applications`、grant detail 是否无报错且正确渲染 released result / post-visit report。
+    *   本地 `frontend/vite.config.ts` 的 dev proxy 仍指向 `http://localhost:3000`，而稳定可用的 backend 实例位于 `3001`；如果继续用默认代理做验收，会把 `3000` 根目录启动上下文的已知异常混进 portal 验收结果里。
+*   **变更记录**:
+    *   `scripts/me-applications-real-flow-check.mjs` 新增 `PORTAL_INT_SKIP_CLEANUP`、`PORTAL_INT_USER_EMAIL`、`PORTAL_INT_USER_PASSWORD` 与 `PORTAL_INT_USER_FULL_NAME` 环境变量支持，并把 applicant 登录凭据回显到脚本 JSON 输出中，方便把 real-flow fixture 复用于浏览器验收。
+    *   没有修改 feature list，也没有改 portal 页面代码；本轮目标是给 Session 43 已完成的主链补浏览器证据，而不是新增功能。
+*   **验证记录**:
+    *   执行通过 `PORTAL_INT_BACKEND_ORIGIN="http://127.0.0.1:3001" PORTAL_INT_FRONTEND_ORIGIN="http://127.0.0.1:5174" DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:5433/asiamath_dev?schema=public" npm run test:portal:int`，确认脚本增强后默认清理路径没有回归。
+    *   额外启动一条直连稳定 backend 的 frontend dev server：`VITE_API_BASE_URL="http://127.0.0.1:3001/api/v1" npm run dev --workspace frontend -- --host 127.0.0.1 --port 5175`。
+    *   执行通过 `PORTAL_INT_BACKEND_ORIGIN="http://127.0.0.1:3001" PORTAL_INT_FRONTEND_ORIGIN="http://127.0.0.1:5175" PORTAL_INT_SKIP_CLEANUP="true" PORTAL_INT_USER_EMAIL="portal.int.browser@example.com" PORTAL_INT_USER_PASSWORD="password123" PORTAL_INT_USER_FULL_NAME="Portal Browser Acceptance" DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:5433/asiamath_dev?schema=public" npm run test:portal:int`，保留了一组浏览器可登录的真实 applicant fixture。
+    *   使用 `agent-browser` 在 `http://127.0.0.1:5175` 完成 applicant 验收：
+        *   登录 `portal.int.browser@example.com / password123` 成功。
+        *   `/me/applications` 实际显示 `Integration Grant Conference 2026` 与 `Integration Grant 2026 Travel Support` 两条 released 记录，grant 的 next action 已变成 `View result`。
+        *   grant detail `/me/applications/c44d65c9-fce0-45bd-a599-d91855024ffa` 实际渲染 `Awarded`、`Post-visit report`、`Status: submitted`、`Attendance: Confirmed` 与 narrative `Attended the workshop, presented a talk, and met two collaborators.`。
+        *   `/portal` 公共入口页在登录态下正常渲染 featured call / opportunities / scholars 等模块，浏览器控制台无错误。
+*   **边界与说明**:
+    *   `/login` 在没有 `returnTo` state 时默认跳到 `/dashboard` 是当前设计行为，来自 `frontend/src/features/navigation/authReturn.ts` 的 `DEFAULT_AUTH_RETURN_TO = '/dashboard'`；这次验收不把它视为 portal bug。
+    *   这轮仍未推进 scholar directory real-data；如果继续补 `PORTAL` 尾项，下一块应该转到 scholar-directory provider 和真实 profile 数据链路。
+
+### 2026-04-28 (Session 43)
+*   **Agent 角色**: Coding Agent (`PORTAL` post-visit detail + real-flow integration follow-up)
+*   **关联 Feature**: `FE-GRANT-001` / `INT-PORTAL-001` partial close-out
+*   **问题现象**:
+    *   applicant grant detail 虽然已经能显示 released result，但在 `accepted + reportRequired` 的场景下仍缺 `post-visit report` 提交与已提交展示，导致 dashboard 的 `submit_post_visit_report` next action 没有完整落点。
+    *   现有 `scripts/me-applications-real-flow-check.mjs` 只验证 applicant dashboard/detail 的 released decision，不覆盖 post-visit report submit 后的 dashboard/detail 状态切换，因此还不能真正证明 `INT-PORTAL-001` 关掉了这条 grant follow-up 链。
+*   **变更记录**:
+    *   `frontend/src/api/review.ts`、`frontend/src/features/review/{types,reviewMappers,httpReviewProvider,fakeReviewProvider}.ts` 补齐 applicant detail 的 `postVisitReport` domain 映射和 `submitMyPostVisitReport()` 真实/假 provider 接口。
+    *   `frontend/src/pages/MyApplicationDetail.tsx` / `MyApplicationDetail.css` 在 grant detail 中新增 applicant-visible `Submit post-visit report` 表单；提交成功后本地状态切换为 `Post-visit report` 已提交视图，conference detail 则继续不显示该区块。
+    *   `frontend/src/features/review/httpReviewProvider.test.ts` 与 `frontend/src/pages/MyApplicationDetail.test.tsx` 先补失败测试，再锁定 real mapper、submit API 调用、grant accepted detail 的表单/已提交双态，以及 conference detail 的隐藏行为。
+    *   `scripts/me-applications-real-flow-check.mjs` 现在会在 released grant decision 之后真实调用 `/api/v1/me/applications/:id/post-visit-report`，并断言 dashboard `next_action` 从 `submit_post_visit_report` 收口为 `view_result`，同时确认 grant detail 返回完整 `post_visit_report` payload。
+*   **验证记录**:
+    *   按 TDD 先扩 `frontend/src/features/review/httpReviewProvider.test.ts` 与 `frontend/src/pages/MyApplicationDetail.test.tsx`，执行 `cd frontend && npm run test:run -- src/features/review/httpReviewProvider.test.ts src/pages/MyApplicationDetail.test.tsx`，确认新增 `postVisitReport` mapper / submit / detail-form 断言先失败。
+    *   修复后执行通过同一命令：`2` 个 test files、`10` 个 tests 全部通过。
+    *   执行通过 `cd frontend && npm run test:run -- src/pages/MyApplications.test.tsx src/pages/MyApplicationDetail.test.tsx src/features/review/httpReviewProvider.test.ts`：`3` 个 test files、`24` 个 tests 全部通过。
+    *   执行通过 `cd frontend && npm run build`（`tsc -b && vite build`）。
+    *   本地 real-flow 验证通过：
+        *   用本地 `postgres:16-alpine` 临时容器在 host `5433` 提供 `asiamath_dev`。
+        *   frontend dev server 实际监听 `http://127.0.0.1:5174`。
+        *   backend 以 `backend/` 目录为 cwd、`PORT=3001` 的 built app 方式稳定提供 API；同样的 app 若从仓库根目录用 ad-hoc wrapper 启在 `3000`，会出现 register/conferences 异常 500，因此这轮 real-flow 以 `3001` 作为可信 backend origin。
+        *   执行通过 `PORTAL_INT_BACKEND_ORIGIN="http://127.0.0.1:3001" PORTAL_INT_FRONTEND_ORIGIN="http://127.0.0.1:5174" DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:5433/asiamath_dev?schema=public" npm run test:portal:int`，脚本成功验证：real applicant register、conference + linked grant submit、released dashboard/detail、post-visit report submit、submit 后 dashboard/detail 状态切换，以及 unauthenticated dashboard 401。
+*   **边界与说明**:
+    *   本轮没有做 browser-driven acceptance，因此虽然 `test:portal:int` 已经覆盖了 real backend contract 和 frontend route shell 可达性，但还没有用浏览器实际验证 applicant 在 `/me/applications` / grant detail 上的真实渲染与交互。
+    *   本轮没有推进 scholar directory real-data 接通，也没有修改 `docs/planning/asiamath-feature-list-v4.0-optimized.json` 的 feature 状态。
+    *   backend `3000` 根目录启动上下文的异常 500 仍值得后续单独收口，但它不再阻塞 `INT-PORTAL-001` 的真实链路验证，因为 `3001` 的同代码实例已证明 contract 本身可用。
 
 ### 2026-04-28 (Session 42)
 *   **Agent 角色**: Coding Agent (Conference apply UX hint follow-up)
