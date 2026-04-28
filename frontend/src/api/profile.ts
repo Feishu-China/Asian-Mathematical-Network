@@ -18,3 +18,8 @@ export const fetchScholarProfile = async (slug: string) => {
   const response = await api.get(`/scholars/${slug}`);
   return response.data;
 };
+
+export const fetchScholarDirectory = async () => {
+  const response = await api.get('/scholars');
+  return response.data;
+};

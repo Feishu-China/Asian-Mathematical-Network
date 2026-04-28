@@ -322,6 +322,25 @@
       "passes": true
     },
     {
+      "id": "INT-PROFILE-002",
+      "epic": "PROFILE",
+      "title": "[集成] Scholar Directory 真实数据接通",
+      "category": "integration",
+      "description": "让公开学者目录与 portal scholar teaser 使用真实公开 profile 数据，而不是前端 seed。",
+      "priority": "P2",
+      "delivery_track": "integration",
+      "depends_on": ["INT-PROFILE-001"],
+      "parallel_ready": false,
+      "steps": [
+        "Implement public scholar directory list API / contract",
+        "Switch scholar directory and portal scholar teaser adapters to Real API",
+        "Verify /scholars and /portal reflect live public scholar data",
+        "Mark feature passes=true"
+      ],
+      "status": "completed",
+      "passes": true
+    },
+    {
       "id": "FE-CONF-001",
       "epic": "CONF",
       "title": "[前端] 会议发布与申请 UI (基于 Mock)",
@@ -502,7 +521,7 @@
         "Show separate records for Conference vs Grant",
         "Integrate with mock endpoints"
       ],
-      "status": "not_started",
+      "status": "completed",
       "passes": false
     },
     {
@@ -519,7 +538,7 @@
         "Implement GET /applications/my endpoints",
         "Ensure data returns released vs unreleased status correctly"
       ],
-      "status": "not_started",
+      "status": "completed",
       "passes": false
     },
     {
@@ -537,8 +556,8 @@
         "Verify dashboard reflects final issued decisions",
         "Mark feature passes=true"
       ],
-      "status": "not_started",
-      "passes": false
+      "status": "completed",
+      "passes": true
     }
   ]
 }

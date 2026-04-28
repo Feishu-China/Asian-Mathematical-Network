@@ -158,6 +158,7 @@ export type ApplicantApplicationDetail = {
     noteExternal: string | null;
     releasedAt: string | null;
   } | null;
+  postVisitReport: PostVisitReport | null;
   postVisitReportStatus: string | null;
 };
 
@@ -180,6 +181,19 @@ export type ReviewSubmissionValues = {
   comment: string;
 };
 
+export type PostVisitReport = {
+  id: string;
+  status: string;
+  reportNarrative: string;
+  attendanceConfirmed: boolean;
+  submittedAt: string | null;
+};
+
+export type PostVisitReportValues = {
+  reportNarrative: string;
+  attendanceConfirmed: boolean;
+};
+
 export type ReviewProvider = {
   listOrganizerConferenceApplications(conferenceId: string): Promise<OrganizerApplicationListItem[]>;
   getOrganizerApplicationDetail(applicationId: string): Promise<OrganizerApplicationDetail>;
@@ -197,4 +211,8 @@ export type ReviewProvider = {
   getReviewerAssignmentDetail(assignmentId: string): Promise<ReviewerAssignmentDetail>;
   submitReviewerReview(assignmentId: string, values: ReviewSubmissionValues): Promise<ReviewRecord>;
   getMyApplicationDetail(applicationId: string): Promise<ApplicantApplicationDetail>;
+  submitMyPostVisitReport(
+    applicationId: string,
+    values: PostVisitReportValues
+  ): Promise<PostVisitReport>;
 };

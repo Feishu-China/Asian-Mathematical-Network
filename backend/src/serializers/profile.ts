@@ -16,6 +16,18 @@ type PublicProfile = Pick<
   | 'updatedAt'
 >;
 
+type PublicScholarSummary = Pick<
+  Profile,
+  | 'slug'
+  | 'fullName'
+  | 'title'
+  | 'institutionNameRaw'
+  | 'countryCode'
+  | 'researchKeywords'
+  | 'mscCodes'
+  | 'bio'
+>;
+
 const serializeMscCodes = (mscCodes: Profile['mscCodes']) =>
   mscCodes
     .slice()
@@ -66,4 +78,15 @@ export const serializePublicProfile = (profile: PublicProfile) => ({
   msc_codes: serializeMscCodes(profile.mscCodes),
   orcid_id: profile.orcidId,
   updated_at: profile.updatedAt,
+});
+
+export const serializePublicScholarSummary = (profile: PublicScholarSummary) => ({
+  slug: profile.slug,
+  full_name: profile.fullName,
+  title: profile.title,
+  institution_name_raw: profile.institutionNameRaw,
+  country_code: profile.countryCode,
+  research_keywords: profile.researchKeywords,
+  primary_msc_code: profile.mscCodes.find((item) => item.isPrimary)?.code ?? null,
+  bio: profile.bio,
 });

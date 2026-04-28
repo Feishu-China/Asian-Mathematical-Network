@@ -194,6 +194,7 @@ const buildShortcutPanel = (
 const renderApplicantPanels = (
   latestApplication: MyApplication | null,
   applications: MyApplication[],
+  hasApplicationHistory: boolean,
   applicationsError: boolean
 ) => {
   const applicationCountLabel =
@@ -246,7 +247,7 @@ const renderApplicantPanels = (
           className="dashboard-widget"
           headingLevel="h3"
           badgeLabel="Empty"
-          title="No active applications yet"
+          title={hasApplicationHistory ? 'No active applications right now' : 'No active applications yet'}
           description="Open your application workspace to review records or start a submission."
           tone="neutral"
           actions={
@@ -391,6 +392,7 @@ const renderRolePanels = (
   role: WorkspaceRole,
   latestApplication: MyApplication | null,
   applications: MyApplication[],
+  hasApplicationHistory: boolean,
   applicationsError: boolean,
   primaryConferenceId: string | null
 ) => {
@@ -406,8 +408,16 @@ const renderRolePanels = (
     return renderAdminPanels();
   }
 
-  return renderApplicantPanels(latestApplication, applications, applicationsError);
+  return renderApplicantPanels(
+    latestApplication,
+    applications,
+    hasApplicationHistory,
+    applicationsError
+  );
 };
+
+const isActiveApplication = (application: MyApplication): boolean =>
+  application.viewerStatus === 'draft' || application.viewerStatus === 'under_review';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -476,7 +486,9 @@ export default function Dashboard() {
 
   const workspaceRole = readWorkspaceRole(userData?.user);
   const workspaceCopy = WORKSPACE_COPY[workspaceRole];
-  const latestApplication = applications[0] ?? null;
+  const activeApplications = applications.filter(isActiveApplication);
+  const latestApplication = activeApplications[0] ?? null;
+  const hasApplicationHistory = applications.length > 0;
   const primaryConferenceId = readPrimaryConferenceId(userData?.user);
   const accountMenu = buildDashboardAccountMenu(workspaceRole, primaryConferenceId, () => {
     localStorage.removeItem('token');
@@ -554,7 +566,8 @@ export default function Dashboard() {
           {renderRolePanels(
             workspaceRole,
             latestApplication,
-            applications,
+            activeApplications,
+            hasApplicationHistory,
             applicationsError,
             primaryConferenceId
           )}

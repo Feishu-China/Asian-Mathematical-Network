@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { WorkspaceShell } from '../components/layout/WorkspaceShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
@@ -60,6 +60,10 @@ const readSourceTitle = (application: ApplicantApplicationDetail) => {
   return application.conferenceTitle ?? application.grantTitle ?? 'Untitled conference';
 };
 
+const canSubmitPostVisitReport = (application: ApplicantApplicationDetail) =>
+  application.applicationType === 'grant_application' &&
+  application.releasedDecision?.finalStatus === 'accepted';
+
 export default function MyApplicationDetail() {
   const { id = '' } = useParams();
   const navigate = useNavigate();
@@ -68,6 +72,10 @@ export default function MyApplicationDetail() {
   const [loadState, setLoadState] = useState<'loading' | 'ready' | 'not_found' | 'error'>(
     'loading'
   );
+  const [reportNarrative, setReportNarrative] = useState('');
+  const [attendanceConfirmed, setAttendanceConfirmed] = useState(true);
+  const [reportSubmitting, setReportSubmitting] = useState(false);
+  const [reportError, setReportError] = useState<string | null>(null);
   const returnContext = readReturnContext(location.state);
   const accountMenu = buildWorkspaceAccountMenu(() => {
     localStorage.removeItem('token');
@@ -88,6 +96,10 @@ export default function MyApplicationDetail() {
 
     setApplication(null);
     setLoadState('loading');
+    setReportNarrative('');
+    setAttendanceConfirmed(true);
+    setReportSubmitting(false);
+    setReportError(null);
 
     reviewProvider
       .getMyApplicationDetail(id)
@@ -116,6 +128,55 @@ export default function MyApplicationDetail() {
       active = false;
     };
   }, [id, location.pathname, navigate]);
+
+  const handlePostVisitReportSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!application) {
+      return;
+    }
+
+    const nextNarrative = reportNarrative.trim();
+    if (!nextNarrative) {
+      setReportError('Please describe the visit before submitting.');
+      return;
+    }
+
+    setReportSubmitting(true);
+    setReportError(null);
+
+    try {
+      const report = await reviewProvider.submitMyPostVisitReport(application.id, {
+        reportNarrative: nextNarrative,
+        attendanceConfirmed,
+      });
+
+      setApplication((current) =>
+        current
+          ? {
+              ...current,
+              postVisitReport: report,
+              postVisitReportStatus: report.status,
+            }
+          : current
+      );
+      setReportNarrative('');
+    } catch (error) {
+      if (isUnauthorizedSessionError(error)) {
+        localStorage.removeItem('token');
+        navigate('/login', { state: toReturnToState(location.pathname) });
+        return;
+      }
+
+      setReportError(
+        error instanceof Error
+          ? error.message
+          : 'We could not submit the post-visit report. Please try again.'
+      );
+    } finally {
+      setReportSubmitting(false);
+    }
+  };
 
   return (
     <WorkspaceShell
@@ -342,6 +403,86 @@ export default function MyApplicationDetail() {
               ) : null}
             </div>
           </section>
+
+          {canSubmitPostVisitReport(application) ? (
+            application.postVisitReport ? (
+              <section className="surface-card review-card">
+                <header className="review-card__header">
+                  <div>
+                    <p className="conference-eyebrow">Grant follow-up</p>
+                    <h2>Post-visit report</h2>
+                  </div>
+                </header>
+
+                <div className="review-card__meta">
+                  <p className="application-detail__report-meta">
+                    <strong>Status:</strong> {application.postVisitReport.status}
+                    {application.postVisitReport.submittedAt ? (
+                      <>
+                        {' '}
+                        · submitted{' '}
+                        {new Date(application.postVisitReport.submittedAt).toLocaleString()}
+                      </>
+                    ) : null}
+                  </p>
+                  <p className="application-detail__report-meta">
+                    <strong>Attendance:</strong>{' '}
+                    {application.postVisitReport.attendanceConfirmed
+                      ? 'Confirmed'
+                      : 'Not confirmed'}
+                  </p>
+                  <p className="application-detail__result-note">
+                    {application.postVisitReport.reportNarrative}
+                  </p>
+                </div>
+              </section>
+            ) : (
+              <section className="surface-card review-card">
+                <header className="review-card__header">
+                  <div>
+                    <p className="conference-eyebrow">Grant follow-up</p>
+                    <h2>Submit post-visit report</h2>
+                  </div>
+                </header>
+
+                <form
+                  className="application-detail__report-form"
+                  onSubmit={handlePostVisitReportSubmit}
+                >
+                  <p className="review-note">
+                    Submit one applicant-visible follow-up report for this awarded travel grant.
+                  </p>
+                  <label className="application-detail__report-label">
+                    <span>Report narrative</span>
+                    <textarea
+                      className="application-detail__report-textarea"
+                      value={reportNarrative}
+                      onChange={(event) => setReportNarrative(event.target.value)}
+                      rows={6}
+                      maxLength={4000}
+                      required
+                    />
+                  </label>
+                  <label className="application-detail__report-checkbox">
+                    <input
+                      type="checkbox"
+                      checked={attendanceConfirmed}
+                      onChange={(event) => setAttendanceConfirmed(event.target.checked)}
+                    />
+                    <span>I confirm I attended the supported event.</span>
+                  </label>
+                  {reportError ? (
+                    <p className="application-detail__report-error">{reportError}</p>
+                  ) : null}
+                  <div>
+                    <button type="submit" disabled={reportSubmitting}>
+                      {reportSubmitting ? 'Submitting...' : 'Submit report'}
+                    </button>
+                  </div>
+                </form>
+              </section>
+            )
+          ) : null}
         </div> : null}
       </div>
     </WorkspaceShell>
