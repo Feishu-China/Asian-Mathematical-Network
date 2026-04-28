@@ -18,6 +18,9 @@ function LoginStateProbe() {
   return <div>{JSON.stringify(location.state)}</div>;
 }
 
+const hasExactText = (expected: string) => (_content: string, element: Element | null) =>
+  element?.textContent?.replace(/\s+/g, ' ').trim() === expected;
+
 describe('conference apply page', () => {
   beforeEach(() => {
     localStorage.clear();
@@ -67,6 +70,49 @@ describe('conference apply page', () => {
 
     await user.click(screen.getByRole('button', { name: /submit application/i }));
     expect(await screen.findByText(/application submitted/i)).toBeInTheDocument();
+  });
+
+  it('shows required markers for base and talk-specific fields', async () => {
+    localStorage.setItem('token', 'applicant-1');
+
+    renderWithRouter(
+      <ConferenceApply />,
+      '/conferences/asiamath-2026-workshop/apply',
+      '/conferences/:slug/apply'
+    );
+
+    await screen.findByRole('heading', { name: /conference application/i });
+
+    expect(screen.getAllByText(hasExactText('Participation type *'))[0]).toBeInTheDocument();
+    expect(screen.getAllByText(hasExactText('Statement *'))[0]).toBeInTheDocument();
+    expect(screen.getAllByText(hasExactText('Abstract title (required for talk)'))[0]).toBeInTheDocument();
+    expect(screen.getAllByText(hasExactText('Abstract text (required for talk)'))[0]).toBeInTheDocument();
+  });
+
+  it('explains why submit is disabled before saving and when talk abstract fields are incomplete', async () => {
+    localStorage.setItem('token', 'applicant-1');
+    const user = userEvent.setup();
+
+    renderWithRouter(
+      <ConferenceApply />,
+      '/conferences/asiamath-2026-workshop/apply',
+      '/conferences/:slug/apply'
+    );
+
+    await screen.findByRole('heading', { name: /conference application/i });
+
+    expect(screen.getByText(/save this draft once before submitting/i)).toBeInTheDocument();
+
+    await user.selectOptions(screen.getByLabelText(/participation type/i), 'talk');
+    await user.type(screen.getByLabelText(/statement/i), 'I want to present new work.');
+    await user.type(screen.getByLabelText(/abstract title/i), 'A New Theorem');
+    await user.click(screen.getByRole('button', { name: /save draft/i }));
+
+    expect(await screen.findByText(/draft saved/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/abstract text is required for talk submissions/i)
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /submit application/i })).toBeDisabled();
   });
 
   it('renders the shared applicant account menu for signed-in applicants', async () => {
@@ -198,7 +244,7 @@ describe('conference apply page', () => {
       '/portal'
     );
 
-    await user.click(screen.getByRole('link', { name: /view details/i }));
+    await user.click(screen.getAllByRole('link', { name: /view details/i })[0]);
     expect(await screen.findByRole('link', { name: /apply for conference/i })).toBeInTheDocument();
 
     await user.click(screen.getByRole('link', { name: /apply for conference/i }));

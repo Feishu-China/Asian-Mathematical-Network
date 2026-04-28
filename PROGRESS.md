@@ -10,6 +10,24 @@
 
 ## 📅 Handoff 历史记录
 
+### 2026-04-28 (Session 42)
+*   **Agent 角色**: Coding Agent (Conference apply UX hint follow-up)
+*   **关联 Feature**: `CONF` applicant apply flow partial follow-up only
+*   **问题现象**:
+    *   conference apply 表单里，`Submit application` 在未满足条件时会直接禁用，但用户看不到哪些字段必填，也不知道当前是“还没先保存 draft”还是“talk submission 还缺 abstract”。
+*   **变更记录**:
+    *   `frontend/src/features/conference/ConferenceApplyForm.tsx` 为 `Participation type`、`Statement` 增加可见必填标记，并为 `Abstract title`、`Abstract text` 增加 `required for talk` 标签说明。
+    *   submit 区域现在会在按钮禁用时显示单行条件提示，至少覆盖 `Save this draft once before submitting`、缺 `Participation type`、缺 `Statement`、以及 `talk` submission 缺 abstract title / text 这几类状态。
+    *   `frontend/src/pages/ConferenceApply.test.tsx` 先补失败测试，再锁定新标签与 submit hint 行为；同时把原有 portal-origin return-path 断言从单个 `View details` 收紧为首个匹配项，避免测试因列表里存在多个 conference card 而误报。
+    *   `frontend/src/pages/Conference.css` 增加必填标记、条件标签和 submit hint 的最小样式，不改整体 page layout。
+*   **验证记录**:
+    *   按 TDD 先修改 `frontend/src/pages/ConferenceApply.test.tsx`，执行 `cd frontend && npm run test:run -- src/pages/ConferenceApply.test.tsx`，确认新增 required-marker / submit-hint 断言先失败。
+    *   修复后执行通过同一命令：`1` 个 test file、`9` 个 tests 全部通过。
+    *   执行通过 `cd frontend && npm run build`（`tsc -b && vite build`）。
+*   **边界与说明**:
+    *   本轮没有改 submit 流程本身，仍保持“先 save draft，再 submit”的现有实现；只补可见提示，降低用户猜测成本。
+    *   本轮没有扩展 organizer / reviewer 相关表单，也没有改 backend conference application contract。
+
 ### 2026-04-28 (Session 41)
 *   **Agent 角色**: Coding Agent (Applicant summary parity fix)
 *   **关联 Feature**: `FE-PORTAL-001` partial follow-up only

@@ -116,6 +116,27 @@
   margin-top: 0.25rem;
 }
 
+.conference-field-label {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: baseline;
+}
+
+.conference-required-indicator {
+  color: var(--color-navy-700);
+}
+
+.conference-conditional-indicator,
+.conference-submit-hint {
+  color: var(--color-text-muted);
+}
+
+.conference-submit-hint {
+  margin: calc(var(--space-4) * -0.5) 0 0;
+  font-size: 0.95rem;
+}
+
 .conference-publish-hint {
   padding: 0.9rem 1rem;
   border: 1px solid rgba(122, 98, 57, 0.18);
