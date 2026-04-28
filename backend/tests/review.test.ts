@@ -89,14 +89,14 @@ const registerUser = async (email: string, fullName: string) => {
 };
 
 const promoteReviewer = async (userId: string) => {
-  await prisma.$executeRawUnsafe(
-    `
-      INSERT INTO "UserRole" ("id", "userId", "role", "isPrimary", "createdAt")
-      VALUES (?, ?, 'reviewer', 0, CURRENT_TIMESTAMP)
-    `,
-    `role-${userId}`,
-    userId
-  );
+  await prisma.userRole.create({
+    data: {
+      id: `role-${userId}`,
+      userId,
+      role: 'reviewer',
+      isPrimary: false,
+    },
+  });
 };
 
 const createPublishedConference = async (organizerToken: string, slug: string, title: string) => {
@@ -189,7 +189,7 @@ const submitConferenceApplication = async (
 };
 
 describe('Review API', () => {
-  beforeAll(async () => {
+  beforeEach(async () => {
     await cleanupReviewFixtures();
   });
 
