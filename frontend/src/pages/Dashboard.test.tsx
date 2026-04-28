@@ -5,8 +5,10 @@ import { render } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import * as authApi from '../api/auth';
 import { dashboardProvider } from '../features/dashboard/dashboardProvider';
+import { setDashboardFakeState } from '../features/dashboard/fakeDashboardProvider';
 import { renderWithRouter } from '../test/renderWithRouter';
 import { resetDashboardFakeState, seedDashboardDemoState } from '../features/dashboard/fakeDashboardProvider';
+import type { MyApplication } from '../features/dashboard/types';
 import Dashboard from './Dashboard';
 
 vi.mock('../api/auth', async () => {
@@ -25,6 +27,41 @@ vi.mock('../api/auth', async () => {
 });
 
 const mockedGetMe = vi.mocked(authApi.getMe);
+
+const releasedApplication: MyApplication = {
+  id: 'released-application-1',
+  applicationType: 'conference_application',
+  sourceModule: 'M2',
+  sourceId: 'conf-1',
+  sourceSlug: 'applied-pde-exchange-2025',
+  sourceTitle: 'Applied PDE Exchange 2025',
+  linkedConferenceTitle: null,
+  viewerStatus: 'result_released',
+  submittedAt: '2025-08-12T09:00:00.000Z',
+  releasedDecision: {
+    decisionKind: 'conference_admission',
+    finalStatus: 'rejected',
+    displayLabel: 'Rejected',
+    releasedAt: '2025-09-01T09:00:00.000Z',
+  },
+  nextAction: 'view_result',
+  postVisitReportStatus: null,
+};
+
+const underReviewApplication: MyApplication = {
+  id: 'under-review-application-1',
+  applicationType: 'conference_application',
+  sourceModule: 'M2',
+  sourceId: 'conf-2',
+  sourceSlug: 'regional-topology-symposium-2026',
+  sourceTitle: 'Regional Topology Symposium 2026',
+  linkedConferenceTitle: null,
+  viewerStatus: 'under_review',
+  submittedAt: '2026-04-22T09:00:00.000Z',
+  releasedDecision: null,
+  nextAction: 'view_submission',
+  postVisitReportStatus: null,
+};
 
 describe('Dashboard page', () => {
   beforeEach(() => {
@@ -67,6 +104,35 @@ describe('Dashboard page', () => {
     expect(await screen.findByText(/review demo conference 2026/i)).toBeInTheDocument();
     expect(screen.getByText(/1 active application in your workspace/i)).toBeInTheDocument();
     expect(screen.getByText('Under review')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /open my applications/i })).toHaveAttribute(
+      'href',
+      '/me/applications'
+    );
+  });
+
+  it('counts only unfinished applications as active and highlights the latest unfinished record', async () => {
+    localStorage.setItem('token', 'dashboard-token');
+    setDashboardFakeState([releasedApplication, underReviewApplication]);
+
+    renderWithRouter(<Dashboard />, '/dashboard', '/dashboard');
+
+    expect(await screen.findByText(/regional topology symposium 2026/i)).toBeInTheDocument();
+    expect(screen.getByText(/1 active application in your workspace/i)).toBeInTheDocument();
+    expect(screen.getByText('Under review')).toBeInTheDocument();
+    expect(screen.queryByText(/applied pde exchange 2025/i)).not.toBeInTheDocument();
+  });
+
+  it('shows a no-active-applications state when every application already has a released result', async () => {
+    localStorage.setItem('token', 'dashboard-token');
+    setDashboardFakeState([releasedApplication]);
+
+    renderWithRouter(<Dashboard />, '/dashboard', '/dashboard');
+
+    expect(await screen.findByRole('heading', { name: /dashboard/i })).toBeInTheDocument();
+    expect(screen.getByText(/no active applications right now/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/open your application workspace to review records or start a submission/i)
+    ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /open my applications/i })).toHaveAttribute(
       'href',
       '/me/applications'
