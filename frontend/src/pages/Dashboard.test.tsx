@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { render } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import * as authApi from '../api/auth';
+import { dashboardProvider } from '../features/dashboard/dashboardProvider';
 import { renderWithRouter } from '../test/renderWithRouter';
 import { resetDashboardFakeState, seedDashboardDemoState } from '../features/dashboard/fakeDashboardProvider';
 import Dashboard from './Dashboard';
@@ -72,21 +73,58 @@ describe('Dashboard page', () => {
     );
   });
 
-  it('keeps the dashboard badge scoped to the applicant workspace even for organizer-capable accounts', async () => {
+  it('renders a reviewer workspace landing and skips applicant dashboard data', async () => {
+    const listMyApplicationsSpy = vi.spyOn(dashboardProvider, 'listMyApplications');
     localStorage.setItem('token', 'dashboard-token');
     mockedGetMe.mockResolvedValueOnce({
       user: {
-        email: 'demo.organizer@asiamath.org',
+        email: 'demo.reviewer@asiamath.org',
         status: 'active',
-        role: 'organizer',
+        role: 'reviewer',
       },
     });
 
     renderWithRouter(<Dashboard />, '/dashboard', '/dashboard');
 
     expect(await screen.findByRole('heading', { name: /dashboard/i })).toBeInTheDocument();
-    expect(screen.getByText('Role: Applicant')).toBeInTheDocument();
-    expect(screen.queryByText('Role: Organizer')).not.toBeInTheDocument();
+    expect(screen.getByText('Role: Reviewer')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /open reviewer queue/i })).toHaveAttribute(
+      'href',
+      '/reviewer'
+    );
+    expect(
+      screen.queryByText(/open your application workspace to review records or start a submission/i)
+    ).not.toBeInTheDocument();
+    expect(listMyApplicationsSpy).not.toHaveBeenCalled();
+  });
+
+  it('renders an organizer workspace landing instead of applicant-only dashboard content', async () => {
+    const listMyApplicationsSpy = vi.spyOn(dashboardProvider, 'listMyApplications');
+    localStorage.setItem('token', 'dashboard-token');
+    mockedGetMe.mockResolvedValueOnce({
+      user: {
+        email: 'demo.organizer@asiamath.org',
+        status: 'active',
+        role: 'organizer',
+        conference_staff_memberships: [
+          {
+            conference_id: 'conf-draft-001',
+            staff_role: 'owner',
+          },
+        ],
+      },
+    });
+
+    renderWithRouter(<Dashboard />, '/dashboard', '/dashboard');
+
+    expect(await screen.findByRole('heading', { name: /dashboard/i })).toBeInTheDocument();
+    expect(screen.getByText('Role: Organizer')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /open conference workspace/i })).toHaveAttribute(
+      'href',
+      '/organizer/conferences/conf-draft-001/applications'
+    );
+    expect(screen.queryByText('Role: Applicant')).not.toBeInTheDocument();
+    expect(listMyApplicationsSpy).not.toHaveBeenCalled();
   });
 
   it('renders the shared applicant account menu and logs out to the portal', async () => {

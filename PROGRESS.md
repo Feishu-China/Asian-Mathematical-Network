@@ -10,6 +10,28 @@
 
 ## 📅 Handoff 历史记录
 
+### 2026-04-28 (Session 40)
+*   **Agent 角色**: Coding Agent (Role workspace fix)
+*   **关联 Feature**: `FE-PORTAL-001` partial follow-up only
+*   **问题现象**:
+    *   使用 reviewer / organizer 账号登录后，前端仍统一落到 applicant-only `/dashboard` 内容。
+    *   `Dashboard` 会无差别请求 applicant `My Applications` 数据，并渲染 applicant badge、入口与 walkthrough 文案，导致 reviewer / organizer 看不到属于自己角色的工作台内容。
+*   **变更记录**:
+    *   `frontend/src/pages/Dashboard.tsx` 改为按 `getMe()` 返回的 `role` / `primary_role` 分流：reviewer / organizer / admin 不再走 applicant application aggregation，而是进入各自角色的 workspace landing。
+    *   reviewer 登录后，`/dashboard` 现在呈现 reviewer badge、review queue 主入口，以及 reviewer scope 说明，不再显示 applicant application widget。
+    *   organizer 登录后，`/dashboard` 现在呈现 organizer badge、conference workspace 主入口；若账号存在 `conference_staff_memberships`，主入口会直接落到对应 conference application queue，否则回落到 `Create organizer conference`。
+    *   dashboard account menu 现在同样按角色收口：applicant 保持 `My Applications` / `My Profile`，reviewer 指向 `Reviewer Queue`，organizer 指向 `Conference Workspace`，避免登录后菜单仍暴露 applicant-only 主入口。
+    *   `frontend/src/pages/Dashboard.test.tsx` 新增 reviewer / organizer 两条回归，锁定“非 applicant 不再拉 applicant dashboard 数据”和“dashboard 内容随角色切换”这两个行为。
+*   **验证记录**:
+    *   preflight：新 worktree 创建后执行 `npm run test:smoke`；其中前端 baseline 通过，backend baseline 在 Prisma migrate 阶段触发已有的 `Schema engine error`，确认这是当前 `demo/d0` 基线问题，不是本轮 role workspace 改动引入。
+    *   按 TDD 先修改 `frontend/src/pages/Dashboard.test.tsx`，执行 `cd frontend && npm run test:run -- src/pages/Dashboard.test.tsx`，确认 reviewer / organizer 断言先失败。
+    *   修复后执行通过 `cd frontend && npm run test:run -- src/pages/Dashboard.test.tsx`：`1` 个 test file、`7` 个 tests 全部通过。
+    *   执行通过 `cd frontend && npm run test:run -- src/pages/Login.test.tsx src/pages/Dashboard.test.tsx`：`2` 个 test files、`10` 个 tests 全部通过。
+    *   执行通过 `cd frontend && npm run build`（`tsc -b && vite build`），无类型或构建错误。
+*   **边界与说明**:
+    *   本轮只修 authenticated dashboard 的角色分流，没有新增 organizer root route，也没有改 reviewer queue / organizer queue 详情页本身。
+    *   `FE-PORTAL-001` 仍是更大的 portal + applicant dashboard feature，本轮只是收口其中一个实际 demo 缺口，因此没有把 feature list 直接标记为 `completed`。
+
 ### 2026-04-27 (PostgreSQL deployment slice)
 *   **Agent 角色**: Coding Agent (Deployment and database migration)
 *   **完成 Slice**: `demo/d0` PostgreSQL baseline + Vercel/Railway split deployment preview
