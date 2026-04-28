@@ -6,6 +6,7 @@ const require = createRequire(import.meta.url);
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const backendDir = path.resolve(scriptDir, '../backend');
+const backendRequire = createRequire(path.join(backendDir, 'package.json'));
 
 process.env.TS_NODE_PROJECT = path.join(backendDir, 'tsconfig.json');
 process.chdir(backendDir);
@@ -14,13 +15,13 @@ if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL must be set before running seed-demo-baseline.mjs');
 }
 
-require('../backend/node_modules/ts-node/register/transpile-only');
+backendRequire('ts-node/register/transpile-only');
 
-const { PrismaClient } = require('../backend/node_modules/@prisma/client');
+const { PrismaClient } = backendRequire('@prisma/client');
 const {
   buildDemoBaselineSummary,
   ensureDemoBaseline,
-} = require('../backend/src/lib/demoBaseline.ts');
+} = backendRequire('./src/lib/demoBaseline.ts');
 
 const prisma = new PrismaClient();
 

@@ -58,8 +58,8 @@ Here is the layout and what each folder is used for:
 ├── 📁 database/                # 🗄️ Raw SQL definitions
 │   └── ddl/                    # 🏗️ DDL (Data Definition Language) files for creating tables
 │
-├── 📁 src/                     # 🔗 Shared Code (Used by BOTH frontend and backend)
-│   └── types/                  # 🧱 Shared TypeScript models (e.g., `models.ts` defining User, Profile)
+├── 📁 packages/                # 📦 Shared workspace packages
+│   └── shared/                 # 🧱 Shared TypeScript models consumed by frontend and backend
 │
 ├── 📁 mocks/                   # 🤡 Mock API server configurations and test data fixtures
 │
@@ -77,7 +77,7 @@ Here is the layout and what each folder is used for:
 ### 🚦 Where do I start? (For New Engineers)
 1. **Read the Rules**: Read `AGENT_HARNESS.md` to understand how we work (One Feature at a time, Smoke Tests).
 2. **Find a Task**: Open `docs/planning/asiamath-feature-list-v4.0-optimized.json` and find a feature marked `"status": "not_started"`.
-3. **Read the Contract**: Check `docs/specs/openapi.yaml` and `src/types/models.ts` to understand the data structure you need to implement.
+3. **Read the Contract**: Check `docs/specs/openapi.yaml` and `packages/shared/src/models.ts` to understand the data structure you need to implement.
 4. **Develop**: Go to `frontend/` or `backend/` and start coding.
 
 Happy coding! If you follow the isolated file structure, you will never see a merge conflict.

@@ -1,4 +1,4 @@
-import type { CareerStage, Profile } from '../../../../src/types/models';
+import type { CareerStage, Profile } from '@asiamath/shared/models';
 
 export type EditableProfile = Profile;
 

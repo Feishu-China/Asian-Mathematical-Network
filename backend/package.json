@@ -4,15 +4,17 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "prisma migrate deploy && ts-node src/index.ts",
-    "dev": "prisma migrate deploy && nodemon src/index.ts",
-    "test": "sh -c 'DATABASE_URL=\"$TEST_DATABASE_URL\" prisma migrate reset --force --skip-seed && DATABASE_URL=\"$TEST_DATABASE_URL\" jest --runInBand'"
+    "build": "prisma generate && npm --prefix .. run build --workspace @asiamath/shared && tsc -p tsconfig.build.json",
+    "start": "prisma migrate deploy && node dist/index.js",
+    "dev": "npm --prefix .. run build --workspace @asiamath/shared && prisma migrate deploy && nodemon --watch src --watch ../packages/shared/src --ext ts,json --exec \"npm --prefix .. run build --workspace @asiamath/shared && ts-node src/index.ts\"",
+    "test": "npm --prefix .. run build --workspace @asiamath/shared && sh -c 'DATABASE_URL=\"$TEST_DATABASE_URL\" prisma migrate reset --force --skip-seed && DATABASE_URL=\"$TEST_DATABASE_URL\" jest --runInBand'"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@asiamath/shared": "1.0.0",
     "@prisma/client": "^5.22.0",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",

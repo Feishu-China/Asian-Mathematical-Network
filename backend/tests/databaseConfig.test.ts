@@ -47,10 +47,24 @@ describe('backend database configuration', () => {
       scripts?: Record<string, string>;
     };
 
+    expect(packageJson.scripts?.build).toContain('prisma generate');
+    expect(packageJson.scripts?.build).toContain(
+      'npm --prefix .. run build --workspace @asiamath/shared',
+    );
+    expect(packageJson.scripts?.build).toContain('tsc -p tsconfig.build.json');
     expect(packageJson.scripts?.start).toContain('prisma migrate deploy');
-    expect(packageJson.scripts?.start).not.toContain('file:./');
+    expect(packageJson.scripts?.start).toContain('node dist/index.js');
+    expect(packageJson.scripts?.start).not.toContain('ts-node');
+    expect(packageJson.scripts?.dev).toContain(
+      'npm --prefix .. run build --workspace @asiamath/shared',
+    );
     expect(packageJson.scripts?.dev).toContain('prisma migrate deploy');
+    expect(packageJson.scripts?.dev).toContain('../packages/shared/src');
+    expect(packageJson.scripts?.dev).toContain('nodemon');
     expect(packageJson.scripts?.dev).not.toContain('file:./');
+    expect(packageJson.scripts?.test).toContain(
+      'npm --prefix .. run build --workspace @asiamath/shared',
+    );
     expect(packageJson.scripts?.test).toContain('TEST_DATABASE_URL');
     expect(packageJson.scripts?.test).not.toContain('file:./');
   });

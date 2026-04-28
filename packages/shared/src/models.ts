@@ -126,12 +126,12 @@ export interface Application {
 }
 
 export interface Decision {
-  id: string; // UUID
+  id: string;
   applicationId: string;
   finalStatus: DecisionFinalStatus;
   releaseStatus: DecisionReleaseStatus;
   internalNotes: string | null;
-  externalNotes: string | null; // Only visible to applicant if released
+  externalNotes: string | null;
   issuedByUserId: string;
   issuedAt: string;
   releasedAt: string | null;

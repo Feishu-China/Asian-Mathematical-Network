@@ -1,4 +1,4 @@
-import type { Profile } from '../../../src/types/models';
+import type { Profile } from '@asiamath/shared/models';
 
 type PublicProfile = Pick<
   Profile,

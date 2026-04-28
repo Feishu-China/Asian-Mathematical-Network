@@ -1,4 +1,4 @@
-import type { GrantOpportunityStatus, GrantType } from '../../../../src/types/models';
+import type { GrantOpportunityStatus, GrantType } from '@asiamath/shared/models';
 
 export type LinkedOpportunityType = 'conference' | 'school';
 
