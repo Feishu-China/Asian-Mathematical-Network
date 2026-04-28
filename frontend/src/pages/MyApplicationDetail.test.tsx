@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { resetReviewFakeState } from '../features/review/fakeReviewProvider';
 import { reviewProvider } from '../features/review/reviewProvider';
@@ -10,6 +10,59 @@ function LoginStateProbe() {
 
   return <div>{JSON.stringify(location.state)}</div>;
 }
+
+const acceptedGrantDetailWithoutReport = {
+  id: 'grant-application-1',
+  applicationType: 'grant_application',
+  sourceModule: 'M7',
+  conferenceId: 'review-conf-001',
+  conferenceTitle: 'Review Demo Conference 2026',
+  grantId: 'grant-1',
+  grantTitle: 'Asiamath 2026 Travel Grant',
+  linkedConferenceId: 'review-conf-001',
+  linkedConferenceTitle: 'Review Demo Conference 2026',
+  linkedConferenceApplicationId: 'review-application-1',
+  viewerStatus: 'result_released',
+  participationType: null,
+  statement: 'Requesting travel support for the workshop.',
+  abstractTitle: null,
+  abstractText: null,
+  interestedInTravelSupport: false,
+  travelPlanSummary: 'Round-trip travel from Singapore with two hotel nights.',
+  fundingNeedSummary: 'Airfare and local accommodation support.',
+  extraAnswers: {},
+  applicantProfileSnapshot: {
+    fullName: 'Ada Lovelace',
+    institutionNameRaw: 'National University of Singapore',
+    countryCode: 'SG',
+    careerStage: 'phd',
+    researchKeywords: ['algebraic geometry'],
+  },
+  files: [],
+  submittedAt: '2026-08-01T10:00:00.000Z',
+  releasedDecision: {
+    decisionKind: 'travel_grant',
+    finalStatus: 'accepted',
+    displayLabel: 'Awarded',
+    noteExternal: 'Your travel grant has been awarded.',
+    releasedAt: '2026-08-10T09:00:00.000Z',
+  },
+  postVisitReport: null,
+  postVisitReportStatus: null,
+} as any;
+
+const acceptedGrantDetailWithReport = {
+  ...acceptedGrantDetailWithoutReport,
+  id: 'grant-application-2',
+  postVisitReport: {
+    id: 'report-1',
+    status: 'submitted',
+    reportNarrative: 'I attended the workshop and presented my recent results.',
+    attendanceConfirmed: true,
+    submittedAt: '2026-09-01T09:30:00.000Z',
+  },
+  postVisitReportStatus: 'submitted',
+} as any;
 
 describe('MyApplicationDetail page', () => {
   beforeEach(() => {
@@ -80,7 +133,75 @@ describe('MyApplicationDetail page', () => {
     expect(screen.getByText(/this talk discusses a compactness result\./i)).toBeInTheDocument();
     expect(screen.getByText(/travel support:/i)).toBeInTheDocument();
     expect(screen.getByText(/requested/i)).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /submit post-visit report/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /^post-visit report$/i })).not.toBeInTheDocument();
     expect(screen.queryByText(/internal status/i)).not.toBeInTheDocument();
+  });
+
+  it('renders a post-visit report form for an accepted grant and swaps to the submitted view after success', async () => {
+    localStorage.setItem('token', 'applicant-1');
+    vi.spyOn(reviewProvider, 'getMyApplicationDetail').mockResolvedValueOnce(
+      acceptedGrantDetailWithoutReport
+    );
+    const submitSpy = vi
+      .spyOn(reviewProvider as any, 'submitMyPostVisitReport')
+      .mockResolvedValueOnce({
+        id: 'report-1',
+        status: 'submitted',
+        reportNarrative: 'Workshop went well; I gave a 30-minute talk.',
+        attendanceConfirmed: true,
+        submittedAt: '2026-09-01T09:30:00.000Z',
+      });
+
+    render(
+      <MemoryRouter initialEntries={['/me/applications/grant-application-1']}>
+        <Routes>
+          <Route path="/me/applications/:id" element={<MyApplicationDetail />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(
+      await screen.findByRole('heading', { name: /submit post-visit report/i })
+    ).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText(/report narrative/i), {
+      target: { value: 'Workshop went well; I gave a 30-minute talk.' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /submit report/i }));
+
+    expect(submitSpy).toHaveBeenCalledWith('grant-application-1', {
+      reportNarrative: 'Workshop went well; I gave a 30-minute talk.',
+      attendanceConfirmed: true,
+    });
+    expect(await screen.findByRole('heading', { name: /^post-visit report$/i })).toBeInTheDocument();
+    expect(screen.getByText('Workshop went well; I gave a 30-minute talk.')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: /submit post-visit report/i })
+    ).not.toBeInTheDocument();
+  });
+
+  it('renders an existing post-visit report for an accepted grant without showing the form', async () => {
+    localStorage.setItem('token', 'applicant-1');
+    vi.spyOn(reviewProvider, 'getMyApplicationDetail').mockResolvedValueOnce(
+      acceptedGrantDetailWithReport
+    );
+
+    render(
+      <MemoryRouter initialEntries={['/me/applications/grant-application-2']}>
+        <Routes>
+          <Route path="/me/applications/:id" element={<MyApplicationDetail />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByRole('heading', { name: /^post-visit report$/i })).toBeInTheDocument();
+    expect(
+      screen.getByText('I attended the workshop and presented my recent results.')
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: /submit post-visit report/i })
+    ).not.toBeInTheDocument();
   });
 
   it('renders a dedicated error state when the applicant detail request fails', async () => {

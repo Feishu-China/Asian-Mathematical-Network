@@ -10,6 +10,7 @@ import {
   fromTransportReviewerQueueItem,
 } from './reviewMappers';
 import type {
+  PostVisitReport,
   ReviewConflictState,
   ReviewProvider,
 } from './types';
@@ -484,8 +485,25 @@ export const fakeReviewProvider: ReviewProvider = {
       files: application.files,
       submitted_at: application.submitted_at,
       released_decision: toReleasedDecision(application.decision),
+      post_visit_report: null,
       post_visit_report_status: null,
     });
+  },
+
+  async submitMyPostVisitReport(applicationId, values) {
+    requireToken();
+    await delay();
+    findApplication(applicationId);
+
+    const report: PostVisitReport = {
+      id: `post-visit-report-${applicationId}`,
+      status: 'submitted',
+      reportNarrative: values.reportNarrative.trim(),
+      attendanceConfirmed: values.attendanceConfirmed,
+      submittedAt: now(),
+    };
+
+    return report;
   },
 };
 

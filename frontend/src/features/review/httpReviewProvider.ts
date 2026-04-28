@@ -8,6 +8,7 @@ import {
   fetchReviewerAssignments,
   fetchReviewerCandidates,
   releaseDecisionRequest,
+  submitMyPostVisitReportRequest,
   submitReviewerReviewRequest,
   upsertDecisionRequest,
 } from '../../api/review';
@@ -16,6 +17,7 @@ import {
   fromTransportInternalDecision,
   fromTransportOrganizerApplicationDetail,
   fromTransportOrganizerApplicationListItem,
+  fromTransportPostVisitReport,
   fromTransportReviewAssignment,
   fromTransportReviewRecord,
   fromTransportReviewerAssignmentDetail,
@@ -166,6 +168,33 @@ export const httpReviewProvider: ReviewProvider = {
         error,
         { 401: 'UNAUTHORIZED', 404: 'NOT_FOUND' },
         'Application not found.'
+      );
+    }
+  },
+
+  async submitMyPostVisitReport(applicationId, values) {
+    try {
+      const response = await submitMyPostVisitReportRequest(readToken(), applicationId, {
+        report_narrative: values.reportNarrative,
+        attendance_confirmed: values.attendanceConfirmed,
+      });
+      const report = fromTransportPostVisitReport(response.data.post_visit_report);
+
+      if (!report) {
+        throw new Error('Backend returned no post-visit report');
+      }
+
+      return report;
+    } catch (error) {
+      return rethrowCodedError(
+        error,
+        {
+          401: 'UNAUTHORIZED',
+          404: 'NOT_FOUND',
+          409: 'CONFLICT',
+          422: 'VALIDATION',
+        },
+        'We could not submit the post-visit report.'
       );
     }
   },

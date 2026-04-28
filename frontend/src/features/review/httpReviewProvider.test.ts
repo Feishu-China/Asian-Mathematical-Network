@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import axios from 'axios';
-import { fetchMyApplicationDetail } from '../../api/review';
+import { fetchMyApplicationDetail, submitMyPostVisitReportRequest } from '../../api/review';
 import { httpReviewProvider } from './httpReviewProvider';
 
 vi.mock('../../api/review', () => ({
@@ -14,6 +14,7 @@ vi.mock('../../api/review', () => ({
   fetchReviewerAssignmentDetail: vi.fn(),
   submitReviewerReviewRequest: vi.fn(),
   fetchMyApplicationDetail: vi.fn(),
+  submitMyPostVisitReportRequest: vi.fn(),
 }));
 
 describe('httpReviewProvider', () => {
@@ -57,6 +58,13 @@ describe('httpReviewProvider', () => {
           files: [],
           submitted_at: '2026-04-20T10:00:00.000Z',
           released_decision: null,
+          post_visit_report: {
+            id: 'report-1',
+            status: 'submitted',
+            report_narrative: 'I attended the workshop and shared follow-up notes.',
+            attendance_confirmed: true,
+            submitted_at: '2026-05-01T08:30:00.000Z',
+          },
           post_visit_report_status: null,
         },
       },
@@ -92,7 +100,46 @@ describe('httpReviewProvider', () => {
       files: [],
       submittedAt: '2026-04-20T10:00:00.000Z',
       releasedDecision: null,
+      postVisitReport: {
+        id: 'report-1',
+        status: 'submitted',
+        reportNarrative: 'I attended the workshop and shared follow-up notes.',
+        attendanceConfirmed: true,
+        submittedAt: '2026-05-01T08:30:00.000Z',
+      },
       postVisitReportStatus: null,
+    });
+  });
+
+  it('submits a post-visit report through the real applicant API and maps the response', async () => {
+    vi.mocked(submitMyPostVisitReportRequest).mockResolvedValueOnce({
+      data: {
+        post_visit_report: {
+          id: 'report-1',
+          status: 'submitted',
+          report_narrative: 'Workshop completed successfully.',
+          attendance_confirmed: true,
+          submitted_at: '2026-05-02T12:00:00.000Z',
+        },
+      },
+    });
+
+    await expect(
+      httpReviewProvider.submitMyPostVisitReport('application-1', {
+        reportNarrative: 'Workshop completed successfully.',
+        attendanceConfirmed: true,
+      })
+    ).resolves.toEqual({
+      id: 'report-1',
+      status: 'submitted',
+      reportNarrative: 'Workshop completed successfully.',
+      attendanceConfirmed: true,
+      submittedAt: '2026-05-02T12:00:00.000Z',
+    });
+
+    expect(submitMyPostVisitReportRequest).toHaveBeenCalledWith('review-token', 'application-1', {
+      report_narrative: 'Workshop completed successfully.',
+      attendance_confirmed: true,
     });
   });
 

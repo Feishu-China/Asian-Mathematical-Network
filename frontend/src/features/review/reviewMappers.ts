@@ -166,6 +166,13 @@ type TransportApplicantApplicationDetail = {
     note_external: string | null;
     released_at: string | null;
   } | null;
+  post_visit_report: {
+    id: string;
+    status: string;
+    report_narrative: string;
+    attendance_confirmed: boolean;
+    submitted_at: string | null;
+  } | null;
   post_visit_report_status: string | null;
 };
 
@@ -250,6 +257,19 @@ export const fromTransportInternalDecision = (
   decidedAt: decision.decided_at,
   releasedAt: decision.released_at,
 });
+
+export const fromTransportPostVisitReport = (
+  report: TransportApplicantApplicationDetail['post_visit_report']
+) =>
+  report
+    ? {
+        id: report.id,
+        status: report.status,
+        reportNarrative: report.report_narrative,
+        attendanceConfirmed: report.attendance_confirmed,
+        submittedAt: report.submitted_at,
+      }
+    : null;
 
 export const fromTransportOrganizerApplicationDetail = (
   detail: TransportOrganizerApplicationDetail
@@ -347,6 +367,7 @@ export const fromTransportApplicantApplicationDetail = (
         releasedAt: detail.released_decision.released_at,
       }
     : null,
+  postVisitReport: fromTransportPostVisitReport(detail.post_visit_report),
   postVisitReportStatus: detail.post_visit_report_status,
 });
 
