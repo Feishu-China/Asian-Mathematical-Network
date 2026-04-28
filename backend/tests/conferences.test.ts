@@ -436,7 +436,7 @@ describe('Conference API', () => {
       id: applicationId,
       application_type: 'conference_application',
       conference_id: conferenceId,
-      conference_title: 'Organizer Conference 2026',
+      conference_title: 'Apply Conference 2026',
       viewer_status: 'under_review',
       statement: 'Updated draft statement.',
       submitted_at: expect.any(String),
