@@ -41,4 +41,32 @@ describe('backend database configuration', () => {
     const lockFile = readBackendFile('prisma', 'migrations', 'migration_lock.toml');
     expect(lockFile).toContain('provider = "postgresql"');
   });
+
+  it('uses environment-driven PostgreSQL scripts for backend start, dev, and test', () => {
+    const packageJson = JSON.parse(readBackendFile('package.json')) as {
+      scripts?: Record<string, string>;
+    };
+
+    expect(packageJson.scripts?.start).toContain('prisma migrate deploy');
+    expect(packageJson.scripts?.start).not.toContain('file:./');
+    expect(packageJson.scripts?.dev).toContain('prisma migrate deploy');
+    expect(packageJson.scripts?.dev).not.toContain('file:./');
+    expect(packageJson.scripts?.test).toContain('TEST_DATABASE_URL');
+    expect(packageJson.scripts?.test).not.toContain('file:./');
+  });
+
+  it('does not fall back to SQLite in backend utility scripts', () => {
+    const scriptPaths = [
+      path.join(backendRoot, '..', 'scripts', 'seed-demo-baseline.mjs'),
+      path.join(backendRoot, '..', 'scripts', 'grant-real-flow-check.mjs'),
+      path.join(backendRoot, '..', 'scripts', 'me-applications-real-flow-check.mjs'),
+    ];
+
+    for (const scriptPath of scriptPaths) {
+      const contents = fs.readFileSync(scriptPath, 'utf8');
+
+      expect(contents).not.toContain('file:./dev.db');
+      expect(contents).toContain('DATABASE_URL');
+    }
+  });
 });

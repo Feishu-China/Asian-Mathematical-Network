@@ -9,7 +9,10 @@ const backendDir = path.resolve(scriptDir, '../backend');
 
 process.env.TS_NODE_PROJECT = path.join(backendDir, 'tsconfig.json');
 process.chdir(backendDir);
-process.env.DATABASE_URL ??= 'file:./dev.db';
+
+if (!process.env.DATABASE_URL) {
+  throw new Error('DATABASE_URL must be set before running seed-demo-baseline.mjs');
+}
 
 require('../backend/node_modules/ts-node/register/transpile-only');
 
