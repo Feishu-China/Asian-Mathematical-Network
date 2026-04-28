@@ -140,7 +140,11 @@ export type ApplicantApplicationDetail = {
   linkedConferenceTitle: string | null;
   linkedConferenceApplicationId: string | null;
   viewerStatus: ViewerStatus;
+  participationType: string | null;
   statement: string | null;
+  abstractTitle: string | null;
+  abstractText: string | null;
+  interestedInTravelSupport: boolean;
   travelPlanSummary: string | null;
   fundingNeedSummary: string | null;
   extraAnswers: Record<string, unknown>;

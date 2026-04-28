@@ -10,6 +10,30 @@
 
 ## 📅 Handoff 历史记录
 
+### 2026-04-28 (Session 41)
+*   **Agent 角色**: Coding Agent (Applicant summary parity fix)
+*   **关联 Feature**: `FE-PORTAL-001` partial follow-up only
+*   **问题现象**:
+    *   applicant 提交 conference application 后，在 `/me/applications/:id` 的 `Application summary` 中只能看到 `Statement`，看不到已填写的 `Participation type`、`Abstract title`、`Abstract text` 和 `Interested in travel support`。
+    *   同一条 application 在 reviewer / organizer 视图中已经能看到 abstract 相关字段，因此 applicant detail 明显比其它角色视图缺字段。
+*   **根因定位**:
+    *   applicant detail contract 单独走 `serializeApplicantApplicationDetail()` / `ApplicantApplicationDetail`，这条链路没有序列化或映射 `participation_type`、`abstract_title`、`abstract_text`、`interested_in_travel_support`。
+    *   同时 `frontend/src/pages/MyApplicationDetail.tsx` 的 `Application summary` 区块只渲染了 `statement`、grant-specific summary 字段、extra answers 和 files，即使这些 conference fields 存在也不会显示。
+*   **变更记录**:
+    *   `backend/src/serializers/workflow.ts` 为 applicant detail payload 补回 `participation_type`、`abstract_title`、`abstract_text`、`interested_in_travel_support`。
+    *   `frontend/src/features/review/types.ts`、`reviewMappers.ts`、`fakeReviewProvider.ts` 对齐 applicant detail contract，确保 real/fake provider 都携带这些字段。
+    *   `frontend/src/pages/MyApplicationDetail.tsx` 的 `Application summary` 现在会显示 participation type、abstract title、abstract text，以及 conference application 的 travel support 状态。
+    *   `frontend/src/pages/MyApplicationDetail.test.tsx` 与 `frontend/src/features/review/httpReviewProvider.test.ts` 补回归，锁定 applicant detail summary 和 real API mapper 不再漏字段。
+    *   `backend/tests/review.test.ts` 扩展 applicant detail API 断言，要求 `/api/v1/me/applications/:id` 返回这些 conference-specific fields。
+*   **验证记录**:
+    *   按 TDD 先补失败测试，执行 `cd frontend && npm run test:run -- src/pages/MyApplicationDetail.test.tsx src/features/review/httpReviewProvider.test.ts`，确认 applicant detail mapper / summary 断言先失败。
+    *   修复后执行通过同一命令：`2` 个 test files、`7` 个 tests 全部通过。
+    *   执行通过 `cd frontend && npm run build`（`tsc -b && vite build`）。
+    *   backend full DB integration test 这轮未完成：当前 worktree 未配置 `TEST_DATABASE_URL`，而 `cd backend && npx tsc --noEmit` 还会命中 postgres 分支已有的 Prisma typing / implicit any 历史问题，无法把 serializer 改动单独跑成一轮 clean backend green。
+*   **边界与说明**:
+    *   本轮只修 applicant detail summary 的字段缺失，没有改 reviewer / organizer detail grammar，也没有改 submit flow 本身。
+    *   backend serializer 已随代码补齐，但仍需要在有 `TEST_DATABASE_URL` 的 postgres 环境里补跑一次 `review.test.ts`，确认真实 `/api/v1/me/applications/:id` 集成返回与前端当前展示一致。
+
 ### 2026-04-28 (Session 40)
 *   **Agent 角色**: Coding Agent (Role workspace fix)
 *   **关联 Feature**: `FE-PORTAL-001` partial follow-up only

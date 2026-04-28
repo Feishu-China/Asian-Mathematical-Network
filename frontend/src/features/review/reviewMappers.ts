@@ -148,7 +148,11 @@ type TransportApplicantApplicationDetail = {
   linked_conference_title: string | null;
   linked_conference_application_id: string | null;
   viewer_status: ApplicantApplicationDetail['viewerStatus'];
+  participation_type: string | null;
   statement: string | null;
+  abstract_title: string | null;
+  abstract_text: string | null;
+  interested_in_travel_support: boolean;
   travel_plan_summary: string | null;
   funding_need_summary: string | null;
   extra_answers: Record<string, unknown>;
@@ -323,7 +327,11 @@ export const fromTransportApplicantApplicationDetail = (
   linkedConferenceTitle: detail.linked_conference_title,
   linkedConferenceApplicationId: detail.linked_conference_application_id,
   viewerStatus: detail.viewer_status,
+  participationType: detail.participation_type,
   statement: detail.statement,
+  abstractTitle: detail.abstract_title,
+  abstractText: detail.abstract_text,
+  interestedInTravelSupport: detail.interested_in_travel_support,
   travelPlanSummary: detail.travel_plan_summary,
   fundingNeedSummary: detail.funding_need_summary,
   extraAnswers: detail.extra_answers,

@@ -72,6 +72,14 @@ describe('MyApplicationDetail page', () => {
       screen.getByText('We are pleased to inform you that your application has been accepted.')
     ).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /application summary/i })).toBeInTheDocument();
+    expect(screen.getByText(/participation type:/i)).toBeInTheDocument();
+    expect(screen.getByText(/^talk$/i)).toBeInTheDocument();
+    expect(screen.getByText(/abstract title:/i)).toBeInTheDocument();
+    expect(screen.getByText(/a note on birational geometry/i)).toBeInTheDocument();
+    expect(screen.getByText(/abstract text:/i)).toBeInTheDocument();
+    expect(screen.getByText(/this talk discusses a compactness result\./i)).toBeInTheDocument();
+    expect(screen.getByText(/travel support:/i)).toBeInTheDocument();
+    expect(screen.getByText(/requested/i)).toBeInTheDocument();
     expect(screen.queryByText(/internal status/i)).not.toBeInTheDocument();
   });
 

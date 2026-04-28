@@ -285,6 +285,27 @@ export default function MyApplicationDetail() {
                   <strong>Statement:</strong> {application.statement}
                 </p>
               ) : null}
+              {application.participationType ? (
+                <p>
+                  <strong>Participation type:</strong> {application.participationType}
+                </p>
+              ) : null}
+              {application.abstractTitle ? (
+                <p>
+                  <strong>Abstract title:</strong> {application.abstractTitle}
+                </p>
+              ) : null}
+              {application.abstractText ? (
+                <p>
+                  <strong>Abstract text:</strong> {application.abstractText}
+                </p>
+              ) : null}
+              {application.applicationType === 'conference_application' ? (
+                <p>
+                  <strong>Travel support:</strong>{' '}
+                  {application.interestedInTravelSupport ? 'Requested' : 'Not requested'}
+                </p>
+              ) : null}
               {application.travelPlanSummary ? (
                 <p>
                   <strong>Travel plan:</strong> {application.travelPlanSummary}
@@ -307,6 +328,9 @@ export default function MyApplicationDetail() {
                 </p>
               ) : null}
               {!application.statement &&
+              !application.participationType &&
+              !application.abstractTitle &&
+              !application.abstractText &&
               !application.travelPlanSummary &&
               !application.fundingNeedSummary &&
               Object.keys(application.extraAnswers).length === 0 &&

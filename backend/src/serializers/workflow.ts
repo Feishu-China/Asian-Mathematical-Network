@@ -281,7 +281,11 @@ export const serializeApplicantApplicationDetail = (application: {
   linkedConferenceId: string | null;
   linkedConferenceApplicationId: string | null;
   status: string;
+  participationType: string | null;
   statement: string | null;
+  abstractTitle: string | null;
+  abstractText: string | null;
+  interestedInTravelSupport: boolean;
   travelPlanSummary: string | null;
   fundingNeedSummary: string | null;
   extraAnswersJson: string;
@@ -337,7 +341,11 @@ export const serializeApplicantApplicationDetail = (application: {
     linked_conference_title: application.grant?.linkedConference?.title ?? null,
     linked_conference_application_id: application.linkedConferenceApplicationId,
     viewer_status: viewerStatus,
+    participation_type: application.participationType,
     statement: application.statement,
+    abstract_title: application.abstractTitle,
+    abstract_text: application.abstractText,
+    interested_in_travel_support: application.interestedInTravelSupport,
     travel_plan_summary: application.travelPlanSummary,
     funding_need_summary: application.fundingNeedSummary,
     extra_answers: parseJson<Record<string, unknown>>(application.extraAnswersJson, {}),

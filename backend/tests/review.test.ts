@@ -356,6 +356,11 @@ describe('Review API', () => {
       id: applicationId,
       application_type: 'conference_application',
       viewer_status: 'under_review',
+      participation_type: 'talk',
+      statement: 'I would like to present new work.',
+      abstract_title: 'A note on birational geometry',
+      abstract_text: 'This talk discusses a compactness result.',
+      interested_in_travel_support: true,
       released_decision: null,
     });
     expect(applicantDetailBeforeRelease.body.data.application).not.toHaveProperty('decision');
