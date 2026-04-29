@@ -123,6 +123,11 @@
   align-items: baseline;
 }
 
+.conference-field-help {
+  color: var(--color-text-muted);
+  font-size: 0.95rem;
+}
+
 .conference-required-indicator {
   color: var(--color-navy-700);
 }

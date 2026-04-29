@@ -78,6 +78,14 @@
   color: var(--color-text);
 }
 
+.conference-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
 .conference-form-actions {
   display: flex;
   flex-wrap: wrap;

@@ -72,8 +72,9 @@ describe('conference apply page', () => {
     expect(await screen.findByText(/application submitted/i)).toBeInTheDocument();
   });
 
-  it('shows required markers for base and talk-specific fields', async () => {
+  it('shows only the statement requirement for participant applications', async () => {
     localStorage.setItem('token', 'applicant-1');
+    const user = userEvent.setup();
 
     renderWithRouter(
       <ConferenceApply />,
@@ -82,14 +83,18 @@ describe('conference apply page', () => {
     );
 
     await screen.findByRole('heading', { name: /conference application/i });
+    await user.selectOptions(screen.getByLabelText(/participation type/i), 'participant');
 
     expect(screen.getAllByText(hasExactText('Participation type *'))[0]).toBeInTheDocument();
     expect(screen.getAllByText(hasExactText('Statement *'))[0]).toBeInTheDocument();
-    expect(screen.getAllByText(hasExactText('Abstract title (required for talk)'))[0]).toBeInTheDocument();
-    expect(screen.getAllByText(hasExactText('Abstract text (required for talk)'))[0]).toBeInTheDocument();
+    expect(
+      screen.getByText(/you only need a short statement for participant registration/i)
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText(/abstract title/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/abstract text/i)).not.toBeInTheDocument();
   });
 
-  it('explains why submit is disabled before saving and when talk abstract fields are incomplete', async () => {
+  it('requires abstract fields for poster submissions', async () => {
     localStorage.setItem('token', 'applicant-1');
     const user = userEvent.setup();
 
@@ -103,16 +108,67 @@ describe('conference apply page', () => {
 
     expect(screen.getByText(/save this draft once before submitting/i)).toBeInTheDocument();
 
-    await user.selectOptions(screen.getByLabelText(/participation type/i), 'talk');
+    await user.selectOptions(screen.getByLabelText(/participation type/i), 'poster');
+    expect(
+      screen.getByText(/an abstract title and abstract text are required for presentation submissions/i)
+    ).toBeInTheDocument();
+    expect(screen.getAllByText(hasExactText('Abstract title *'))[0]).toBeInTheDocument();
+    expect(screen.getAllByText(hasExactText('Abstract text *'))[0]).toBeInTheDocument();
     await user.type(screen.getByLabelText(/statement/i), 'I want to present new work.');
     await user.type(screen.getByLabelText(/abstract title/i), 'A New Theorem');
     await user.click(screen.getByRole('button', { name: /save draft/i }));
 
     expect(await screen.findByText(/draft saved/i)).toBeInTheDocument();
     expect(
-      screen.getByText(/abstract text is required for talk submissions/i)
+      screen.getByText(/abstract text is required for poster submissions/i)
     ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /submit application/i })).toBeDisabled();
+  });
+
+  it('allows participant submissions without abstract fields once the draft is saved', async () => {
+    localStorage.setItem('token', 'applicant-1');
+    const user = userEvent.setup();
+
+    renderWithRouter(
+      <ConferenceApply />,
+      '/conferences/asiamath-2026-workshop/apply',
+      '/conferences/:slug/apply'
+    );
+
+    await screen.findByRole('heading', { name: /conference application/i });
+
+    await user.selectOptions(screen.getByLabelText(/participation type/i), 'participant');
+    await user.type(screen.getByLabelText(/statement/i), 'I would like to attend and join discussions.');
+    await user.click(screen.getByRole('button', { name: /save draft/i }));
+
+    expect(await screen.findByText(/draft saved/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /submit application/i })).toBeEnabled();
+  });
+
+  it('preserves abstract values when toggling back from participant to talk', async () => {
+    localStorage.setItem('token', 'applicant-1');
+    const user = userEvent.setup();
+
+    renderWithRouter(
+      <ConferenceApply />,
+      '/conferences/asiamath-2026-workshop/apply',
+      '/conferences/:slug/apply'
+    );
+
+    await screen.findByRole('heading', { name: /conference application/i });
+
+    await user.selectOptions(screen.getByLabelText(/participation type/i), 'talk');
+    await user.type(screen.getByLabelText(/abstract title/i), 'Stored abstract title');
+    await user.type(screen.getByLabelText(/abstract text/i), 'Stored abstract text');
+    await user.selectOptions(screen.getByLabelText(/participation type/i), 'participant');
+
+    expect(screen.queryByLabelText(/abstract title/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/abstract text/i)).not.toBeInTheDocument();
+
+    await user.selectOptions(screen.getByLabelText(/participation type/i), 'talk');
+
+    expect(screen.getByDisplayValue('Stored abstract title')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Stored abstract text')).toBeInTheDocument();
   });
 
   it('renders the shared applicant account menu for signed-in applicants', async () => {
