@@ -85,6 +85,17 @@ type DemoGrantApplicationFixture = {
     submittedAt: string;
   };
 };
+type DemoReviewAssignmentFixture = {
+  conferenceSlug: string;
+  applicantKey: 'showcaseApplicant';
+  reviewer: 'reviewer';
+  assignedBy: 'organizer';
+  status: 'assigned';
+  conflictState: 'clear' | 'flagged';
+  conflictNote: string | null;
+  assignedAt: string;
+  dueAt: string | null;
+};
 type ProfileRecord = Prisma.ProfileGetPayload<{
   include: { mscCodes: true };
 }>;
@@ -538,6 +549,20 @@ const DEMO_SHOWCASE_GRANT_APPLICATIONS: readonly DemoGrantApplicationFixture[] =
   },
 ] as const;
 
+const DEMO_REVIEW_ASSIGNMENTS: readonly DemoReviewAssignmentFixture[] = [
+  {
+    conferenceSlug: 'regional-topology-symposium-2026',
+    applicantKey: 'showcaseApplicant',
+    reviewer: 'reviewer',
+    assignedBy: 'organizer',
+    status: 'assigned',
+    conflictState: 'clear',
+    conflictNote: null,
+    assignedAt: '2026-04-24T09:00:00Z',
+    dueAt: '2026-05-08T23:59:59Z',
+  },
+] as const;
+
 const DEMO_ACCOUNT_ENTRIES = Object.entries(DEMO_BASELINE_FIXTURE.demoAccounts) as Array<
   [DemoAccountKey, DemoAccountFixture]
 >;
@@ -560,6 +585,9 @@ const getGrantFormSchemaJson = () =>
   JSON.stringify({
     fields: DEMO_BASELINE_FIXTURE.grantFormFields,
   });
+
+const buildConferenceApplicationSeedKey = (accountKey: DemoAccountKey, conferenceSlug: string) =>
+  `${accountKey}:${conferenceSlug}`;
 
 const getLoginRole = (key: DemoAccountKey): DemoLoginRole => {
   if (key === 'organizer') {
@@ -989,6 +1017,7 @@ const seedShowcaseApplications = async (
     buildApplicantProfileSnapshot(accountByKey.showcaseApplicant.profile)
   );
   const acceptedConferenceApplicationsBySlug = new Map<string, { id: string }>();
+  const conferenceApplicationsByAccountAndSlug = new Map<string, { id: string }>();
 
   for (const fixture of DEMO_REVIEWER_CONFERENCE_APPLICATIONS) {
     const conference = getRequiredConference(conferences, fixture.conferenceSlug);
@@ -1049,6 +1078,10 @@ const seedShowcaseApplications = async (
       fixture.decision
     );
     await syncPostVisitReport(prisma, application.id, undefined);
+    conferenceApplicationsByAccountAndSlug.set(
+      buildConferenceApplicationSeedKey('reviewer', fixture.conferenceSlug),
+      { id: application.id }
+    );
   }
 
   for (const fixture of DEMO_SHOWCASE_CONFERENCE_APPLICATIONS) {
@@ -1110,6 +1143,10 @@ const seedShowcaseApplications = async (
       fixture.decision
     );
     await syncPostVisitReport(prisma, application.id, undefined);
+    conferenceApplicationsByAccountAndSlug.set(
+      buildConferenceApplicationSeedKey('showcaseApplicant', fixture.conferenceSlug),
+      { id: application.id }
+    );
 
     if (fixture.decision?.finalStatus === 'accepted') {
       acceptedConferenceApplicationsBySlug.set(fixture.conferenceSlug, { id: application.id });
@@ -1185,6 +1222,31 @@ const seedShowcaseApplications = async (
     await replaceApplicationStatusHistory(prisma, application.id, accountByKey, fixture.statusHistory);
     await syncDecision(prisma, application.id, 'grant_application', accountByKey, fixture.decision);
     await syncPostVisitReport(prisma, application.id, fixture.postVisitReport);
+  }
+
+  for (const fixture of DEMO_REVIEW_ASSIGNMENTS) {
+    const application = conferenceApplicationsByAccountAndSlug.get(
+      buildConferenceApplicationSeedKey(fixture.applicantKey, fixture.conferenceSlug)
+    );
+
+    if (!application) {
+      throw new Error(
+        `Reviewer assignment fixture for ${fixture.applicantKey}:${fixture.conferenceSlug} is missing its seeded application`
+      );
+    }
+
+    await prisma.reviewAssignment.create({
+      data: {
+        applicationId: application.id,
+        reviewerUserId: accountByKey[fixture.reviewer].user.id,
+        assignedByUserId: accountByKey[fixture.assignedBy].user.id,
+        status: fixture.status,
+        conflictState: fixture.conflictState,
+        conflictNote: fixture.conflictNote,
+        assignedAt: new Date(fixture.assignedAt),
+        dueAt: parseDate(fixture.dueAt),
+      },
+    });
   }
 };
 

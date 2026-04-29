@@ -283,7 +283,7 @@
         "Integrate with mock endpoints"
       ],
       "status": "completed",
-      "passes": false
+      "passes": true
     },
     {
       "id": "BE-PROFILE-001",
@@ -301,7 +301,7 @@
         "Write backend unit tests"
       ],
       "status": "completed",
-      "passes": false
+      "passes": true
     },
     {
       "id": "INT-PROFILE-001",
@@ -357,7 +357,7 @@
         "Integrate with mock endpoints"
       ],
       "status": "completed",
-      "passes": false
+      "passes": true
     },
     {
       "id": "BE-CONF-001",
@@ -375,7 +375,7 @@
         "Write backend unit tests"
       ],
       "status": "completed",
-      "passes": false
+      "passes": true
     },
     {
       "id": "INT-CONF-001",
@@ -412,7 +412,7 @@
         "Integrate with mock endpoints"
       ],
       "status": "completed",
-      "passes": false
+      "passes": true
     },
     {
       "id": "BE-GRANT-001",
@@ -430,7 +430,7 @@
         "Enforce conference linkage validation"
       ],
       "status": "completed",
-      "passes": false
+      "passes": true
     },
     {
       "id": "INT-GRANT-001",
@@ -522,7 +522,7 @@
         "Integrate with mock endpoints"
       ],
       "status": "completed",
-      "passes": false
+      "passes": true
     },
     {
       "id": "BE-PORTAL-001",
@@ -539,7 +539,7 @@
         "Ensure data returns released vs unreleased status correctly"
       ],
       "status": "completed",
-      "passes": false
+      "passes": true
     },
     {
       "id": "INT-PORTAL-001",

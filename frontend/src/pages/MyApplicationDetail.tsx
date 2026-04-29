@@ -5,7 +5,6 @@ import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
 import { DemoStatePanel } from '../features/demo/DemoStatePanel';
-import { DemoShortcutPanel } from '../features/demo/DemoShortcutPanel';
 import {
   clearAuthSession,
   readAuthToken,
@@ -273,24 +272,36 @@ export default function MyApplicationDetail() {
               </div>
             </div>
 
-            <DemoShortcutPanel
-              className="surface-card review-sidebar application-detail__aside"
-              headingLevel="h3"
-              title={demoWalkthroughCopy.detail.title}
-              intro={demoWalkthroughCopy.detail.intro}
-              shortcuts={[
-                {
-                  to: DASHBOARD_RETURN_CONTEXT.to,
-                  label: DASHBOARD_RETURN_CONTEXT.label,
-                  description: 'Return to the authenticated workspace summary after narrating this application detail.',
-                },
-                {
-                  to: PORTAL_RETURN_CONTEXT.to,
-                  label: 'Restart from portal',
-                  description: 'Replay the story from the public entry when the rehearsal needs a clean reset.',
-                },
-              ]}
-            />
+            <section className="surface-card review-sidebar application-detail__aside application-detail__shortcut-panel">
+              <h3>{demoWalkthroughCopy.detail.title}</h3>
+              <p className="application-detail__shortcut-intro">{demoWalkthroughCopy.detail.intro}</p>
+              <div className="application-detail__shortcut-list">
+                <Link
+                  to={DASHBOARD_RETURN_CONTEXT.to}
+                  className="application-detail__shortcut-card"
+                  aria-label={DASHBOARD_RETURN_CONTEXT.label}
+                >
+                  <span className="application-detail__shortcut-card-title">
+                    {DASHBOARD_RETURN_CONTEXT.label}
+                  </span>
+                  <span className="application-detail__shortcut-card-description">
+                    Return to the authenticated workspace summary after narrating this application detail.
+                  </span>
+                </Link>
+                <Link
+                  to={PORTAL_RETURN_CONTEXT.to}
+                  className="application-detail__shortcut-card"
+                  aria-label="Restart from portal"
+                >
+                  <span className="application-detail__shortcut-card-title">
+                    Restart from portal
+                  </span>
+                  <span className="application-detail__shortcut-card-description">
+                    Replay the story from the public entry when the rehearsal needs a clean reset.
+                  </span>
+                </Link>
+              </div>
+            </section>
           </div>
         ) : null
       }

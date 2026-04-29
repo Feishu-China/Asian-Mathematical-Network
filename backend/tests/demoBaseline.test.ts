@@ -154,6 +154,51 @@ describe('demo baseline fixture', () => {
     );
   });
 
+  it('seeds at least one reviewer assignment that matches the showcase under-review contract', async () => {
+    const fixture = await ensureDemoBaseline(prisma);
+    const organizer = fixture.demoAccounts.find((account) => account.key === 'organizer');
+    const reviewer = fixture.demoAccounts.find((account) => account.key === 'reviewer');
+    const showcaseApplicant = fixture.demoAccounts.find(
+      (account) => account.key === 'showcaseApplicant'
+    );
+
+    expect(organizer).toBeDefined();
+    expect(reviewer).toBeDefined();
+    expect(showcaseApplicant).toBeDefined();
+
+    const reviewerAssignments = await prisma.reviewAssignment.findMany({
+      where: { reviewerUserId: reviewer!.user.id },
+      include: {
+        application: {
+          include: {
+            conference: true,
+            grant: true,
+          },
+        },
+      },
+      orderBy: [{ assignedAt: 'desc' }],
+    });
+
+    expect(reviewerAssignments.length).toBeGreaterThanOrEqual(1);
+    expect(reviewerAssignments).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          reviewerUserId: reviewer!.user.id,
+          assignedByUserId: organizer!.user.id,
+          status: 'assigned',
+          conflictState: 'clear',
+          application: expect.objectContaining({
+            applicantUserId: showcaseApplicant!.user.id,
+            applicationType: 'conference_application',
+            status: 'under_review',
+            conference: expect.objectContaining({ slug: 'regional-topology-symposium-2026' }),
+            grant: null,
+          }),
+        }),
+      ])
+    );
+  });
+
   it('creates stable demo accounts, public/private scholar-profile baselines, and role-capable organizer/reviewer accounts', async () => {
     const fixture = await ensureDemoBaseline(prisma);
 

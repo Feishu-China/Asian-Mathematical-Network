@@ -301,6 +301,8 @@ function ApplicationSection({
   untitledFallback,
   detailState,
 }: ApplicationSectionProps) {
+  const navigate = useNavigate();
+
   return (
     <section className="dashboard-widget" aria-labelledby={`section-${heading}`}>
       <header className="my-applications__section-header">
@@ -311,13 +313,20 @@ function ApplicationSection({
       </header>
 
       {items.length === 0 ? (
-        <DemoStatePanel
-          badgeLabel="Empty"
-          title={emptyHint}
-          description="Use the browse link in this section to start a new record."
-          tone="neutral"
-          compact
-        />
+        <button
+          type="button"
+          className="surface-card my-applications__empty-card"
+          onClick={() => navigate(browseLink.to, { state: browseLink.state })}
+        >
+          <StatusBadge tone="neutral">Empty</StatusBadge>
+          <span className="my-applications__empty-title">{emptyHint}</span>
+          <span className="my-applications__empty-description">
+            {browseLink.to === '/conferences'
+              ? 'Browse conferences to start a new record.'
+              : 'Browse grants to start a new record.'}
+          </span>
+          <span className="my-applications__empty-cta">{browseLink.label}</span>
+        </button>
       ) : (
         <ul className="my-applications__list">
           {items.map((item) => (

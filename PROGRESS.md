@@ -10,6 +10,51 @@
 
 ## 📅 Handoff 历史记录
 
+### 2026-04-29 (Session 51)
+*   **Agent 角色**: Coding Agent (`DR-005` / `PMB-006` integration + `DR-006` blocker fixes)
+*   **关联 Feature**: 无新增 feature；本轮目标是把 Sprint 1 的 hosted smoke、feature-list passes 收口，以及修复 `DR-004` 暴露的两个 `P1` blocker。
+*   **执行结果总览**:
+    *   `DR-005` 已真实执行并通过，结果见 `docs/planning/asiamath-d0-hosted-smoke-run-2026-04-29.md`。
+    *   `PMB-006` 已完成，`docs/planning/asiamath-feature-list-v4.0-optimized.json` 中剩余 `passes: false` 已回填为 `0`，决议记录见 `docs/planning/asiamath-feature-list-passes-resolution-2026-04-29.md`。
+    *   `DR-004` 原始本地 rehearsal 仍保持 `P0=0 / P1=2 / P2=1` 的失败记录；但本轮已经对两条 `P1` blocker 进行了代码修复，等待本地环境恢复后重跑。
+*   **Hosted smoke (`DR-005`) 结论**:
+    *   当前 live hosted preview 实际来源仍是 `codex/demo-d0-postgres-deploy`，未自动切到 `main`。
+    *   Vercel preview URL 为 `https://asiamath-demo-d0-frontend-preview-b9dty01s0-feishus-projects.vercel.app`，对应 commit `7443fdeb95c2249ef66f9e3e232d915b3c2528d6`。
+    *   Railway backend 为 `https://backend-production-2d8c.up.railway.app`。
+    *   `Postgres.DATABASE_PUBLIC_URL` 路径下的真实 reseed 成功，public `/conferences`、`/grants`、`/scholars` API、showcase/clean applicant `/me/applications`、以及 `/portal`、`/dashboard`、`/me/applications`、grant detail、`/scholars` 的 browser smoke 全部通过。
+    *   最大 caveat 不是产品问题，而是 `agent-browser` 对匿名/public navbar 状态清理不完全可靠，因此 public 面验证主要依赖页面内容、网络请求和 error check。
+*   **Feature-list passes (`PMB-006`) 结论**:
+    *   这轮把以下 `8` 个历史遗留 implementation item 从 `passes: false` 回填为 `passes: true`：
+        *   `FE-PROFILE-001`
+        *   `BE-PROFILE-001`
+        *   `FE-CONF-001`
+        *   `BE-CONF-001`
+        *   `FE-GRANT-001`
+        *   `BE-GRANT-001`
+        *   `FE-PORTAL-001`
+        *   `BE-PORTAL-001`
+    *   理由不是“这轮新做完了功能”，而是这些实现早已落仓，后续 `INT-*`、real-flow、browser evidence 都已经在历史 `PROGRESS.md` 和 run 文档中闭环，只是 frozen feature-list 从未回填。
+    *   当前 frozen MVP feature-list 已经变成 `24/24 completed` 且 `passes: false = 0`。后续 readiness 风险不再用旧 feature-list 的红灯表示，而由 post-MVP backlog / Sprint 文档承担。
+*   **`DR-006` 已落的 blocker 修复**:
+    *   **`R1` 导航交互回归** 已修：
+        *   根因不是 route 不存在，而是若干 surface 视觉上像整块 CTA/card，但真实可点击区域只挂在小块 inline `Link` 上，本地 rehearsal 点击正文时不会导航。
+        *   已在 applicant 空态、grant detail presenter shortcut、dashboard organizer/reviewer workspace 入口、scholar card 四处改成整块可触发的导航卡片，并补齐前端回归测试。
+        *   前端验证通过：
+            *   `npm run test --workspace frontend -- src/pages/MyApplications.test.tsx src/pages/MyApplicationDetail.test.tsx src/pages/Dashboard.test.tsx src/pages/Scholars.test.tsx`
+            *   `41` 个测试全部通过
+            *   `npm run build --workspace frontend` 通过（只有既有 chunk-size warning）
+    *   **`R2` reviewer queue 空态导致无法验 `queue -> detail -> back`** 已修：
+        *   根因是 demo baseline 过去只 seed 了 reviewer/applicant/showcase 的 `Application`，没有 seed `ReviewAssignment`，而 reviewer queue 直接查 `reviewAssignment`。
+        *   已在 `backend/src/lib/demoBaseline.ts` 增加最小 reviewer assignment fixture，并在 `backend/tests/demoBaseline.test.ts` 加回归测试，保证 reviewer demo 账号至少拥有一条与当前 under-review showcase contract 一致的 assignment。
+        *   线程执行时在本机 `5433` override 下已跑过 `tests/demoBaseline.test.ts` 并通过；但主线程补验时，当前机器上的 `5432` 与 `5433` 都无法被 Prisma 连通，因此主线程未能再次独立复跑同组 backend tests。
+*   **当前环境 blocker**:
+    *   尝试重跑本地 `DR-004` 时，`npm run seed:demo` 在 `5432` 和 `5433` 两条路径上都收到 Prisma `Can't reach database server at 127.0.0.1:<port>`。
+    *   `lsof` 显示 `5432` 和 `5433` 都由 `ssh` 进程监听，说明当前机器更像是依赖本地端口转发而不是真正本地 Postgres 实例；但从 Prisma 视角看，这两个端口当前都不可用。
+    *   因此，`DR-004` 的**修后复跑尚未完成**，原因是环境 blocker，不是这轮代码修复再次失败。
+*   **建议下一步**:
+    *   先恢复一个可用的本地 Postgres 路径（无论是 `5432` 官方默认还是 `5433` 本机 override），再重跑 `DR-004`。
+    *   如果你不想先处理本地数据库，也可以先整合并提交本轮代码/文档结果，因为 `DR-005` 与 `PMB-006` 都已完成，`DR-006` 两个代码 blocker 也已落地。
+
 ### 2026-04-29 (Session 50)
 *   **Agent 角色**: Coding Agent (Sprint 1 `DR-004` / `DR-005` / `DR-007` parallel artifact integration)
 *   **关联 Feature**: 无新增 feature；本轮只并行产出并整合 Sprint 1 第二批 demo-readiness artifact，不执行真实 rehearsal 或 hosted smoke。

@@ -15,6 +15,45 @@
   font-weight: 600;
 }
 
+.my-applications__empty-card {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--border-subtle);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.my-applications__empty-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-1px);
+}
+
+.my-applications__empty-card:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.my-applications__empty-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-navy-900);
+}
+
+.my-applications__empty-description {
+  color: var(--color-text-muted);
+}
+
+.my-applications__empty-cta {
+  font-weight: 600;
+  color: var(--color-navy-800);
+}
+
 .my-applications__list {
   list-style: none;
   margin: 0;

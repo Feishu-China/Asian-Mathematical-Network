@@ -318,6 +318,52 @@ describe('Dashboard page', () => {
     expect(screen.getByText(/"label":"Back to dashboard"/)).toBeInTheDocument();
   });
 
+  it('navigates into the organizer workspace when the workspace card body is clicked', async () => {
+    const user = userEvent.setup();
+    localStorage.setItem('token', 'organizer-1');
+    mockedGetMe.mockResolvedValueOnce(
+      buildMeResponse({
+        id: 'user-organizer',
+        email: 'demo.organizer@asiamath.org',
+        status: 'active',
+        role: 'organizer',
+        roles: ['applicant', 'organizer'],
+        available_workspaces: ['applicant', 'organizer'],
+        primary_role: 'organizer',
+        conference_staff_memberships: [
+          {
+            conference_id: 'conf-draft-001',
+            staff_role: 'owner',
+          },
+        ],
+        createdAt: '2026-04-29T00:00:00.000Z',
+        updatedAt: '2026-04-29T00:00:00.000Z',
+      })
+    );
+
+    render(
+      <MemoryRouter initialEntries={['/dashboard']}>
+        <Routes>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route
+            path="/organizer/conferences/:id/applications"
+            element={<div>Organizer workspace destination</div>}
+          />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByRole('heading', { name: /dashboard/i })).toBeInTheDocument();
+
+    await user.click(
+      screen.getByText(
+        /Enter reviewer assignment, internal decision, and release-control surfaces without falling back to applicant-only content/i
+      )
+    );
+
+    expect(await screen.findByText('Organizer workspace destination')).toBeInTheDocument();
+  });
+
   it('renders the shared applicant account menu and logs out to the portal', async () => {
     const user = userEvent.setup();
     localStorage.setItem('token', 'dashboard-token');

@@ -189,15 +189,18 @@ const renderApplicantPanels = (
 
 const renderReviewerPanels = (workspaceState: ReturnContextState | undefined) => (
   <>
-    <div className="dashboard-widget">
+    <Link
+      to="/reviewer"
+      state={workspaceState}
+      className="dashboard-widget dashboard-widget--link-card"
+      aria-label="Open reviewer queue"
+    >
       <h3>Reviewer queue</h3>
       <p className="dashboard-widget__summary">
         Open only your assigned review tasks and keep conflict-flagged work blocked from submission.
       </p>
-      <Link to="/reviewer" state={workspaceState} className="dashboard-widget__link">
-        Open reviewer queue
-      </Link>
-    </div>
+      <span className="dashboard-widget__card-cta">Open reviewer queue</span>
+    </Link>
     <div className="dashboard-widget">
       <h3>Review scope</h3>
       <p>
@@ -221,16 +224,19 @@ const renderOrganizerPanels = (
 
   return (
     <>
-      <div className="dashboard-widget">
+      <Link
+        to={workspaceHref}
+        state={workspaceState}
+        className="dashboard-widget dashboard-widget--link-card"
+        aria-label={workspaceLabel}
+      >
         <h3>Conference workspace</h3>
         <p className="dashboard-widget__summary">
           Enter reviewer assignment, internal decision, and release-control surfaces without falling
           back to applicant-only content.
         </p>
-        <Link to={workspaceHref} state={workspaceState} className="dashboard-widget__link">
-          {workspaceLabel}
-        </Link>
-      </div>
+        <span className="dashboard-widget__card-cta">{workspaceLabel}</span>
+      </Link>
       <div className="dashboard-widget">
         <h3>Decision controls</h3>
         <p>

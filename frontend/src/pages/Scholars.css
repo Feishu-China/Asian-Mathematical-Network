@@ -15,6 +15,30 @@
   color: var(--color-navy-700);
 }
 
+.scholar-summary-card__card-link {
+  color: inherit;
+  text-decoration: none;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.scholar-summary-card__card-link:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-1px);
+}
+
+.scholar-summary-card__card-link:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.scholar-summary-card__card-link:hover .scholar-summary-card__title {
+  color: var(--color-accent);
+}
+
 .scholar-summary-card__title {
   font-family: var(--font-heading);
   font-size: 1.35rem;

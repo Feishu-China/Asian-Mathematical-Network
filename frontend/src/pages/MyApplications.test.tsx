@@ -182,6 +182,26 @@ describe('MyApplications page', () => {
     ).toHaveAttribute('href', '/conferences');
   });
 
+  it('navigates into conferences when the conference empty-state browse card body is clicked', async () => {
+    const user = userEvent.setup();
+    localStorage.setItem('token', 'test-token');
+
+    render(
+      <MemoryRouter initialEntries={['/me/applications']}>
+        <Routes>
+          <Route path="/me/applications" element={<MyApplications />} />
+          <Route path="/conferences" element={<div>Conference browse destination</div>} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await screen.findByText(/You have no conference applications yet/i);
+
+    await user.click(screen.getByText(/Browse conferences to start a new record/i));
+
+    expect(await screen.findByText('Conference browse destination')).toBeInTheDocument();
+  });
+
   it('shows a dedicated error state when application records fail to load', async () => {
     localStorage.setItem('token', 'test-token');
     vi.spyOn(dashboardProvider, 'listMyApplications').mockRejectedValueOnce(
