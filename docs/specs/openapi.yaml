@@ -404,6 +404,10 @@ components:
           format: uuid
           nullable: true
           description: Conference id for conference applications, grant id for grant applications.
+        source_slug:
+          type: string
+          nullable: true
+          description: Conference or grant slug for the source object, suitable for building public URLs.
         source_title:
           type: string
           nullable: true
@@ -424,7 +428,10 @@ components:
         post_visit_report_status:
           type: string
           nullable: true
-          description: Reserved for the post-visit report flow; currently always null.
+          description: |
+            `submitted` once the applicant has submitted a post-visit report for this
+            application; `null` otherwise. Only meaningful for grant applications with
+            `report_required: true` after a released accepted decision.
 
     MyApplicationDetail:
       type: object
@@ -489,6 +496,26 @@ components:
           nullable: true
         released_decision:
           $ref: '#/components/schemas/ReleasedDecisionDetail'
+        post_visit_report:
+          type: object
+          nullable: true
+          description: |
+            The submitted post-visit report when present, otherwise null. Mirrors
+            `post_visit_report_status` for clients that prefer the nested object.
+          required:
+            - id
+            - status
+            - report_narrative
+            - attendance_confirmed
+          properties:
+            id: { type: string, format: uuid }
+            status: { type: string }
+            report_narrative: { type: string }
+            attendance_confirmed: { type: boolean }
+            submitted_at:
+              type: string
+              format: date-time
+              nullable: true
         post_visit_report_status:
           type: string
           nullable: true
