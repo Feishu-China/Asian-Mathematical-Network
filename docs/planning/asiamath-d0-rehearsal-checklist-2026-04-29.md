@@ -168,7 +168,7 @@ npm run seed:demo
   期望：grant result 渲染正确；`post-visit report` 已提交状态可见；没有 dead-end CTA。
 
 - [ ] 从 applicant workspace 验证 public 回流 affordance。
-  期望：`Back to portal` 或 `Browse opportunities` 可以把用户带回公共浏览面，且不会破坏登录态。
+  期望：当前保留的 applicant-safe 返回入口可以把用户带回公共浏览面，且不会破坏登录态；不要求在 application detail 中额外保留 `Restart from portal` 一类 demo shortcut。
 
 - [ ] 退出 showcase applicant。
   期望：登出后公共入口恢复正常，不残留错误角色壳层。

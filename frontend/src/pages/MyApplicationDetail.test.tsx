@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
-import userEvent from '@testing-library/user-event';
 import { resetReviewFakeState } from '../features/review/fakeReviewProvider';
 import { reviewProvider } from '../features/review/reviewProvider';
 import MyApplicationDetail from './MyApplicationDetail';
@@ -133,10 +132,6 @@ describe('MyApplicationDetail page', () => {
       '/me/applications'
     );
     expect(screen.getByRole('heading', { name: /presenter shortcuts/i })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /restart from portal/i })).toHaveAttribute(
-      'href',
-      '/portal'
-    );
     expect(
       screen.getByText('We are pleased to inform you that your application has been accepted.')
     ).toBeInTheDocument();
@@ -218,31 +213,6 @@ describe('MyApplicationDetail page', () => {
     expect(
       screen.queryByRole('heading', { name: /submit post-visit report/i })
     ).not.toBeInTheDocument();
-  });
-
-  it('navigates to the portal when the presenter shortcut card body is clicked', async () => {
-    const user = userEvent.setup();
-    localStorage.setItem('token', 'applicant-1');
-    vi.spyOn(reviewProvider, 'getMyApplicationDetail').mockResolvedValueOnce(
-      acceptedGrantDetailWithReport
-    );
-
-    render(
-      <MemoryRouter initialEntries={['/me/applications/grant-application-2']}>
-        <Routes>
-          <Route path="/me/applications/:id" element={<MyApplicationDetail />} />
-          <Route path="/portal" element={<div>Portal destination</div>} />
-        </Routes>
-      </MemoryRouter>
-    );
-
-    expect(await screen.findByRole('heading', { name: /presenter shortcuts/i })).toBeInTheDocument();
-
-    await user.click(
-      screen.getByText(/Replay the story from the public entry when the rehearsal needs a clean reset/i)
-    );
-
-    expect(await screen.findByText('Portal destination')).toBeInTheDocument();
   });
 
   it('renders a dedicated error state when the applicant detail request fails', async () => {

@@ -14,7 +14,6 @@ import { isUnauthorizedSessionError } from '../features/auth/sessionErrors';
 import {
   DASHBOARD_RETURN_CONTEXT,
   demoWalkthroughCopy,
-  PORTAL_RETURN_CONTEXT,
 } from '../features/demo/demoWalkthrough';
 import { toReturnToState } from '../features/navigation/authReturn';
 import { readReturnContext } from '../features/navigation/returnContext';
@@ -286,18 +285,6 @@ export default function MyApplicationDetail() {
                   </span>
                   <span className="application-detail__shortcut-card-description">
                     Return to the authenticated workspace summary after narrating this application detail.
-                  </span>
-                </Link>
-                <Link
-                  to={PORTAL_RETURN_CONTEXT.to}
-                  className="application-detail__shortcut-card"
-                  aria-label="Restart from portal"
-                >
-                  <span className="application-detail__shortcut-card-title">
-                    Restart from portal
-                  </span>
-                  <span className="application-detail__shortcut-card-description">
-                    Replay the story from the public entry when the rehearsal needs a clean reset.
                   </span>
                 </Link>
               </div>

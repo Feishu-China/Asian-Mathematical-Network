@@ -118,6 +118,12 @@ Preflight observations:
 
 ## Key Observations
 
+### Post-run clarification
+
+- The grant-detail `Restart from portal` shortcut recorded in this run reflected an older demo affordance, not a stable product requirement.
+- Current rehearsal interpretation should treat that item as a historical observation from this round, not as a reason to restore the shortcut in applicant detail after the product flow was simplified.
+- `R1` should therefore be read as a broader click-navigation regression across still-supported CTA/card surfaces, not as a mandate to keep a detail-page portal reset entry.
+
 ### Showcase applicant
 
 - `/me/applications` displayed exactly four seeded records.
@@ -166,7 +172,7 @@ Preflight observations:
 
 | Issue ID | Priority | Surface / Route | Role / Account | Repro Steps | Expected | Actual | Screenshot Path | Notes / Next Action |
 |---|---|---|---|---|---|---|---|---|
-| `R1` | `P1` | `/me/applications/:id`, `/me/applications`, `/dashboard`, `/scholars` | showcase applicant, clean applicant, organizer, visitor | `1. Open the route. 2. Click the rendered CTA or card link. 3. Observe URL.` | The clicked link should navigate to its visible target. | Multiple rendered links kept the browser on the same URL after repeated click attempts. Reproduced on `Restart from portal` in grant detail, `Browse conferences` in clean applicant empty state, `Open conference workspace` in organizer dashboard, and scholar card links in `/scholars`. Direct `open <href>` worked for the same targets. | `tmp/rehearsal/2026-04-29/r1-restart-from-portal.png` | Investigate a navigation interaction regression across several routed links before re-running `DR-004`. |
+| `R1` | `P1` | `/me/applications/:id`, `/me/applications`, `/dashboard`, `/scholars` | showcase applicant, clean applicant, organizer, visitor | `1. Open the route. 2. Click the rendered CTA or card link. 3. Observe URL.` | The clicked link should navigate to its visible target. | Multiple rendered links kept the browser on the same URL after repeated click attempts. Reproduced on the then-visible `Restart from portal` affordance in grant detail, `Browse conferences` in clean applicant empty state, `Open conference workspace` in organizer dashboard, and scholar card links in `/scholars`. Direct `open <href>` worked for the same targets. | `tmp/rehearsal/2026-04-29/r1-restart-from-portal.png` | Investigate a navigation interaction regression across several routed links before re-running `DR-004`. The grant-detail shortcut itself was later confirmed to be an obsolete demo affordance rather than a current product requirement. |
 | `R2` | `P1` | `/reviewer` | reviewer | `1. Log in as reviewer. 2. Open /dashboard. 3. Switch to Reviewer. 4. Inspect queue.` | At least one seeded reviewer assignment should exist so `queue -> detail -> back` can be validated. | Reviewer queue loaded with shell controls, but the only content state was `No reviewer assignments yet.` No detail route could be exercised from the queue. | `not captured` | Decide whether `seed:demo` should include at least one reviewer assignment, or mark reviewer detail coverage out of scope for this round. |
 | `R3` | `P2` | `/me/applications` | clean applicant | `1. Log in as clean applicant. 2. Open /me/applications. 3. Inspect empty-state CTA wording.` | Checklist expected a unified `Browse opportunities` CTA from the empty state. | The page showed `Start from published conferences`, `Restart from portal`, `Browse conferences`, and `Browse grants`; no unified `Browse opportunities` CTA was present. | `not captured` | Align checklist wording and UI copy, or restore a single applicant-safe empty-state CTA. |
 
