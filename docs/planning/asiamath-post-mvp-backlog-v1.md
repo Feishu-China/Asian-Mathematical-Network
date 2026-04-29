@@ -41,6 +41,16 @@
 | `PMB-006` | 整理 feature-list `passes` 遗留约定 | Engineering / Delivery | `unblock` | 当前 `24/24 completed` 但仍有 `8` 个 `passes: false`，会让交接口径不够直观。 | 明确是否保留现状、统一回填、或新增文档说明，不再造成误判。 |
 | `PMB-007` | 准备 presenter-safe demo kit | Demo Readiness | `demo` | 现在系统已经能演示，但缺一个可重复、可交给别人上手的演示包。 | 固定 demo 账号、seed 数据、3 分钟 / 10 分钟脚本、关键截图或讲解顺序。 |
 
+### Sprint 1 closeout snapshot
+
+`PMB-001 ~ PMB-007` are now closed for Sprint 1.
+
+Closeout evidence:
+
+- `docs/planning/asiamath-sprint-1-closeout-2026-04-29.md`
+- `docs/planning/asiamath-d0-rehearsal-run-2026-04-29.md`
+- `docs/planning/asiamath-d0-hosted-smoke-run-2026-04-29.md`
+
 ---
 
 ## 3. P1 Next
@@ -99,4 +109,3 @@
 - `docs/planning/asiamath-demo-coverage-matrix-d0.md`
 - `docs/planning/asiamath-demo-preview-ops-d0.md`
 - `docs/planning/mvp-demo-dual-track-governance.md`
-

@@ -10,6 +10,27 @@
 
 ## 📅 Handoff 历史记录
 
+### 2026-04-29 (Session 53)
+*   **Agent 角色**: Coding Agent (Sprint 1 closeout)
+*   **关联 Feature**: 无新增 feature；本轮目标是把 `Sprint 1: Demo Readiness` 从“实际上已完成”正式收口为文档状态上的 `completed`。
+*   **变更记录**:
+    *   新增 `docs/planning/asiamath-sprint-1-closeout-2026-04-29.md`，作为 Sprint 1 的关账文档。
+    *   文档明确确认以下 exit gate 全部满足：
+        *   `d0` 基线明确
+        *   本地运行与 Postgres 契约明确
+        *   `DR-004` 修后复跑为 `Pass`
+        *   `DR-005` hosted reseed + smoke 为 `Pass`
+        *   当前没有已知 `P0` demo blocker
+        *   `DR-007` demo kit 已完成
+    *   `docs/planning/asiamath-sprint-1-demo-readiness-2026-04-29.md` 已显式改成 `Current status: completed`，并链接到 closeout 记录。
+    *   `docs/planning/asiamath-post-mvp-backlog-v1.md` 已补 `Sprint 1 closeout snapshot`，明确 `PMB-001 ~ PMB-007` 已关闭。
+*   **结论**:
+    *   `Sprint 1` 现在不应再视为 `in progress`。
+    *   当前项目的主选择已经从“继续修 demo blockers”切换为“下一轮是继续 demo/delivery，还是恢复 product growth”。
+*   **下一步**:
+    *   若近期仍频繁面向外部演示，优先进入 demo/delivery 路线：preview branch 策略、移动端 polish、operator rehearsal cadence。
+    *   若演示基线已足够稳定，则可以从 `PMB-008 ~ PMB-010` 里选一个真实产品增量开下一轮 sprint。
+
 ### 2026-04-29 (Session 52)
 *   **Agent 角色**: Coding Agent (`DR-004` rerun closeout)
 *   **关联 Feature**: 无新增 feature；本轮只关闭 `DR-004` 修后复跑，并收掉 applicant 侧残留的过时 demo shortcut。

@@ -5,6 +5,9 @@
 > Sprint type: post-MVP closeout sprint  
 > Goal: 让当前 Asiamath 从 “功能型 MVP 已完成” 进入 “可重复展示、可重复验收、可交接” 的 demo-ready 状态。
 
+> Current status: `completed`
+> Closeout record: `docs/planning/asiamath-sprint-1-closeout-2026-04-29.md`
+
 ---
 
 ## 1. Sprint 目标
@@ -162,6 +165,14 @@ Sprint 1 只有在以下条件同时满足时，才算真正完成：
 
 若任一条件未满足，则本轮仍应视为 `in progress`，而不是“因为功能已完成所以自然结束”。
 
+Current closeout result:
+
+- `DR-001 ~ DR-007` 已全部有对应 artifact 或执行结果
+- local rehearsal 已在修后复跑中转为 `Pass`
+- hosted preview reseed + smoke 已转为 `Pass`
+- 当前已无已知 `P0` demo blocker
+- 因此本 sprint 现在按 closeout 记录视为 `completed`
+
 ---
 
 ## 8. Sprint 1 之后的衔接
@@ -185,4 +196,3 @@ Sprint 1 只有在以下条件同时满足时，才算真正完成：
 - reviewer access 流程
 - backend runtime / deployment 深化
 - 选定 1-2 个 breadth 模块继续 productize
-
