@@ -99,6 +99,7 @@ type Props = {
   description?: ReactNode;
   badges?: ReactNode;
   actions?: ReactNode;
+  workspaceSwitcher?: ReactNode;
   accountMenu?: AccountMenu;
   aside?: ReactNode;
   children: ReactNode;
@@ -110,6 +111,7 @@ export function WorkspaceShell({
   description,
   badges,
   actions,
+  workspaceSwitcher,
   accountMenu,
   aside,
   children,
@@ -120,15 +122,16 @@ export function WorkspaceShell({
         <header className="page-shell__header">
           {eyebrow ? <p className="page-shell__eyebrow">{eyebrow}</p> : null}
           {badges ? <div className="page-shell__badges">{badges}</div> : null}
-          {title || description || actions || accountMenu ? (
+          {title || description || actions || workspaceSwitcher || accountMenu ? (
             <div className="page-shell__title-row">
               <div className="page-shell__title-group">
                 {title ? <h1>{title}</h1> : null}
                 {description ? <p className="page-shell__description">{description}</p> : null}
               </div>
-              {actions || accountMenu ? (
+              {actions || workspaceSwitcher || accountMenu ? (
                 <div className="page-shell__actions">
                   {actions}
+                  {workspaceSwitcher}
                   {accountMenu ? <WorkspaceAccountMenu menu={accountMenu} /> : null}
                 </div>
               ) : null}

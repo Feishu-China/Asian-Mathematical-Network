@@ -1,7 +1,18 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { login } from '../api/auth';
-import { readReturnTo, toReturnToState } from '../features/navigation/authReturn';
+import {
+  hasExplicitReturnTo,
+  readReturnTo,
+  resolvePostAuthDestination,
+  resolvePostAuthWorkspace,
+  toReturnToState,
+} from '../features/navigation/authReturn';
+import {
+  writeAuthToken,
+  writeStoredAuthUser,
+} from '../features/auth/authSession';
+import { writeStoredWorkspace } from '../features/navigation/workspaces';
 import { LogIn, Mail, Lock } from 'lucide-react';
 import './Auth.css'; // Add basic styling
 
@@ -20,8 +31,14 @@ export default function Login() {
     setLoading(true);
     try {
       const data = await login({ email, password });
-      localStorage.setItem('token', data.accessToken);
-      navigate(returnTo);
+      writeAuthToken(data.accessToken);
+      writeStoredAuthUser(data.user);
+
+      if (!hasExplicitReturnTo(location.state)) {
+        writeStoredWorkspace(resolvePostAuthWorkspace(data.user.available_workspaces));
+      }
+
+      navigate(resolvePostAuthDestination(location.state, data.user.available_workspaces));
     } catch (err: any) {
       setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
     } finally {

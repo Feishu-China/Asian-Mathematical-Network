@@ -5,36 +5,32 @@ import { WorkspaceShell } from '../components/layout/WorkspaceShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
-import { getMe } from '../api/auth';
+import { getMe, type AuthUser } from '../api/auth';
 import { dashboardProvider } from '../features/dashboard/dashboardProvider';
 import { DemoStatePanel } from '../features/demo/DemoStatePanel';
-import { DemoShortcutPanel } from '../features/demo/DemoShortcutPanel';
+import { clearAuthSession, readAuthToken, writeStoredAuthUser } from '../features/auth/authSession';
 import {
   buildChainedReturnState,
   DASHBOARD_RETURN_CONTEXT,
-  demoWalkthroughCopy,
   MY_APPLICATIONS_RETURN_CONTEXT,
   OPPORTUNITIES_RETURN_CONTEXT,
 } from '../features/demo/demoWalkthrough';
 import type { MyApplication, ViewerStatus } from '../features/dashboard/types';
-import type { AccountMenu } from '../features/navigation/accountMenu';
 import { toReturnToState } from '../features/navigation/authReturn';
+import { WorkspaceSwitcher } from '../features/navigation/WorkspaceSwitcher';
 import type { ReturnContextState } from '../features/navigation/returnContext';
+import { buildWorkspaceAccountMenu } from '../features/navigation/workspaceAccountMenu';
+import { toWorkspaceEntryState } from '../features/navigation/workspaceNavigation';
+import {
+  getApplicantReviewerWorkspaces,
+  writeStoredWorkspace,
+} from '../features/navigation/workspaces';
 import './Dashboard.css';
 
 type WorkspaceRole = 'applicant' | 'reviewer' | 'organizer' | 'admin';
 
 type DashboardData = {
-  user?: {
-    email?: string | null;
-    status?: string | null;
-    role?: WorkspaceRole | null;
-    primary_role?: WorkspaceRole | null;
-    conference_staff_memberships?: Array<{
-      conference_id?: string | null;
-      staff_role?: string | null;
-    }> | null;
-  };
+  user?: AuthUser;
 };
 
 type BadgeTone = 'neutral' | 'info' | 'success' | 'warning' | 'danger';
@@ -93,6 +89,16 @@ const readWorkspaceRole = (user: DashboardData['user'] | undefined): WorkspaceRo
   return isWorkspaceRole(role) ? role : 'applicant';
 };
 
+const readDashboardWorkspaceRole = (user: DashboardData['user'] | undefined): WorkspaceRole => {
+  const applicantReviewerWorkspaces = getApplicantReviewerWorkspaces(user?.available_workspaces);
+
+  if (applicantReviewerWorkspaces.length > 1) {
+    return 'applicant';
+  }
+
+  return readWorkspaceRole(user);
+};
+
 const readPrimaryConferenceId = (user: DashboardData['user'] | undefined): string | null => {
   const conferenceId = user?.conference_staff_memberships?.find(
     (membership) => typeof membership?.conference_id === 'string' && membership.conference_id.length > 0
@@ -100,96 +106,6 @@ const readPrimaryConferenceId = (user: DashboardData['user'] | undefined): strin
 
   return conferenceId ?? null;
 };
-
-const buildDashboardAccountMenu = (
-  role: WorkspaceRole,
-  primaryConferenceId: string | null,
-  onLogout: () => void
-): AccountMenu => {
-  const roleLinks =
-    role === 'reviewer'
-      ? [
-          {
-            kind: 'link' as const,
-            to: '/reviewer',
-            label: 'Reviewer Queue',
-          },
-          {
-            kind: 'link' as const,
-            to: '/me/profile',
-            label: 'My Profile',
-          },
-        ]
-      : role === 'organizer'
-        ? [
-            {
-              kind: 'link' as const,
-              to: primaryConferenceId
-                ? `/organizer/conferences/${primaryConferenceId}/applications`
-                : '/organizer/conferences/new',
-              label: primaryConferenceId ? 'Conference Workspace' : 'Create Conference',
-            },
-            {
-              kind: 'link' as const,
-              to: '/me/profile',
-              label: 'My Profile',
-            },
-          ]
-        : role === 'admin'
-          ? [
-              {
-                kind: 'link' as const,
-                to: '/me/profile',
-                label: 'My Profile',
-              },
-            ]
-          : [
-              {
-                kind: 'link' as const,
-                to: '/me/applications',
-                label: 'My Applications',
-              },
-              {
-                kind: 'link' as const,
-                to: '/me/profile',
-                label: 'My Profile',
-              },
-            ];
-
-  return {
-    label: 'Account',
-    items: [
-      {
-        kind: 'link',
-        to: '/dashboard',
-        label: 'My Dashboard',
-      },
-      ...roleLinks,
-      {
-        kind: 'action',
-        label: 'Log out',
-        onSelect: onLogout,
-      },
-    ],
-  };
-};
-
-const buildShortcutPanel = (
-  shortcuts: Array<{
-    to: string;
-    label: string;
-    description: string;
-    state?: ReturnContextState;
-  }>
-) => (
-  <DemoShortcutPanel
-    className="dashboard-widget"
-    headingLevel="h3"
-    title={demoWalkthroughCopy.dashboard.title}
-    intro={demoWalkthroughCopy.dashboard.intro}
-    shortcuts={shortcuts}
-  />
-);
 
 const renderApplicantPanels = (
   latestApplication: MyApplication | null,
@@ -261,21 +177,6 @@ const renderApplicantPanels = (
           }
         />
       )}
-      {buildShortcutPanel([
-        {
-          to: '/me/applications',
-          state: buildChainedReturnState(MY_APPLICATIONS_RETURN_CONTEXT, DASHBOARD_RETURN_CONTEXT),
-          label: 'Continue in My applications',
-          description:
-            'Move into the seeded applicant record list without losing your dashboard return link.',
-        },
-        {
-          to: '/portal',
-          label: 'Restart from portal',
-          description:
-            'Reset the demo story at the public entry if you need to replay the whole click path.',
-        },
-      ])}
       <div className="dashboard-widget">
         <h3>Upcoming Conferences</h3>
         <p>Explore latest mathematical conferences in Asia.</p>
@@ -284,29 +185,17 @@ const renderApplicantPanels = (
   );
 };
 
-const renderReviewerPanels = () => (
+const renderReviewerPanels = (workspaceState: ReturnContextState | undefined) => (
   <>
     <div className="dashboard-widget">
       <h3>Reviewer queue</h3>
       <p className="dashboard-widget__summary">
         Open only your assigned review tasks and keep conflict-flagged work blocked from submission.
       </p>
-      <Link to="/reviewer" className="dashboard-widget__link">
+      <Link to="/reviewer" state={workspaceState} className="dashboard-widget__link">
         Open reviewer queue
       </Link>
     </div>
-    {buildShortcutPanel([
-      {
-        to: '/reviewer',
-        label: 'Continue in reviewer queue',
-        description: 'Move into your assigned review tasks without opening applicant-only surfaces.',
-      },
-      {
-        to: '/portal',
-        label: 'Restart from portal',
-        description: 'Return to the public entry when the demo story needs a clean reset.',
-      },
-    ])}
     <div className="dashboard-widget">
       <h3>Review scope</h3>
       <p>
@@ -317,7 +206,10 @@ const renderReviewerPanels = () => (
   </>
 );
 
-const renderOrganizerPanels = (primaryConferenceId: string | null) => {
+const renderOrganizerPanels = (
+  primaryConferenceId: string | null,
+  workspaceState: ReturnContextState | undefined
+) => {
   const workspaceHref = primaryConferenceId
     ? `/organizer/conferences/${primaryConferenceId}/applications`
     : '/organizer/conferences/new';
@@ -333,24 +225,10 @@ const renderOrganizerPanels = (primaryConferenceId: string | null) => {
           Enter reviewer assignment, internal decision, and release-control surfaces without falling
           back to applicant-only content.
         </p>
-        <Link to={workspaceHref} className="dashboard-widget__link">
+        <Link to={workspaceHref} state={workspaceState} className="dashboard-widget__link">
           {workspaceLabel}
         </Link>
       </div>
-      {buildShortcutPanel([
-        {
-          to: workspaceHref,
-          label: primaryConferenceId ? 'Continue in organizer queue' : 'Start organizer workspace',
-          description: primaryConferenceId
-            ? 'Move into the seeded conference queue without detouring through applicant pages.'
-            : 'Create the first organizer-owned conference workspace for this account.',
-        },
-        {
-          to: '/portal',
-          label: 'Restart from portal',
-          description: 'Return to the public entry when the demo story needs a clean reset.',
-        },
-      ])}
       <div className="dashboard-widget">
         <h3>Decision controls</h3>
         <p>
@@ -374,13 +252,6 @@ const renderAdminPanels = () => (
         Return to portal
       </Link>
     </div>
-    {buildShortcutPanel([
-      {
-        to: '/portal',
-        label: 'Restart from portal',
-        description: 'Return to the public entry when the demo story needs a clean reset.',
-      },
-    ])}
     <div className="dashboard-widget">
       <h3>Current scope</h3>
       <p>Admin-specific workflow surfaces are not part of the current demo slice.</p>
@@ -394,14 +265,15 @@ const renderRolePanels = (
   applications: MyApplication[],
   hasApplicationHistory: boolean,
   applicationsError: boolean,
-  primaryConferenceId: string | null
+  primaryConferenceId: string | null,
+  workspaceState: ReturnContextState | undefined
 ) => {
   if (role === 'reviewer') {
-    return renderReviewerPanels();
+    return renderReviewerPanels(workspaceState);
   }
 
   if (role === 'organizer') {
-    return renderOrganizerPanels(primaryConferenceId);
+    return renderOrganizerPanels(primaryConferenceId, workspaceState);
   }
 
   if (role === 'admin') {
@@ -431,7 +303,7 @@ export default function Dashboard() {
     let active = true;
 
     const fetchMe = async () => {
-      const token = localStorage.getItem('token');
+      const token = readAuthToken();
       if (!token) {
         navigate('/login', { state: toReturnToState(location.pathname) });
         return;
@@ -444,8 +316,9 @@ export default function Dashboard() {
           return;
         }
 
+        writeStoredAuthUser(meResult.user);
         setUserData(meResult);
-        const role = readWorkspaceRole(meResult.user);
+        const role = readDashboardWorkspaceRole(meResult.user);
 
         if (role === 'applicant') {
           try {
@@ -467,7 +340,7 @@ export default function Dashboard() {
         }
       } catch {
         if (active) {
-          localStorage.removeItem('token');
+          clearAuthSession();
           navigate('/login', { state: toReturnToState(location.pathname) });
         }
       } finally {
@@ -484,16 +357,28 @@ export default function Dashboard() {
     };
   }, [location.pathname, navigate]);
 
-  const workspaceRole = readWorkspaceRole(userData?.user);
+  const workspaceRole = readDashboardWorkspaceRole(userData?.user);
   const workspaceCopy = WORKSPACE_COPY[workspaceRole];
   const activeApplications = applications.filter(isActiveApplication);
   const latestApplication = activeApplications[0] ?? null;
   const hasApplicationHistory = applications.length > 0;
   const primaryConferenceId = readPrimaryConferenceId(userData?.user);
-  const accountMenu = buildDashboardAccountMenu(workspaceRole, primaryConferenceId, () => {
-    localStorage.removeItem('token');
-    navigate('/portal');
+  const workspaceEntryState = toWorkspaceEntryState(DASHBOARD_RETURN_CONTEXT);
+  const applicantReviewerWorkspaces = getApplicantReviewerWorkspaces(userData?.user?.available_workspaces);
+  const accountMenu = buildWorkspaceAccountMenu({
+    role: workspaceRole,
+    primaryConferenceId,
+    onLogout: () => {
+      clearAuthSession();
+      navigate('/portal');
+    },
   });
+
+  useEffect(() => {
+    if (!loading) {
+      writeStoredWorkspace(workspaceRole);
+    }
+  }, [loading, workspaceRole]);
 
   if (loading) {
     return (
@@ -508,6 +393,14 @@ export default function Dashboard() {
           </>
         }
         accountMenu={accountMenu}
+        workspaceSwitcher={
+          applicantReviewerWorkspaces.length > 1 ? (
+            <WorkspaceSwitcher
+              currentWorkspace="applicant"
+              availableWorkspaces={applicantReviewerWorkspaces}
+            />
+          ) : undefined
+        }
       >
         <div className="dashboard-page">
           <DemoStatePanel
@@ -539,14 +432,24 @@ export default function Dashboard() {
           <Link to="/portal" className="dashboard-shell-link dashboard-shell-link--secondary">
             Back to portal
           </Link>
-          <Link
-            to="/opportunities"
-            state={buildChainedReturnState(OPPORTUNITIES_RETURN_CONTEXT, DASHBOARD_RETURN_CONTEXT)}
-            className="dashboard-shell-link"
-          >
-            Browse opportunities
-          </Link>
+          {workspaceRole === 'applicant' ? (
+            <Link
+              to="/opportunities"
+              state={buildChainedReturnState(OPPORTUNITIES_RETURN_CONTEXT, DASHBOARD_RETURN_CONTEXT)}
+              className="dashboard-shell-link"
+            >
+              Browse opportunities
+            </Link>
+          ) : null}
         </>
+      }
+      workspaceSwitcher={
+        applicantReviewerWorkspaces.length > 1 ? (
+          <WorkspaceSwitcher
+            currentWorkspace="applicant"
+            availableWorkspaces={applicantReviewerWorkspaces}
+          />
+        ) : undefined
       }
       accountMenu={accountMenu}
     >
@@ -569,7 +472,8 @@ export default function Dashboard() {
             activeApplications,
             hasApplicationHistory,
             applicationsError,
-            primaryConferenceId
+            primaryConferenceId,
+            workspaceEntryState
           )}
         </div>
       </div>

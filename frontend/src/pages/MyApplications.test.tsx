@@ -136,7 +136,30 @@ describe('MyApplications page', () => {
     await user.click(screen.getByRole('button', { name: 'Log out' }));
 
     expect(localStorage.getItem('token')).toBeNull();
+    expect(localStorage.getItem('asiamath.authUser')).toBeNull();
     expect(screen.getByText('Portal destination')).toBeInTheDocument();
+  });
+
+  it('shows the workspace switcher for accounts that can move between applicant and reviewer workspaces', async () => {
+    localStorage.setItem('token', 'test-token');
+    localStorage.setItem(
+      'asiamath.authUser',
+      JSON.stringify({
+        id: 'user-1',
+        email: 'user@example.com',
+        status: 'active',
+        role: 'reviewer',
+        roles: ['applicant', 'reviewer'],
+        available_workspaces: ['applicant', 'reviewer'],
+        primary_role: 'reviewer',
+        createdAt: '2026-04-29T00:00:00.000Z',
+        updatedAt: '2026-04-29T00:00:00.000Z',
+      })
+    );
+
+    renderWithRouter(<MyApplications />, '/me/applications', '/me/applications');
+
+    expect(await screen.findByRole('button', { name: /workspace/i })).toBeInTheDocument();
   });
 
   it('shows empty hints in both sections when the user has no applications', async () => {

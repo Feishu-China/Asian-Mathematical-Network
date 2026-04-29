@@ -6,6 +6,11 @@ import { RoleBadge } from '../components/ui/RoleBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
 import { DemoStatePanel } from '../features/demo/DemoStatePanel';
 import { DemoShortcutPanel } from '../features/demo/DemoShortcutPanel';
+import {
+  clearAuthSession,
+  readAuthToken,
+  readStoredAuthUser,
+} from '../features/auth/authSession';
 import { isUnauthorizedSessionError } from '../features/auth/sessionErrors';
 import {
   DASHBOARD_RETURN_CONTEXT,
@@ -14,7 +19,12 @@ import {
 } from '../features/demo/demoWalkthrough';
 import { toReturnToState } from '../features/navigation/authReturn';
 import { readReturnContext } from '../features/navigation/returnContext';
+import { WorkspaceSwitcher } from '../features/navigation/WorkspaceSwitcher';
 import { buildWorkspaceAccountMenu } from '../features/navigation/workspaceAccountMenu';
+import {
+  getApplicantReviewerWorkspaces,
+  writeStoredWorkspace,
+} from '../features/navigation/workspaces';
 import { reviewProvider } from '../features/review/reviewProvider';
 import type {
   ApplicantApplicationDetail,
@@ -77,8 +87,11 @@ export default function MyApplicationDetail() {
   const [reportSubmitting, setReportSubmitting] = useState(false);
   const [reportError, setReportError] = useState<string | null>(null);
   const returnContext = readReturnContext(location.state);
+  const applicantReviewerWorkspaces = getApplicantReviewerWorkspaces(
+    readStoredAuthUser()?.available_workspaces
+  );
   const accountMenu = buildWorkspaceAccountMenu(() => {
-    localStorage.removeItem('token');
+    clearAuthSession();
     navigate('/portal');
   });
   const backLink = returnContext ?? {
@@ -89,10 +102,12 @@ export default function MyApplicationDetail() {
   useEffect(() => {
     let active = true;
 
-    if (!localStorage.getItem('token')) {
+    if (!readAuthToken()) {
       navigate('/login', { state: toReturnToState(location.pathname) });
       return;
     }
+
+    writeStoredWorkspace('applicant');
 
     setApplication(null);
     setLoadState('loading');
@@ -115,7 +130,7 @@ export default function MyApplicationDetail() {
         }
 
         if (isUnauthorizedSessionError(error)) {
-          localStorage.removeItem('token');
+          clearAuthSession();
           navigate('/login', { state: toReturnToState(location.pathname) });
           return;
         }
@@ -163,7 +178,7 @@ export default function MyApplicationDetail() {
       setReportNarrative('');
     } catch (error) {
       if (isUnauthorizedSessionError(error)) {
-        localStorage.removeItem('token');
+        clearAuthSession();
         navigate('/login', { state: toReturnToState(location.pathname) });
         return;
       }
@@ -211,6 +226,14 @@ export default function MyApplicationDetail() {
         <Link to={backLink.to} state={backLink.state} className="application-detail__back-link">
           {backLink.label}
         </Link>
+      }
+      workspaceSwitcher={
+        applicantReviewerWorkspaces.length > 1 ? (
+          <WorkspaceSwitcher
+            currentWorkspace="applicant"
+            availableWorkspaces={applicantReviewerWorkspaces}
+          />
+        ) : undefined
       }
       accountMenu={accountMenu}
       aside={

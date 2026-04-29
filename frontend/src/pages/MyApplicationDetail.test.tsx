@@ -84,6 +84,20 @@ describe('MyApplicationDetail page', () => {
     await reviewProvider.releaseDecision('review-application-1');
 
     localStorage.setItem('token', 'applicant-1');
+    localStorage.setItem(
+      'asiamath.authUser',
+      JSON.stringify({
+        id: 'user-1',
+        email: 'user@example.com',
+        status: 'active',
+        role: 'reviewer',
+        roles: ['applicant', 'reviewer'],
+        available_workspaces: ['applicant', 'reviewer'],
+        primary_role: 'reviewer',
+        createdAt: '2026-04-29T00:00:00.000Z',
+        updatedAt: '2026-04-29T00:00:00.000Z',
+      })
+    );
 
     render(
       <MemoryRouter
@@ -112,6 +126,7 @@ describe('MyApplicationDetail page', () => {
     expect(screen.getByText('Page mode: Hybrid')).toBeInTheDocument();
     expect(screen.getByText('Result released')).toBeInTheDocument();
     expect(screen.getByText('Accepted')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /workspace/i })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /back to applicant overview/i })).toHaveAttribute(
       'href',
       '/me/applications'
@@ -242,6 +257,7 @@ describe('MyApplicationDetail page', () => {
 
     expect(await screen.findByText('{"returnTo":"/me/applications/review-application-1"}')).toBeInTheDocument();
     expect(localStorage.getItem('token')).toBeNull();
+    expect(localStorage.getItem('asiamath.authUser')).toBeNull();
   });
 
   it('redirects to /login with a returnTo state when no applicant session is present', async () => {

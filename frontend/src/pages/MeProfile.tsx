@@ -7,9 +7,15 @@ import { StatusBadge } from '../components/ui/StatusBadge';
 import { DemoStatePanel } from '../features/demo/DemoStatePanel';
 import { DemoStatusNotice } from '../features/demo/DemoStatusNotice';
 import { ProfileForm } from '../features/profile/ProfileForm';
+import {
+  clearAuthSession,
+  readAuthToken,
+  readStoredAuthUser,
+} from '../features/auth/authSession';
 import { isUnauthorizedSessionError } from '../features/auth/sessionErrors';
 import { DASHBOARD_RETURN_CONTEXT } from '../features/demo/demoWalkthrough';
 import { readReturnContext } from '../features/navigation/returnContext';
+import { WorkspaceSwitcher } from '../features/navigation/WorkspaceSwitcher';
 import {
   buildScholarRoute,
   formatDateTime,
@@ -21,6 +27,10 @@ import {
 import { profileProvider } from '../features/profile/profileProvider';
 import { toReturnToState } from '../features/navigation/authReturn';
 import { buildWorkspaceAccountMenu } from '../features/navigation/workspaceAccountMenu';
+import {
+  getApplicantReviewerWorkspaces,
+  writeStoredWorkspace,
+} from '../features/navigation/workspaces';
 import type { EditableProfile, ProfileFormValues } from '../features/profile/types';
 import './Profile.css';
 
@@ -35,18 +45,23 @@ export default function MeProfile() {
     'loading'
   );
   const returnContext = readReturnContext(location.state);
+  const applicantReviewerWorkspaces = getApplicantReviewerWorkspaces(
+    readStoredAuthUser()?.available_workspaces
+  );
   const accountMenu = buildWorkspaceAccountMenu(() => {
-    localStorage.removeItem('token');
+    clearAuthSession();
     navigate('/portal');
   });
 
   useEffect(() => {
     let cancelled = false;
 
-    if (!localStorage.getItem('token')) {
+    if (!readAuthToken()) {
       navigate('/login', { state: toReturnToState('/me/profile') });
       return;
     }
+
+    writeStoredWorkspace('applicant');
 
     profileProvider
       .getMyProfile()
@@ -65,7 +80,7 @@ export default function MeProfile() {
         }
 
         if (isUnauthorizedSessionError(error)) {
-          localStorage.removeItem('token');
+          clearAuthSession();
           navigate('/login', { state: toReturnToState('/me/profile') });
           return;
         }
@@ -88,7 +103,7 @@ export default function MeProfile() {
       setStatus('saved');
     } catch (error) {
       if (isUnauthorizedSessionError(error)) {
-        localStorage.removeItem('token');
+        clearAuthSession();
         navigate('/login', { state: toReturnToState('/me/profile') });
         return;
       }
@@ -143,6 +158,14 @@ export default function MeProfile() {
           </Link>
         }
         accountMenu={accountMenu}
+        workspaceSwitcher={
+          applicantReviewerWorkspaces.length > 1 ? (
+            <WorkspaceSwitcher
+              currentWorkspace="applicant"
+              availableWorkspaces={applicantReviewerWorkspaces}
+            />
+          ) : undefined
+        }
       >
         <div className="profile-page">
           <DemoStatePanel
@@ -188,6 +211,14 @@ export default function MeProfile() {
         >
           {returnContext?.label ?? DASHBOARD_RETURN_CONTEXT.label}
         </Link>
+      }
+      workspaceSwitcher={
+        applicantReviewerWorkspaces.length > 1 ? (
+          <WorkspaceSwitcher
+            currentWorkspace="applicant"
+            availableWorkspaces={applicantReviewerWorkspaces}
+          />
+        ) : undefined
       }
       accountMenu={accountMenu}
     >

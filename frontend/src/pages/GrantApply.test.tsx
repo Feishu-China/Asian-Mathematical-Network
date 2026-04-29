@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as authApi from '../api/auth';
+import type { MeResponse } from '../api/auth';
 import { render } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { renderWithRouter } from '../test/renderWithRouter';
@@ -16,6 +17,45 @@ import Grants from './Grants';
 import GrantDetail from './GrantDetail';
 import GrantApply from './GrantApply';
 
+const buildMeResponse = (
+  email: string,
+  userOverrides: Partial<MeResponse['user']> = {}
+): MeResponse => ({
+  user: {
+    id: 'grant-user',
+    email,
+    status: 'active' as const,
+    role: 'applicant' as const,
+    roles: ['applicant'],
+    available_workspaces: ['applicant'],
+    primary_role: 'applicant' as const,
+    createdAt: '2026-04-29T00:00:00.000Z',
+    updatedAt: '2026-04-29T00:00:00.000Z',
+    ...userOverrides,
+  },
+  profile: {
+    userId: 'grant-user',
+    slug: 'grant-user',
+    fullName: 'Grant User',
+    title: null,
+    institutionId: null,
+    institutionNameRaw: null,
+    countryCode: null,
+    careerStage: null,
+    bio: null,
+    personalWebsite: null,
+    researchKeywords: [],
+    mscCodes: [],
+    orcidId: null,
+    coiDeclarationText: '',
+    isProfilePublic: false,
+    verificationStatus: 'unverified' as const,
+    verifiedAt: null,
+    createdAt: '2026-04-29T00:00:00.000Z',
+    updatedAt: '2026-04-29T00:00:00.000Z',
+  },
+});
+
 function LoginStateProbe() {
   const location = useLocation();
 
@@ -27,11 +67,7 @@ vi.mock('../api/auth', async () => {
 
   return {
     ...actual,
-    getMe: vi.fn(async (token: string) => ({
-      user: {
-        email: `${token}@example.com`,
-      },
-    })),
+    getMe: vi.fn(async (token: string) => buildMeResponse(`${token}@example.com`)),
   };
 });
 
@@ -57,11 +93,7 @@ describe('grant apply page', () => {
     localStorage.clear();
     resetConferenceFakeState();
     resetGrantFakeState();
-    mockedGetMe.mockImplementation(async (token: string) => ({
-      user: {
-        email: `${token}@example.com`,
-      },
-    }));
+    mockedGetMe.mockImplementation(async (token: string) => buildMeResponse(`${token}@example.com`));
   });
 
   afterEach(() => {
@@ -239,11 +271,7 @@ describe('grant apply page', () => {
     const linkedOpportunityApplicationId = await seedSubmittedConferenceApplication(
       'grant-runtime-release-token'
     );
-    mockedGetMe.mockResolvedValueOnce({
-      user: {
-        email: 'grant.submit@example.com',
-      },
-    });
+    mockedGetMe.mockResolvedValueOnce(buildMeResponse('grant.submit@example.com'));
 
     const draft = await fakeGrantProvider.createGrantApplication('grant-published-001', {
       linkedOpportunityApplicationId,
@@ -272,11 +300,7 @@ describe('grant apply page', () => {
 
   it('shows the released result sample for the seeded backend demo grant even when the real grant id is a UUID', async () => {
     localStorage.setItem('token', 'grant-runtime-real-backend');
-    mockedGetMe.mockResolvedValueOnce({
-      user: {
-        email: 'grant.submit@example.com',
-      },
-    });
+    mockedGetMe.mockResolvedValueOnce(buildMeResponse('grant.submit@example.com'));
 
     vi.spyOn(grantProvider, 'getGrantBySlug').mockResolvedValueOnce({
       id: '4cb012a0-ca16-428b-9a22-913ad4c018a0',

@@ -1,7 +1,18 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { register } from '../api/auth';
-import { readReturnTo, toReturnToState } from '../features/navigation/authReturn';
+import {
+  hasExplicitReturnTo,
+  readReturnTo,
+  resolvePostAuthDestination,
+  resolvePostAuthWorkspace,
+  toReturnToState,
+} from '../features/navigation/authReturn';
+import {
+  writeAuthToken,
+  writeStoredAuthUser,
+} from '../features/auth/authSession';
+import { writeStoredWorkspace } from '../features/navigation/workspaces';
 import { UserPlus, Mail, Lock, User } from 'lucide-react';
 import './Auth.css';
 
@@ -21,8 +32,16 @@ export default function Register() {
     setLoading(true);
     try {
       const data = await register({ email, password, fullName });
-      localStorage.setItem('token', data.accessToken);
-      navigate(returnTo);
+      writeAuthToken(data.accessToken);
+      writeStoredAuthUser(data.user);
+
+      if (!hasExplicitReturnTo(location.state)) {
+        writeStoredWorkspace(resolvePostAuthWorkspace(data.user.available_workspaces, 'applicant'));
+      }
+
+      navigate(
+        resolvePostAuthDestination(location.state, data.user.available_workspaces, 'applicant')
+      );
     } catch (err: any) {
       setError(err.response?.data?.message || 'Registration failed.');
     } finally {

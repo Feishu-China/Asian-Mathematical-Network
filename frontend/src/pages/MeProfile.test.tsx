@@ -24,9 +24,25 @@ describe('me profile page', () => {
   });
 
   it('explains the private editor boundary and offers a public scholar handoff when the profile is public', async () => {
+    localStorage.setItem(
+      'asiamath.authUser',
+      JSON.stringify({
+        id: 'user-1',
+        email: 'user@example.com',
+        status: 'active',
+        role: 'reviewer',
+        roles: ['applicant', 'reviewer'],
+        available_workspaces: ['applicant', 'reviewer'],
+        primary_role: 'reviewer',
+        createdAt: '2026-04-29T00:00:00.000Z',
+        updatedAt: '2026-04-29T00:00:00.000Z',
+      })
+    );
+
     renderWithRouter(<MeProfile />, '/me/profile');
 
     expect(await screen.findByRole('heading', { name: /profile/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /workspace/i })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /back to dashboard/i })).toHaveAttribute(
       'href',
       '/dashboard'
@@ -93,5 +109,6 @@ describe('me profile page', () => {
       expect(screen.getByText('{"returnTo":"/me/profile"}')).toBeInTheDocument();
     });
     expect(localStorage.getItem('token')).toBeNull();
+    expect(localStorage.getItem('asiamath.authUser')).toBeNull();
   });
 });

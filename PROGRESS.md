@@ -10,6 +10,61 @@
 
 ## 📅 Handoff 历史记录
 
+### 2026-04-29 (Session 47)
+*   **Agent 角色**: Coding Agent (applicant/reviewer workspace switcher rollout)
+*   **关联 Feature**: applicant/reviewer multi-workspace account follow-up only
+*   **问题现象**:
+    *   认证链路仍默认把所有人送回 `/dashboard`，而前端只按“单一主角色”理解当前用户；一旦同一账号同时具备 applicant + reviewer 权限，就无法在 applicant/reviewer 工作台之间稳定切换，也不会记住上次使用的 workspace。
+    *   applicant/reviewer 二级页没有统一读取可用 workspace 的地方，导致就算 dashboard 能识别 reviewer 权限，`/me/applications`、`/me/profile`、`/reviewer`、`/reviewer/assignments/:id` 这些页头也无法继续切换工作台。
+*   **变更记录**:
+    *   backend `packages/shared/src/models.ts` 新增 `WorkspaceKey`；`backend/src/lib/userRoles.ts` 新增 `listAvailableWorkspaces()`；`backend/src/controllers/auth.ts` 现在会在 `register`、`login`、`getMe` 中统一返回 `user.available_workspaces`。
+    *   `backend/tests/auth.test.ts` 新增 applicant-only 与 reviewer-enabled 两条回归，锁定统一注册用户默认只拿到 `['applicant']`，管理员开通 reviewer 权限后 `GET /auth/me` 必须返回 `['applicant', 'reviewer']`。
+    *   frontend `src/api/auth.ts` 现在有显式 `AuthUser` / `MeResponse` 类型；新增 `src/features/navigation/workspaces.ts` 管理 workspace vocabulary、root route、last-workspace localStorage，以及 applicant/reviewer 过滤逻辑。
+    *   新增 `src/features/auth/authSession.ts` 作为轻量本地 session 层：登录/注册会持久化 `asiamath.authUser`，退出和 401 会统一清掉 token + authUser，applicant/reviewer 二级页可直接从这里读 `available_workspaces`。
+    *   新增 `src/features/navigation/WorkspaceSwitcher.tsx`；`WorkspaceShell.tsx` / `src/styles/layout.css` 增加 switcher slot 与样式，header 现在能在 `Account` 旁边并列承载 workspace switcher。
+    *   `src/features/navigation/authReturn.ts` 新增 post-auth resolver：显式 `returnTo` 仍然优先；没有 deep-link target 时，登录会恢复上一次仍然有效的 workspace root，首次注册则默认 applicant。
+    *   `src/pages/Login.tsx` / `Register.tsx` 现在会写入 token + auth user，并在无显式 `returnTo` 时按上次 workspace 或 applicant 默认值跳转。
+    *   `src/pages/Dashboard.tsx` 现在把 `/dashboard` 固定视为 applicant root：如果账号同时具备 applicant + reviewer，则 dashboard 仍显示 applicant workspace 内容、加载 applicant applications、显示 `Browse opportunities`，同时在页头提供 switcher；reviewer root 明确留在 `/reviewer`。organizer/admin 旧分支行为保持不变。
+    *   applicant 页 `src/pages/MyApplications.tsx`、`MyApplicationDetail.tsx`、`MeProfile.tsx` 以及 reviewer 页 `ReviewerAssignments.tsx`、`ReviewerAssignmentDetail.tsx` 都接入了同一枚 switcher；reviewer 页头明确不显示 `Browse opportunities`。
+    *   多处 logout / unauthorized 分支已经从只删 token 收口为 `clearAuthSession()`，避免 reviewer 权限的本地残留把 switcher 状态带脏。
+*   **验证记录**:
+    *   backend auth 回归通过：在 `postgresql://postgres:postgres@127.0.0.1:5433/asiamath_test?schema=public` 上执行 `npx prisma migrate reset --force --skip-seed` 后，`../node_modules/.bin/jest --runInBand tests/auth.test.ts` 全部通过（`6` tests）。
+    *   frontend foundation / auth-entry / applicant / reviewer / public-nav 相关回归通过：
+        *   `cd frontend && npm run test:run -- src/components/layout/Shell.test.tsx src/pages/Login.test.tsx src/pages/Register.test.tsx src/pages/Dashboard.test.tsx src/pages/MyApplications.test.tsx src/pages/MyApplicationDetail.test.tsx src/pages/MeProfile.test.tsx src/pages/ReviewWorkspaces.test.tsx src/pages/Conferences.test.tsx src/components/layout/PublicPortalNav.test.tsx`
+        *   共 `10` 个 test files、`77` 个 tests 全部通过。
+    *   因 auth 类型收严带出的 grant mock 回归已补齐：`cd frontend && npm run test:run -- src/pages/Dashboard.test.tsx src/pages/GrantApply.test.tsx` 通过（`23` tests）。
+    *   frontend build 通过：`cd frontend && npm run build`；仅保留既有 Vite chunk-size warning，无新的类型或构建错误。
+*   **边界与说明**:
+    *   本轮只打开 applicant/reviewer switcher，不把 organizer/admin 也一起并入 switcher；helper 虽然保留了 organizer/admin vocabulary，但 UI 只在 applicant + reviewer 双 workspace 账号上显示切换器。
+    *   reviewer 权限的获取方式仍是“管理员直接开通”；统一注册后自助申请 reviewer access 的流程只写进 spec，尚未实现。
+
+### 2026-04-29 (Session 46)
+*   **Agent 角色**: Coding Agent (workspace navigation contract + workspace-shell unification rollout)
+*   **关联 Feature**: `PORTAL` / `REVIEW` navigation hardening follow-up only
+*   **问题现象**:
+    *   reviewer / organizer workflow 页面对“逻辑上一级”的表达不稳定：有的页面缺主返回，有的只在侧栏里放局部返回，有的从 dashboard 进入后不会把来源链路继续传下去，导致 `dashboard -> queue -> detail` 这类路径仍然需要手测补洞。
+    *   applicant dashboard 之前已经有较稳定的 workspace shell，但 reviewer / organizer 还没有并入同一套 `Account`、`Back to portal`、header actions 约定，因此新页面很容易在壳层能力上掉队。
+*   **变更记录**:
+    *   新增 `frontend/src/features/navigation/workspaceNavigation.ts`，在既有 `returnContext` 之上补一层 workspace helper，统一处理 dashboard entry state、queue fallback、detail chained return state。
+    *   `frontend/src/features/navigation/workspaceAccountMenu.ts` 从 applicant-only 薄适配层扩展为 role-aware account menu builder，reviewer / organizer / admin 现在也能复用 applicant 同款 `Account` 下拉骨架。
+    *   `frontend/src/pages/Dashboard.tsx` 现在会把 dashboard return context 传入 reviewer / organizer 入口链接；`Dashboard.test.tsx` 同步锁定 organizer workspace 入口必须带上 `Back to dashboard` state。
+    *   `frontend/src/pages/OrganizerConferenceApplications.tsx`、`OrganizerApplicationDetail.tsx`、`ReviewerAssignments.tsx`、`ReviewerAssignmentDetail.tsx` 全部接入 applicant-style `WorkspaceShell` actions：主返回走逻辑上一级，额外提供稳定的 `Back to portal` 出口，并通过 shared `Account` 菜单统一 reviewer / organizer workspace header。
+    *   organizer / reviewer detail 页原本散落在侧栏里的返回链接已移除，返回职责收口到统一 header actions；queue -> detail 链路现在会显式传递 chained return state，而不是靠浏览器历史回退。
+    *   `frontend/src/pages/ReviewWorkspaces.test.tsx` 新增 reviewer / organizer queue/detail 的 header-action coverage；`frontend/src/pages/Conferences.test.tsx` 追加代表性 public regression，锁定 `portal -> conferences -> detail -> conferences -> portal` 的返回链不被这轮改动带歪。
+    *   `AGENT_HARNESS.md` 新增 `Navigation Contract Check`，把“声明逻辑父级、传递 chained return state、workspace 页必须有主返回 + portal 出口 + Account、补代表性导航测试”写成后续 Agent 必须执行的自检项。
+*   **验证记录**:
+    *   preflight baseline 通过：`cd frontend && npm run test:run -- src/pages/Dashboard.test.tsx src/pages/ReviewWorkspaces.test.tsx src/pages/Conferences.test.tsx`
+    *   preflight build 通过：`cd frontend && npm run build`
+    *   按 TDD 先补失败测试后实现：
+        *   `Dashboard.test.tsx` 初始暴露 reviewer / organizer dashboard 入口没有传 workspace return state。
+        *   `ReviewWorkspaces.test.tsx` 初始暴露 reviewer / organizer queue/detail 缺少 `Back to dashboard` / `Back to portal` / `Account` 壳层动作。
+    *   reviewer / organizer workspace 回归通过：`cd frontend && npm run test:run -- src/pages/ReviewWorkspaces.test.tsx`
+    *   最终定向回归通过：`cd frontend && npm run test:run -- src/pages/Dashboard.test.tsx src/pages/ReviewWorkspaces.test.tsx src/pages/Conferences.test.tsx`，`3` 个 test files、`28` 个 tests 全部通过。
+    *   最终 build 通过：`cd frontend && npm run build`（`tsc -b && vite build`）；保留既有 Vite chunk-size warning，但无新的类型或构建错误。
+*   **边界与说明**:
+    *   本轮没有重写全局路由体系，也没有替换既有 public `returnContext` 机制；只是把 workspace contract 建在现有 helper 之上，并用 `Conferences` 这条公共链做代表性回归锁定。
+    *   当前 worktree 里另有 `ConferenceApplyForm` / `Conference.css` / `ConferenceApply.test.tsx` / `styles/components.css` 等既存未提交修改，本轮没有改它们，也没有把这些无关变更纳入导航契约实现。
+
 ### 2026-04-28 (Session 45)
 *   **Agent 角色**: Coding Agent (`INT-PROFILE-002` scholar directory real-data integration)
 *   **关联 Feature**: `INT-PROFILE-002`

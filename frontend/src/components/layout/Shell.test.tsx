@@ -132,4 +132,31 @@ describe('foundation shells', () => {
 
     expect(screen.queryByRole('menu')).not.toBeInTheDocument();
   });
+
+  it('renders a workspace switcher alongside account actions in the workspace shell header', () => {
+    render(
+      <MemoryRouter>
+        <WorkspaceShell
+          title="Dashboard"
+          workspaceSwitcher={<button type="button">Workspace</button>}
+          accountMenu={{
+            label: 'Account',
+            items: [{ kind: 'action', label: 'Log out', onSelect: () => undefined }],
+          }}
+        >
+          <div>Workspace body</div>
+        </WorkspaceShell>
+      </MemoryRouter>
+    );
+
+    expect(screen.getByRole('button', { name: 'Workspace' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Account' })).toBeInTheDocument();
+  });
+
+  it('defines switcher trigger styling in layout.css', () => {
+    const css = readFileSync(resolve(process.cwd(), 'src/styles/layout.css'), 'utf8');
+
+    expect(css).toMatch(/\.workspace-switcher__trigger\s*\{/);
+    expect(css).toMatch(/\.workspace-switcher__panel\s*\{/);
+  });
 });

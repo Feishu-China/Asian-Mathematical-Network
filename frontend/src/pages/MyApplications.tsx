@@ -6,6 +6,11 @@ import { RoleBadge } from '../components/ui/RoleBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
 import { dashboardProvider } from '../features/dashboard/dashboardProvider';
 import { DemoStatePanel } from '../features/demo/DemoStatePanel';
+import {
+  clearAuthSession,
+  readAuthToken,
+  readStoredAuthUser,
+} from '../features/auth/authSession';
 import type {
   MyApplication,
   NextAction,
@@ -26,7 +31,12 @@ import {
   resolveReturnContext,
   type ReturnContextState,
 } from '../features/navigation/returnContext';
+import { WorkspaceSwitcher } from '../features/navigation/WorkspaceSwitcher';
 import { buildWorkspaceAccountMenu } from '../features/navigation/workspaceAccountMenu';
+import {
+  getApplicantReviewerWorkspaces,
+  writeStoredWorkspace,
+} from '../features/navigation/workspaces';
 import './MyApplications.css';
 
 export const routePath = '/me/applications';
@@ -108,8 +118,11 @@ export default function MyApplications() {
   const [items, setItems] = useState<MyApplication[] | null>(null);
   const [hasError, setHasError] = useState(false);
   const returnContext = resolveReturnContext(location.state, routePath, DASHBOARD_RETURN_CONTEXT);
+  const applicantReviewerWorkspaces = getApplicantReviewerWorkspaces(
+    readStoredAuthUser()?.available_workspaces
+  );
   const accountMenu = buildWorkspaceAccountMenu(() => {
-    localStorage.removeItem('token');
+    clearAuthSession();
     navigate('/portal');
   });
   const sectionReturnState = buildChainedReturnState(MY_APPLICATIONS_RETURN_CONTEXT, returnContext);
@@ -133,10 +146,12 @@ export default function MyApplications() {
   useEffect(() => {
     let active = true;
 
-    if (!localStorage.getItem('token')) {
+    if (!readAuthToken()) {
       navigate('/login', { state: toReturnToState(location.pathname) });
       return;
     }
+
+    writeStoredWorkspace('applicant');
 
     setHasError(false);
     setItems(null);
@@ -154,7 +169,7 @@ export default function MyApplications() {
         }
 
         if (isUnauthorizedSessionError(error)) {
-          localStorage.removeItem('token');
+          clearAuthSession();
           navigate('/login', { state: toReturnToState(location.pathname) });
           return;
         }
@@ -192,6 +207,14 @@ export default function MyApplications() {
         </Link>
       }
       accountMenu={accountMenu}
+      workspaceSwitcher={
+        applicantReviewerWorkspaces.length > 1 ? (
+          <WorkspaceSwitcher
+            currentWorkspace="applicant"
+            availableWorkspaces={applicantReviewerWorkspaces}
+          />
+        ) : undefined
+      }
     >
       {items === null ? (
         <DemoStatePanel

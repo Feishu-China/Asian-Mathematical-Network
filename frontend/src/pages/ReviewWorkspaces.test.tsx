@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { renderWithRouter } from '../test/renderWithRouter';
 import {
   resetReviewFakeState,
@@ -29,6 +30,42 @@ describe('review workspaces', () => {
     expect(await screen.findByRole('heading', { name: /conference applications/i })).toBeInTheDocument();
     expect(screen.getByText(/ada lovelace/i)).toBeInTheDocument();
     expect(screen.getByText(/review assignment count: 0/i)).toBeInTheDocument();
+  });
+
+  it('shows dashboard and portal header actions on the organizer queue', async () => {
+    localStorage.setItem('token', 'organizer-1');
+
+    render(
+      <MemoryRouter
+        initialEntries={[
+          {
+            pathname: '/organizer/conferences/review-conf-001/applications',
+            state: {
+              returnContext: {
+                to: '/dashboard',
+                label: 'Back to dashboard',
+              },
+            },
+          },
+        ]}
+      >
+        <Routes>
+          <Route
+            path="/organizer/conferences/:id/applications"
+            element={<OrganizerConferenceApplications />}
+          />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(
+      await screen.findByRole('link', { name: /back to dashboard/i })
+    ).toHaveAttribute('href', '/dashboard');
+    expect(screen.getByRole('link', { name: /back to portal/i })).toHaveAttribute(
+      'href',
+      '/portal'
+    );
+    expect(screen.getByRole('button', { name: 'Account' })).toBeInTheDocument();
   });
 
   it('lets the organizer assign a reviewer and release a decision', async () => {
@@ -65,6 +102,45 @@ describe('review workspaces', () => {
     expect(screen.getAllByText(/release status: released/i).length).toBeGreaterThan(0);
   });
 
+  it('shows queue and portal header actions on the organizer detail page', async () => {
+    localStorage.setItem('token', 'organizer-1');
+
+    render(
+      <MemoryRouter
+        initialEntries={[
+          {
+            pathname: '/organizer/applications/review-application-1',
+            state: {
+              returnContext: {
+                to: '/organizer/conferences/review-conf-001/applications',
+                label: 'Back to conference queue',
+                state: {
+                  returnContext: {
+                    to: '/dashboard',
+                    label: 'Back to dashboard',
+                  },
+                },
+              },
+            },
+          },
+        ]}
+      >
+        <Routes>
+          <Route path="/organizer/applications/:id" element={<OrganizerApplicationDetail />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(
+      await screen.findByRole('link', { name: /back to conference queue/i })
+    ).toHaveAttribute('href', '/organizer/conferences/review-conf-001/applications');
+    expect(screen.getByRole('link', { name: /back to portal/i })).toHaveAttribute(
+      'href',
+      '/portal'
+    );
+    expect(screen.getByRole('button', { name: 'Account' })).toBeInTheDocument();
+  });
+
   it('shows reviewer queue items and allows review submission for clear assignments', async () => {
     localStorage.setItem('token', 'reviewer-1');
     const assignmentId = seedReviewAssignment({
@@ -96,6 +172,116 @@ describe('review workspaces', () => {
     expect(await screen.findByText(/review submitted/i)).toBeInTheDocument();
     expect(screen.getByText(/assignment status: review_submitted/i)).toBeInTheDocument();
     expect(screen.queryByText(/submission blocked/i)).not.toBeInTheDocument();
+  });
+
+  it('shows dashboard and portal header actions on the reviewer queue', async () => {
+    localStorage.setItem('token', 'reviewer-1');
+    localStorage.setItem(
+      'asiamath.authUser',
+      JSON.stringify({
+        id: 'user-reviewer',
+        email: 'reviewer@example.com',
+        status: 'active',
+        role: 'reviewer',
+        roles: ['applicant', 'reviewer'],
+        available_workspaces: ['applicant', 'reviewer'],
+        primary_role: 'reviewer',
+        createdAt: '2026-04-29T00:00:00.000Z',
+        updatedAt: '2026-04-29T00:00:00.000Z',
+      })
+    );
+
+    render(
+      <MemoryRouter
+        initialEntries={[
+          {
+            pathname: '/reviewer',
+            state: {
+              returnContext: {
+                to: '/dashboard',
+                label: 'Back to dashboard',
+              },
+            },
+          },
+        ]}
+      >
+        <Routes>
+          <Route path="/reviewer" element={<ReviewerAssignments />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByRole('link', { name: /back to dashboard/i })).toHaveAttribute(
+      'href',
+      '/dashboard'
+    );
+    expect(screen.getByRole('link', { name: /back to portal/i })).toHaveAttribute(
+      'href',
+      '/portal'
+    );
+    expect(screen.getByRole('button', { name: /workspace/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Account' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /browse opportunities/i })).not.toBeInTheDocument();
+  });
+
+  it('shows queue and portal header actions on the reviewer detail page', async () => {
+    localStorage.setItem('token', 'reviewer-1');
+    localStorage.setItem(
+      'asiamath.authUser',
+      JSON.stringify({
+        id: 'user-reviewer',
+        email: 'reviewer@example.com',
+        status: 'active',
+        role: 'reviewer',
+        roles: ['applicant', 'reviewer'],
+        available_workspaces: ['applicant', 'reviewer'],
+        primary_role: 'reviewer',
+        createdAt: '2026-04-29T00:00:00.000Z',
+        updatedAt: '2026-04-29T00:00:00.000Z',
+      })
+    );
+    const assignmentId = seedReviewAssignment({
+      applicationId: 'review-application-1',
+      reviewerUserId: 'reviewer-1',
+      conflictState: 'clear',
+    });
+
+    render(
+      <MemoryRouter
+        initialEntries={[
+          {
+            pathname: `/reviewer/assignments/${assignmentId}`,
+            state: {
+              returnContext: {
+                to: '/reviewer',
+                label: 'Back to reviewer queue',
+                state: {
+                  returnContext: {
+                    to: '/dashboard',
+                    label: 'Back to dashboard',
+                  },
+                },
+              },
+            },
+          },
+        ]}
+      >
+        <Routes>
+          <Route path="/reviewer/assignments/:id" element={<ReviewerAssignmentDetail />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(
+      await screen.findByRole('link', { name: /back to reviewer queue/i })
+    ).toHaveAttribute('href', '/reviewer');
+    expect(screen.getByRole('link', { name: /back to portal/i })).toHaveAttribute(
+      'href',
+      '/portal'
+    );
+    expect(screen.getByRole('button', { name: /workspace/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Account' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /browse opportunities/i })).not.toBeInTheDocument();
   });
 
   it('blocks non-reviewers from opening the reviewer queue shell', async () => {

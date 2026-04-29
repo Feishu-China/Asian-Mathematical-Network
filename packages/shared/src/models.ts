@@ -9,6 +9,7 @@
 
 export type UserStatus = 'active' | 'inactive' | 'suspended';
 export type UserRole = 'applicant' | 'reviewer' | 'organizer' | 'admin';
+export type WorkspaceKey = UserRole;
 export type InstitutionStatus = 'active' | 'inactive' | 'pending';
 export type ProfileVerificationStatus = 'unverified' | 'pending_review' | 'verified' | 'rejected';
 export type CareerStage = 'undergraduate' | 'masters' | 'phd' | 'postdoc' | 'faculty' | 'other';

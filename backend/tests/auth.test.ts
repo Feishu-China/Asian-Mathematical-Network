@@ -11,14 +11,36 @@ describe('Auth API', () => {
     password: 'password123',
     fullName: 'Test User'
   };
+  const singleWorkspaceUser = {
+    email: 'workspace.single@example.com',
+    password: 'password123',
+    fullName: 'Single Workspace'
+  };
+  const reviewerWorkspaceUser = {
+    email: 'workspace.reviewer@example.com',
+    password: 'password123',
+    fullName: 'Reviewer Workspace'
+  };
 
   beforeAll(async () => {
     // Clean up test user if it exists
-    await prisma.user.deleteMany({ where: { email: testUser.email } });
+    await prisma.user.deleteMany({
+      where: {
+        email: {
+          in: [testUser.email, singleWorkspaceUser.email, reviewerWorkspaceUser.email],
+        },
+      },
+    });
   });
 
   afterAll(async () => {
-    await prisma.user.deleteMany({ where: { email: testUser.email } });
+    await prisma.user.deleteMany({
+      where: {
+        email: {
+          in: [testUser.email, singleWorkspaceUser.email, reviewerWorkspaceUser.email],
+        },
+      },
+    });
     await prisma.$disconnect();
   });
 
@@ -63,5 +85,37 @@ describe('Auth API', () => {
   it('should reject unauthorized access to /me', async () => {
     const res = await request(app).get('/api/v1/auth/me');
     expect(res.status).toBe(401);
+  });
+
+  it('returns applicant as the only available workspace for a freshly registered user', async () => {
+    const registerRes = await request(app)
+      .post('/api/v1/auth/register')
+      .send(singleWorkspaceUser);
+
+    expect(registerRes.status).toBe(201);
+    expect(registerRes.body.user.available_workspaces).toEqual(['applicant']);
+  });
+
+  it('returns reviewer in available_workspaces once reviewer permission is granted', async () => {
+    const registerRes = await request(app)
+      .post('/api/v1/auth/register')
+      .send(reviewerWorkspaceUser);
+
+    expect(registerRes.status).toBe(201);
+
+    await prisma.userRole.create({
+      data: {
+        userId: registerRes.body.user.id,
+        role: 'reviewer',
+        isPrimary: false,
+      },
+    });
+
+    const meRes = await request(app)
+      .get('/api/v1/auth/me')
+      .set('Authorization', `Bearer ${registerRes.body.accessToken}`);
+
+    expect(meRes.status).toBe(200);
+    expect(meRes.body.user.available_workspaces).toEqual(['applicant', 'reviewer']);
   });
 });

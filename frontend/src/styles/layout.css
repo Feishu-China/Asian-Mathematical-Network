@@ -110,6 +110,11 @@
   position: relative;
 }
 
+.workspace-switcher {
+  position: relative;
+}
+
+.workspace-switcher__trigger,
 .workspace-account-menu__trigger {
   display: inline-flex;
   align-items: center;
@@ -130,6 +135,20 @@
     transform 180ms ease;
 }
 
+.workspace-switcher__trigger {
+  gap: 0.65rem;
+}
+
+.workspace-switcher__current {
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+}
+
+.workspace-switcher__panel {
+  min-width: 13.5rem;
+}
+
+.workspace-switcher__trigger:hover,
 .workspace-account-menu__trigger:hover {
   border-color: rgba(31, 52, 84, 0.34);
   background: rgba(255, 253, 249, 0.96);
@@ -137,11 +156,13 @@
   transform: translateY(-1px);
 }
 
+.workspace-switcher__trigger:focus-visible,
 .workspace-account-menu__trigger:focus-visible {
   outline: none;
   box-shadow: var(--focus-ring);
 }
 
+.workspace-switcher__panel,
 .workspace-account-menu__panel {
   position: absolute;
   top: calc(100% + 0.6rem);
@@ -156,6 +177,7 @@
   box-shadow: var(--shadow-md);
 }
 
+.workspace-switcher__item,
 .workspace-account-menu__item {
   display: flex;
   align-items: center;
@@ -172,11 +194,34 @@
   cursor: pointer;
 }
 
+.workspace-switcher__item {
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.workspace-switcher__item-copy {
+  display: grid;
+  gap: 0.15rem;
+  text-align: left;
+}
+
+.workspace-switcher__item-label {
+  font-weight: 600;
+  color: var(--color-navy-900);
+}
+
+.workspace-switcher__item-meta {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.workspace-switcher__item:hover,
 .workspace-account-menu__item:hover {
   background: var(--surface-muted);
   color: var(--color-navy-900);
 }
 
+.workspace-switcher__item:focus-visible,
 .workspace-account-menu__item:focus-visible {
   outline: none;
   box-shadow: inset 0 0 0 2px rgba(58, 95, 145, 0.18);
@@ -237,11 +282,13 @@
     width: 100%;
   }
 
+  .workspace-switcher__trigger,
   .workspace-account-menu__trigger {
     width: 100%;
     justify-content: space-between;
   }
 
+  .workspace-switcher__panel,
   .workspace-account-menu__panel {
     left: 0;
     right: 0;
