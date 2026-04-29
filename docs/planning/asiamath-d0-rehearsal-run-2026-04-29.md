@@ -195,3 +195,40 @@ Reason:
   - clean applicant empty-state CTA behavior diverged from the checklist
 
 Do **not** move directly to `DR-005` as if local rehearsal is fully green. Fix the `P1` issues first, then re-run `DR-004`.
+
+## Post-fix rerun (same-day closeout)
+
+After `DR-006` landed, the local blocker-focused rerun was repeated on the same acceptance-mode stack:
+
+- frontend: `http://127.0.0.1:5175`
+- backend: `http://127.0.0.1:3001`
+- database: documented local override on `127.0.0.1:5433`
+
+The rerun also re-executed `npm run seed:demo` against the `5433` override and restored the expected baseline:
+
+- `publishedConferences = 3`
+- `grants = 2`
+- clean applicant retained `0` applications
+- showcase applicant retained the expected `4` workflow records
+
+### Rerun evidence
+
+- clean applicant `/me/applications` still rendered the simplified applicant-safe public browse path, and `Browse conferences` navigated to `/conferences`
+- reviewer queue now showed `Regional Topology Symposium 2026`, and `Open assignment -> detail -> Back to reviewer queue` completed successfully
+- organizer dashboard `Open conference workspace` navigated into `/organizer/conferences/:id/applications`
+- public `/scholars` list still opened scholar detail successfully; the rerun ended on `/scholars/aisha-rahman`
+- applicant detail no longer relied on a `Restart from portal` shortcut; that affordance was confirmed to be obsolete product copy and was intentionally removed instead of restored
+
+### Rerun interpretation
+
+- `R1` is closed for the still-supported navigation/card surfaces that blocked the original run
+- `R2` is closed by the seeded reviewer assignment and the verified reviewer `queue -> detail -> back` chain
+- `R3` is closed as a product/documentation alignment item: the stale unified `Browse opportunities` expectation was dropped in favor of the current section-level public browse CTA model
+
+### Updated local conclusion
+
+With the documented `5433` local override, the blocker-focused `DR-004` rerun is now considered `Pass`.
+
+Remaining caveat:
+
+- browser automation still occasionally emits a CDP “target navigated or closed” error when a single scripted step spans a route transition, so rerun evidence should be interpreted from the resulting URL/snapshot rather than that transport-level warning alone

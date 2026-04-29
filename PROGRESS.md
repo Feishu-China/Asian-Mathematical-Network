@@ -10,6 +10,39 @@
 
 ## 📅 Handoff 历史记录
 
+### 2026-04-29 (Session 52)
+*   **Agent 角色**: Coding Agent (`DR-004` rerun closeout)
+*   **关联 Feature**: 无新增 feature；本轮只关闭 `DR-004` 修后复跑，并收掉 applicant 侧残留的过时 demo shortcut。
+*   **变更记录**:
+    *   `01c2bb0 fix: remove obsolete portal restart shortcut`
+        *   从 `frontend/src/pages/MyApplicationDetail.tsx` 删除误恢复的 `Restart from portal` shortcut。
+        *   同步删除对应测试，并把 `docs/planning/asiamath-d0-rehearsal-checklist-2026-04-29.md` 与 `docs/planning/asiamath-d0-rehearsal-run-2026-04-29.md` 改成当前正确口径：detail 页不再要求保留这条 demo affordance。
+    *   `4e3233a fix: simplify applicant public browse shortcuts`
+        *   从 `frontend/src/pages/MyApplications.tsx` 删除 applicant list 上残留的 `Restart from portal` demo shortcut，只保留真实产品需要的 applicant-safe public browse 入口。
+        *   `frontend/src/features/demo/demoWalkthrough.ts` 的 applicant list copy 改为 `applicant-safe public browsing`，不再把 list 讲成“restart 控制点”。
+        *   `frontend/src/pages/MyApplications.test.tsx` 补回归，锁住 `Restart from portal` 不再长回 applicant list。
+        *   rehearsal checklist 与 run 文档同步放弃旧的统一 `Browse opportunities` 预期，正式接受当前 section-level `Browse conferences` / `Browse grants` 模式。
+*   **验证记录**:
+    *   `npm run test:run --workspace frontend -- src/pages/MyApplicationDetail.test.tsx` 通过（`6/6`）
+    *   `npm run test:run --workspace frontend -- src/pages/MyApplications.test.tsx` 通过（`16/16`）
+    *   `git diff --check` 通过
+    *   在沙箱外按文档允许的 `5433` override 重新执行 `npm run seed:demo`，结果恢复为：
+        *   `publishedConferences = 3`
+        *   `grants = 2`
+        *   clean applicant `0` applications
+        *   showcase applicant `4` workflow records
+*   **`DR-004` 修后复跑结论**:
+    *   clean applicant `/me/applications` 现在用 applicant-safe public browse CTA；浏览器级 spot-check 确认 `Browse conferences` 实际导航到 `/conferences`。
+    *   organizer dashboard 的 `Open conference workspace` 浏览器级 spot-check 已通过，能进入 `/organizer/conferences/:id/applications`。
+    *   reviewer queue 现在能看到 seeded assignment，且 `Open assignment -> detail -> Back to reviewer queue` 浏览器级 spot-check 已通过。
+    *   public `/scholars` 列表仍能正常打开 scholar detail，spot-check 落在 `/scholars/aisha-rahman`。
+    *   因此，原始 failed run 中的 `R1`、`R2`、`R3` 都已关闭；在文档允许的 `5433` 本机 override 下，`DR-004` blocker-focused rerun 现在可视为 `Pass`。
+*   **环境说明**:
+    *   本机 `5432/5433` 不是宿主机原生 Postgres listener，而是 `colima/lima` 通过 `ssh` 转发出来的端口；因此凡是要连本地数据库的验证，沙箱内不可靠，需在沙箱外执行。
+    *   browser automation 在跨路由单步 eval 时偶尔会报 CDP `target navigated or closed`，但只要最终 URL / snapshot 正确，这属于 transport-level caveat，不再算产品 blocker。
+*   **下一步**:
+    *   `Sprint 1: Demo Readiness` 的主要本地 blocker 已清空。下一步更像是决定要不要把这轮结果合流到新的 trunk candidate，或者开始下一轮 demo / deployment 节奏，而不是继续修 applicant portal 主链。
+
 ### 2026-04-29 (Session 51)
 *   **Agent 角色**: Coding Agent (`DR-005` / `PMB-006` integration + `DR-006` blocker fixes)
 *   **关联 Feature**: 无新增 feature；本轮目标是把 Sprint 1 的 hosted smoke、feature-list passes 收口，以及修复 `DR-004` 暴露的两个 `P1` blocker。
