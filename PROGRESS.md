@@ -4,11 +4,30 @@
 
 ## 当前项目状态
 *   **最新版本**: V4.0-Optimized
-*   **总览**: `AUTH`、`PROFILE`、`CONF`、`GRANT`、`REVIEW` 与 `PORTAL` 六个 Epic 现在都已完成到当前 feature-list 口径；`/portal`、`/me/applications`、grant post-visit report、以及 public scholar directory / portal scholar teaser 的 real-data 链路都已落地并完成本地验证。当前剩余事项已不再是 feature-list 缺口，主要是后续如有需要再单独收口本地 dev proxy 默认仍指向 `3000` 的开发体验差异。
+*   **总览**: `AUTH`、`PROFILE`、`CONF`、`GRANT`、`REVIEW` 与 `PORTAL` 六个 Epic 现在都已完成到当前 feature-list 口径；`/portal`、`/me/applications`、grant post-visit report、public scholar directory / portal scholar teaser、以及 applicant/reviewer workspace switcher 都已落地并完成本地验证。项目已从“功能型 MVP 实现”切换到 `post-MVP` 阶段：下一步主任务不再是沿旧 feature list 继续补功能，而是围绕 `docs/planning/asiamath-mvp-status-inventory-2026-04-29.md`、`asiamath-post-mvp-backlog-v1.md` 与 `asiamath-sprint-1-demo-readiness-2026-04-29.md` 做收口、验收、部署与节奏化迭代。
 
 ---
 
 ## 📅 Handoff 历史记录
+
+### 2026-04-29 (Session 48)
+*   **Agent 角色**: Coding Agent (post-MVP planning closeout)
+*   **关联 Feature**: 无新增 feature；本轮目标是把项目从 `feature implementation` 口径切换到 `post-MVP execution` 口径。
+*   **问题现象**:
+    *   当前 `docs/planning/asiamath-feature-list-v4.0-optimized.json` 已是 `24/24 completed`，但它回答的是“哪些功能被做出来了”，不再适合回答“当前系统是否已适合稳定演示、部署、交接，以及下一轮 sprint 应该先做什么”。
+    *   仓库里已有 `mvp-demo-dual-track-governance.md` 等治理文档，但缺三类可以直接拿来排会和排 sprint 的执行工件：`MVP 状态盘点`、`post-MVP backlog`、以及 `Sprint 1 Demo Readiness`。
+*   **变更记录**:
+    *   新增 `docs/planning/asiamath-mvp-status-inventory-2026-04-29.md`，把当前系统分成 `真实闭环`、`demo breadth`、`仍需收口的发布/演示风险` 三层来看，并明确给出结论：Asiamath 已达到“功能型 MVP 完成”，但尚未达到“完全发布就绪”。
+    *   新增 `docs/planning/asiamath-post-mvp-backlog-v1.md`，把下一阶段任务重排为 `Bug / Stability`、`Core Usability`、`Demo Readiness`、`Engineering / Delivery` 四类，并给出 `P0 Now / P1 Next / P2 Later` 的执行顺序。
+    *   新增 `docs/planning/asiamath-sprint-1-demo-readiness-2026-04-29.md`，把下一轮 sprint 收口为“稳定 demo 基线、统一环境口径、完成 hosted preview smoke、准备 presenter-safe demo kit”的收口型 sprint，而不是继续铺新功能。
+    *   `PROGRESS.md` 顶部总览同步更新，明确项目已进入 `post-MVP` 阶段，后续默认围绕上述三份新文档推进。
+*   **验证记录**:
+    *   读取并对齐了以下真理源后再落文档：`docs/planning/asiamath-feature-list-v4.0-optimized.json`、`docs/planning/mvp-demo-dual-track-governance.md`、`docs/planning/asiamath-demo-coverage-matrix-d0.md`、`docs/planning/asiamath-demo-preview-ops-d0.md`、`docs/planning/asiamath-demo-manual-test-checkpoints-d0.md`、`PROGRESS.md`。
+    *   用 Node 脚本复核了当前 feature-list 状态：总数 `24`，全部 `completed`；同时确认仍有 `8` 个 implementation feature 保持 `passes: false`，并在新 backlog 中把这一点转译成治理任务，而不是误判为“功能未做完”。
+    *   本轮为文档性交接，没有新增代码路径或运行时行为；后续如按 `Sprint 1: Demo Readiness` 执行，再进入对应的测试、hosted smoke 与部署验收。
+*   **边界与说明**:
+    *   本轮没有修改 feature list 的定义，没有新增产品功能，也没有改动当前 `codex/demo-d0-postgres-deploy` 的代码行为。
+    *   三份新文档的目的是把项目从“功能建设清单”切换到“收口与迭代节奏清单”；它们不替代现有 PRD、API spec、数据库 schema 或 demo coverage 文档。
 
 ### 2026-04-29 (Session 47)
 *   **Agent 角色**: Coding Agent (applicant/reviewer workspace switcher rollout)
