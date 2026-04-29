@@ -10,6 +10,42 @@
 
 ## 📅 Handoff 历史记录
 
+### 2026-04-29 (Session 55)
+*   **Agent 角色**: Coding Agent (Growth planning)
+*   **关联 Feature**: 无新增产品功能；本轮目标是把 post-MVP / post-Sprint-1 的下一阶段能力扩展，整理成新的增长期 feature list，而不是继续沿用 MVP 时代的 `FE-* / BE-* / INT-*` 顶层结构。
+*   **变更记录**:
+    *   新增 `docs/planning/asiamath-feature-list-v5-growth.json`，作为下一阶段的增长规划真理源。
+    *   `v5` 明确声明其接替 `docs/planning/asiamath-feature-list-v4.0-optimized.json`，但不否定 `v4` 的历史价值；`v4` 仍是 MVP 构建与 Sprint 1 收口的完成记录。
+    *   新文件不再以 `FE/BE/INT` 作为 roadmap 顶层，而改为：
+        *   `initiative`
+        *   `feature`
+        *   `evidence`
+    *   `v5` 当前定义了四个增长期 initiative：
+        *   `M4-NEXT` (`P0`): Scholar & Reviewer Foundation
+        *   `M8-LITE` (`P1`): Schools & Training Applications
+        *   `UX-WORKSPACE` (`P1`): Workspace Usability & Copy Unification
+        *   `M3-JOBS-LITE` (`P2`): Jobs & Referee Workflow
+    *   这份计划的核心判断是：
+        *   下一轮最值得优先做的，不是 breadth 页面 productize，也不是 prize/newsletter/video 系统
+        *   而是把 `M4-lite` 提升成更可复用的 scholar / reviewer foundation，再决定是否进入 `M8-lite` 或 `M3 jobs`
+    *   `v5` 顶层 metadata 已直接写入：
+        *   `phase`
+        *   `purpose`
+        *   `supersedes`
+        *   `source_of_truth`
+        *   `baseline_assumptions`
+        *   `working_mode`
+        *   `status_rules`
+        *   `passes_rules`
+      因此本轮没有再额外写一份单独说明文档。
+*   **结论**:
+    *   当前项目已经不适合继续扩写旧 `v4` feature list。
+    *   下一阶段如果从 `main` 开新功能，推荐直接以 `v5` 作为增长期执行清单。
+    *   第一优先 initiative 应为 `M4-NEXT`，即：directory search/filter/pagination、reviewer access request、reviewer candidate picker、identity/ORCID tightening，以及对应的 integration acceptance。
+*   **下一步**:
+    *   先把当前 `codex/demo-d0-postgres-deploy` 基线并入 `main`。
+    *   然后从 `main` 切下一条新功能分支，按 `M4-NEXT` 开 Sprint 2。
+
 ### 2026-04-29 (Session 54)
 *   **Agent 角色**: Coding Agent (CI baseline)
 *   **关联 Feature**: 无新增产品 feature；本轮目标是在 `codex/demo-d0-postgres-deploy` 上补第一版最小 GitHub Actions CI，并把因页面真实文案演进而失效的过时前端测试回填到当前口径。

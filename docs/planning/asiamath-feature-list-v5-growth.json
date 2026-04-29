@@ -1,0 +1,429 @@
+{
+  "project": "Asiamath",
+  "version": "5.0-Growth",
+  "status": "planning",
+  "phase": "post-MVP / product-growth",
+  "purpose": "Define the next wave of product initiatives after MVP completion, Sprint 1 demo-readiness closeout, and the first CI baseline.",
+  "supersedes": "docs/planning/asiamath-feature-list-v4.0-optimized.json",
+  "source_of_truth": [
+    "docs/product/asiamath-prd-simplified.md",
+    "docs/product/asiamath-mvp-prd-v3.2.md",
+    "docs/planning/asiamath-post-mvp-backlog-v1.md",
+    "PROGRESS.md"
+  ],
+  "baseline_assumptions": {
+    "implementation_starts_from": "main",
+    "current_candidate_baseline_pre_merge": "codex/demo-d0-postgres-deploy",
+    "required_preconditions": [
+      "Sprint 1 demo-readiness closeout is complete",
+      "Minimal GitHub Actions CI baseline is green",
+      "The next feature branch should be cut from main after baseline promotion"
+    ]
+  },
+  "working_mode": {
+    "top_level_unit": "initiative",
+    "execution_unit": "feature",
+    "structure": "initiative -> feature -> evidence",
+    "default_rule": "One feature at a time for implementation, while allowing independent features from the same initiative to be planned in parallel.",
+    "why_not_v4_shape": "The v4 list was optimized for FE/BE/INT decoupled MVP construction. Growth work should stay legible as product capabilities first, with implementation slices nested under each initiative rather than becoming the top-level roadmap."
+  },
+  "status_rules": {
+    "initiative_statuses": [
+      "queued",
+      "in_progress",
+      "completed"
+    ],
+    "feature_statuses": [
+      "not_started",
+      "in_progress",
+      "completed"
+    ],
+    "feature_status_meaning": {
+      "not_started": "No implementation has begun.",
+      "in_progress": "A branch or PR is actively executing this feature.",
+      "completed": "The implementation scope is landed, but passes may still require verification evidence."
+    }
+  },
+  "passes_rules": {
+    "meaning": "passes=true means the feature has evidence appropriate to its type, not just that code exists.",
+    "default_expectation": [
+      "Relevant build/test evidence",
+      "Representative workflow or browser verification for user-facing flows",
+      "Progress-log or runbook evidence when a feature changes cross-surface behavior"
+    ],
+    "note": "Implementation work may reach completed before passes becomes true."
+  },
+  "initiatives": [
+    {
+      "id": "M4-NEXT",
+      "title": "Scholar & Reviewer Foundation",
+      "priority": "P0",
+      "goal": "Move the current M4-lite profile foundation toward a reusable scholar directory and reviewer sourcing layer that can support the next wave of workflows.",
+      "why_now": "The simplified PRD treats M4 as the foundation for review, grants, prizes, schools, and future industry matching. The MVP already proved the base profile model; the next highest-leverage move is to strengthen search, reviewer enablement, and identity signals.",
+      "suggested_sprint": "Sprint 2",
+      "status": "queued"
+    },
+    {
+      "id": "M8-LITE",
+      "title": "Schools & Training Applications",
+      "priority": "P1",
+      "goal": "Introduce a first real school/program application flow by reusing the shared application and review backbone already proven by conferences and grants.",
+      "why_now": "The simplified PRD ranks M8 as a P1 operational module. It is a better growth candidate than breadth-only surfaces because it reuses existing backbone capabilities while adding a new program type with clear user value.",
+      "suggested_sprint": "Sprint 3",
+      "status": "queued"
+    },
+    {
+      "id": "UX-WORKSPACE",
+      "title": "Workspace Usability & Copy Unification",
+      "priority": "P1",
+      "goal": "Make applicant, reviewer, and organizer shells more consistent, predictable, and mobile-safe before the platform grows another layer of workflows.",
+      "why_now": "Sprint 1 removed the largest demo blockers, but the backlog still calls out status semantics, empty states, and secondary-page mobile polish as next-tier usability work.",
+      "suggested_sprint": "Sprint 2-3",
+      "status": "queued"
+    },
+    {
+      "id": "M3-JOBS-LITE",
+      "title": "Jobs & Referee Workflow",
+      "priority": "P2",
+      "goal": "Add the first concrete M3-facing employment application slice without turning the platform into a generic workflow engine.",
+      "why_now": "The simplified PRD still positions M3 as an important P1 module, but it brings email/referee/file-handling complexity. It should follow M4-next and one more reused application type, not preempt them.",
+      "suggested_sprint": "Sprint 4+",
+      "status": "queued"
+    }
+  ],
+  "features": [
+    {
+      "id": "M4-SEARCH-001",
+      "initiative": "M4-NEXT",
+      "title": "Scholar directory search, filters, and pagination",
+      "category": "core-usability",
+      "priority": "P0",
+      "delivery_track": "vertical-slice",
+      "parallel_ready": true,
+      "description": "Extend the current real-data scholar directory so public and logged-in users can search by name/institution and filter by research tags, MSC, country, or career-stage-adjacent signals.",
+      "why_now": "This is the clearest direct follow-up to the current real-data directory. It turns the directory from a proof-of-data surface into a reusable discovery surface.",
+      "depends_on": [],
+      "evidence_expectation": [
+        "Frontend tests for search/filter behavior",
+        "Backend/provider tests for query and paging contract",
+        "Browser smoke on /scholars using real data"
+      ],
+      "status": "not_started",
+      "passes": false
+    },
+    {
+      "id": "M4-REVIEWER-001",
+      "initiative": "M4-NEXT",
+      "title": "Reviewer access request and enablement flow",
+      "category": "core-usability",
+      "priority": "P0",
+      "delivery_track": "workflow",
+      "parallel_ready": false,
+      "description": "Replace reviewer access being a purely manual admin action with an explicit request, review, and activation path.",
+      "why_now": "The current reviewer role still relies on seeding or direct admin intervention. That is acceptable for demo, but not a good foundation for more review-driven product growth.",
+      "depends_on": [],
+      "evidence_expectation": [
+        "Role/request state persistence tests",
+        "Representative UI/browser verification for request and approval path",
+        "Progress-log evidence showing how reviewer enablement now works"
+      ],
+      "status": "not_started",
+      "passes": false
+    },
+    {
+      "id": "M4-MATCH-001",
+      "initiative": "M4-NEXT",
+      "title": "Reviewer candidate picker with expertise and conflict signals",
+      "category": "workflow",
+      "priority": "P0",
+      "delivery_track": "workflow",
+      "parallel_ready": false,
+      "description": "Improve organizer/admin reviewer assignment by surfacing expertise match, reviewer-source eligibility, and clearer conflict notes instead of a thin candidate list.",
+      "why_now": "The simplified PRD emphasizes M4 as the expert source. This feature gets you the product value of expert matching without committing to a large opaque ranking engine.",
+      "depends_on": [
+        "M4-REVIEWER-001"
+      ],
+      "evidence_expectation": [
+        "Assignment UI tests",
+        "Backend/provider tests for candidate sourcing and conflict data",
+        "Role-workspace verification in organizer/reviewer flows"
+      ],
+      "status": "not_started",
+      "passes": false
+    },
+    {
+      "id": "M4-IDENTITY-001",
+      "initiative": "M4-NEXT",
+      "title": "Academic identity and ORCID surface tightening",
+      "category": "core-usability",
+      "priority": "P1",
+      "delivery_track": "vertical-slice",
+      "parallel_ready": true,
+      "description": "Strengthen profile identity surfaces by tightening ORCID link presentation, academic metadata consistency, and scholar-facing profile completeness signals.",
+      "why_now": "The simplified PRD treats ORCID and academic identity as trust multipliers. MVP intentionally stopped at link-level support; this is the lightweight next step before OAuth or auto-sync.",
+      "depends_on": [],
+      "evidence_expectation": [
+        "Profile edit/detail tests",
+        "Public scholar profile verification",
+        "Documentation of identity field expectations if contracts change"
+      ],
+      "status": "not_started",
+      "passes": false
+    },
+    {
+      "id": "INT-M4-NEXT-001",
+      "initiative": "M4-NEXT",
+      "title": "Scholar-to-reviewer integration acceptance",
+      "category": "integration",
+      "priority": "P0",
+      "delivery_track": "integration",
+      "parallel_ready": false,
+      "description": "Run and record a full acceptance slice covering public scholar discovery, reviewer request/approval, and organizer assignment using the strengthened M4 surfaces.",
+      "why_now": "M4-next only matters if the same foundation can be experienced across public discovery and internal review sourcing, not as disconnected admin tools.",
+      "depends_on": [
+        "M4-SEARCH-001",
+        "M4-REVIEWER-001",
+        "M4-MATCH-001",
+        "M4-IDENTITY-001"
+      ],
+      "evidence_expectation": [
+        "Runbook or browser acceptance record",
+        "Progress-log handoff",
+        "Representative smoke or integration test coverage"
+      ],
+      "status": "not_started",
+      "passes": false
+    },
+    {
+      "id": "M8-PUBLIC-001",
+      "initiative": "M8-LITE",
+      "title": "School list and detail public surfaces",
+      "category": "product-growth",
+      "priority": "P1",
+      "delivery_track": "vertical-slice",
+      "parallel_ready": true,
+      "description": "Add a real schools/training discovery surface with program metadata, application state, and support visibility.",
+      "why_now": "The simplified PRD positions schools as the next program type after conferences and grants. Public list/detail is the smallest credible entry point.",
+      "depends_on": [],
+      "evidence_expectation": [
+        "Public page tests",
+        "Provider/backend contract tests",
+        "Smoke verification on list/detail"
+      ],
+      "status": "not_started",
+      "passes": false
+    },
+    {
+      "id": "M8-APPLY-001",
+      "initiative": "M8-LITE",
+      "title": "School application flow on shared backbone",
+      "category": "product-growth",
+      "priority": "P1",
+      "delivery_track": "workflow",
+      "parallel_ready": false,
+      "description": "Implement the first school application flow by reusing application, file, status, and result-release patterns proven in M2-lite and M7-lite.",
+      "why_now": "This validates whether the current backbone can support a third program type without becoming a generic system too early.",
+      "depends_on": [
+        "M8-PUBLIC-001",
+        "M4-IDENTITY-001"
+      ],
+      "evidence_expectation": [
+        "Applicant tests",
+        "Build and provider/backend tests",
+        "Real-flow verification for submit and released result states"
+      ],
+      "status": "not_started",
+      "passes": false
+    },
+    {
+      "id": "M8-SELECT-001",
+      "initiative": "M8-LITE",
+      "title": "Organizer participant selection and support allocation",
+      "category": "workflow",
+      "priority": "P1",
+      "delivery_track": "workflow",
+      "parallel_ready": false,
+      "description": "Give organizers a minimal workspace for selecting school participants, allocating financial support, and releasing results.",
+      "why_now": "A school application without an organizer selection path does not produce a real program workflow; this is the minimal completion of M8-lite.",
+      "depends_on": [
+        "M8-APPLY-001",
+        "M4-MATCH-001"
+      ],
+      "evidence_expectation": [
+        "Organizer workspace tests",
+        "Decision/release verification",
+        "Progress or runbook evidence for operator path"
+      ],
+      "status": "not_started",
+      "passes": false
+    },
+    {
+      "id": "INT-M8-LITE-001",
+      "initiative": "M8-LITE",
+      "title": "School application end-to-end acceptance",
+      "category": "integration",
+      "priority": "P1",
+      "delivery_track": "integration",
+      "parallel_ready": false,
+      "description": "Verify the end-to-end school flow from public discovery to applicant submission to organizer selection and result release.",
+      "why_now": "Each new program type should earn its place through a credible integrated story, not by accumulating isolated screens.",
+      "depends_on": [
+        "M8-PUBLIC-001",
+        "M8-APPLY-001",
+        "M8-SELECT-001"
+      ],
+      "evidence_expectation": [
+        "Integration script or acceptance checklist",
+        "Browser evidence for core path",
+        "Progress-log closure entry"
+      ],
+      "status": "not_started",
+      "passes": false
+    },
+    {
+      "id": "UX-WORKSPACE-001",
+      "initiative": "UX-WORKSPACE",
+      "title": "Dashboard and workspace status-copy unification",
+      "category": "bug-stability",
+      "priority": "P1",
+      "delivery_track": "usability",
+      "parallel_ready": true,
+      "description": "Systematically unify applicant, reviewer, and organizer status language, next-step labels, and empty-state semantics.",
+      "why_now": "Sprint 1 fixed obvious mismatches such as active-count semantics, but copy drift still exists across shells and secondary pages.",
+      "depends_on": [],
+      "evidence_expectation": [
+        "Representative page tests",
+        "Browser spot checks on affected shells",
+        "Updated wording guidance where needed"
+      ],
+      "status": "not_started",
+      "passes": false
+    },
+    {
+      "id": "UX-WORKSPACE-002",
+      "initiative": "UX-WORKSPACE",
+      "title": "Secondary-page mobile and narrow-screen polish",
+      "category": "demo-readiness",
+      "priority": "P1",
+      "delivery_track": "usability",
+      "parallel_ready": true,
+      "description": "Harden key secondary pages and workspace detail surfaces for mobile and narrow-screen layouts.",
+      "why_now": "This is not a core product blocker, but it is the cleanest polish layer to land before another round of larger workflow expansion.",
+      "depends_on": [],
+      "evidence_expectation": [
+        "Responsive browser checks",
+        "Regression tests where layout behavior is encoded",
+        "Targeted screenshots or notes in handoff"
+      ],
+      "status": "not_started",
+      "passes": false
+    },
+    {
+      "id": "INT-UX-WORKSPACE-001",
+      "initiative": "UX-WORKSPACE",
+      "title": "Workspace browser acceptance refresh",
+      "category": "integration",
+      "priority": "P1",
+      "delivery_track": "integration",
+      "parallel_ready": false,
+      "description": "Re-run browser-level acceptance for applicant, reviewer, and organizer shells after copy and responsive polish land.",
+      "why_now": "Workspace polish is easy to over-claim from unit tests alone; this initiative should close with explicit browser evidence.",
+      "depends_on": [
+        "UX-WORKSPACE-001",
+        "UX-WORKSPACE-002"
+      ],
+      "evidence_expectation": [
+        "Browser acceptance record",
+        "Console-error check",
+        "Progress-log closure entry"
+      ],
+      "status": "not_started",
+      "passes": false
+    },
+    {
+      "id": "M3-JOBS-001",
+      "initiative": "M3-JOBS-LITE",
+      "title": "Public job listings and detail pages",
+      "category": "product-growth",
+      "priority": "P2",
+      "delivery_track": "vertical-slice",
+      "parallel_ready": true,
+      "description": "Add the first real public jobs surface with list/detail pages aligned to the Asiamath portal and opportunity model.",
+      "why_now": "The simplified PRD keeps M3 important, but jobs should only enter after the team proves a third reusable application type or chooses to prioritize employment over schools.",
+      "depends_on": [],
+      "evidence_expectation": [
+        "Public page tests",
+        "Portal/listing integration verification",
+        "Contract evidence for job opportunity model"
+      ],
+      "status": "not_started",
+      "passes": false
+    },
+    {
+      "id": "M3-APPLY-001",
+      "initiative": "M3-JOBS-LITE",
+      "title": "Job application workflow",
+      "category": "product-growth",
+      "priority": "P2",
+      "delivery_track": "workflow",
+      "parallel_ready": false,
+      "description": "Implement a first employment application flow with job-specific materials while still reusing the shared backbone.",
+      "why_now": "This is the first point where the platform begins to test M3 proper. It should wait until the team chooses it over M8-lite, not compete with that initiative in the same sprint.",
+      "depends_on": [
+        "M3-JOBS-001",
+        "M4-IDENTITY-001"
+      ],
+      "evidence_expectation": [
+        "Applicant tests",
+        "Shared-backbone evidence",
+        "Result/status verification"
+      ],
+      "status": "not_started",
+      "passes": false
+    },
+    {
+      "id": "M3-REFEREE-001",
+      "initiative": "M3-JOBS-LITE",
+      "title": "Referee request and confidential letter upload",
+      "category": "workflow",
+      "priority": "P2",
+      "delivery_track": "workflow",
+      "parallel_ready": false,
+      "description": "Add the first confidential referee management slice for employment applications, including request, reminder, and upload handling.",
+      "why_now": "This is one of the biggest complexity multipliers in M3, so it should be explicit and delayed until after the team confirms that jobs are the next major product lane.",
+      "depends_on": [
+        "M3-APPLY-001"
+      ],
+      "evidence_expectation": [
+        "Referee-path tests",
+        "Security/permission verification",
+        "Workflow evidence for upload and visibility boundaries"
+      ],
+      "status": "not_started",
+      "passes": false
+    },
+    {
+      "id": "INT-M3-JOBS-001",
+      "initiative": "M3-JOBS-LITE",
+      "title": "Jobs and referee flow acceptance",
+      "category": "integration",
+      "priority": "P2",
+      "delivery_track": "integration",
+      "parallel_ready": false,
+      "description": "Run an end-to-end acceptance slice for jobs, application submission, referee material handling, and organizer/admin visibility.",
+      "why_now": "If the platform enters M3, it should do so with one complete and testable story rather than half-adopting the module.",
+      "depends_on": [
+        "M3-JOBS-001",
+        "M3-APPLY-001",
+        "M3-REFEREE-001"
+      ],
+      "evidence_expectation": [
+        "Acceptance run record",
+        "Representative browser or script evidence",
+        "Progress-log closeout"
+      ],
+      "status": "not_started",
+      "passes": false
+    }
+  ]
+}
