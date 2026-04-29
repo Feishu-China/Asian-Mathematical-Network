@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { screen, within } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { conferenceProvider } from '../features/conference/conferenceProvider';
 import { renderWithRouter } from '../test/renderWithRouter';
 import { resetConferenceFakeState } from '../features/conference/fakeConferenceProvider';
@@ -92,6 +94,51 @@ describe('conference public pages', () => {
     expect(screen.getByRole('link', { name: /back to conferences/i })).toHaveAttribute(
       'href',
       '/conferences'
+    );
+  });
+
+  it('preserves the portal return chain through conferences and back from detail', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter
+        initialEntries={[
+          {
+            pathname: '/conferences',
+            state: {
+              returnContext: {
+                to: '/portal',
+                label: 'Back to portal',
+              },
+            },
+          },
+        ]}
+      >
+        <Routes>
+          <Route path="/conferences" element={<Conferences />} />
+          <Route path="/conferences/:slug" element={<ConferenceDetail />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    const workshopHeading = await screen.findByRole('heading', { name: 'Asiamath 2026 Workshop' });
+    const workshopCard = workshopHeading.closest('article');
+    expect(workshopCard).not.toBeNull();
+
+    await user.click(
+      within(workshopCard as HTMLElement).getByRole('link', { name: /view details/i })
+    );
+
+    expect(await screen.findByRole('link', { name: /back to conferences/i })).toHaveAttribute(
+      'href',
+      '/conferences'
+    );
+
+    await user.click(screen.getByRole('link', { name: /back to conferences/i }));
+
+    expect(await screen.findByRole('link', { name: /back to portal/i })).toHaveAttribute(
+      'href',
+      '/portal'
     );
   });
 

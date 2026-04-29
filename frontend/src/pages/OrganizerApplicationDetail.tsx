@@ -1,9 +1,15 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { WorkspaceShell } from '../components/layout/WorkspaceShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
+import { clearAuthSession } from '../features/auth/authSession';
+import { buildWorkspaceAccountMenu } from '../features/navigation/workspaceAccountMenu';
+import {
+  buildOrganizerQueueReturnContext,
+  resolveWorkspaceReturnContext,
+} from '../features/navigation/workspaceNavigation';
 import { AssignReviewerForm } from '../features/review/AssignReviewerForm';
 import { DecisionEditor } from '../features/review/DecisionEditor';
 import { reviewProvider } from '../features/review/reviewProvider';
@@ -14,6 +20,8 @@ export const routePath = '/organizer/applications/:id';
 
 export default function OrganizerApplicationDetailPage() {
   const { id = '' } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [application, setApplication] = useState<OrganizerApplicationDetail | null | undefined>(undefined);
   const [candidates, setCandidates] = useState<ReviewerCandidate[]>([]);
   const [assignStatus, setAssignStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
@@ -44,6 +52,20 @@ export default function OrganizerApplicationDetailPage() {
     return <div className="review-page">Application not found.</div>;
   }
 
+  const returnContext = resolveWorkspaceReturnContext(
+    location.state,
+    location.pathname,
+    buildOrganizerQueueReturnContext(application.conferenceId)
+  );
+  const accountMenu = buildWorkspaceAccountMenu({
+    role: 'organizer',
+    primaryConferenceId: application.conferenceId,
+    onLogout: () => {
+      clearAuthSession();
+      navigate('/portal');
+    },
+  });
+
   return (
     <WorkspaceShell
       eyebrow="Organizer workspace"
@@ -58,6 +80,21 @@ export default function OrganizerApplicationDetailPage() {
           </StatusBadge>
         </>
       }
+      actions={
+        <>
+          <Link
+            to={returnContext.to}
+            state={returnContext.state}
+            className="my-applications__section-link"
+          >
+            {returnContext.label}
+          </Link>
+          <Link to="/portal" className="my-applications__section-link">
+            Back to portal
+          </Link>
+        </>
+      }
+      accountMenu={accountMenu}
       aside={
         <div className="surface-card review-sidebar">
           <h3>Application snapshot</h3>
@@ -65,7 +102,6 @@ export default function OrganizerApplicationDetailPage() {
           <p>Participation type: {application.participationType ?? 'not set'}</p>
           <p>Submitted at: {application.submittedAt ?? 'not submitted'}</p>
           <p>Applicant: {application.applicantProfileSnapshot.fullName ?? 'Unknown applicant'}</p>
-          <Link to={`/organizer/conferences/${application.conferenceId}/applications`}>Back to conference queue</Link>
         </div>
       }
     >

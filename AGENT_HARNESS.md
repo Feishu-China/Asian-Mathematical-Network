@@ -38,6 +38,12 @@ Agent 不应试图一次性完成所有任务，而是采用“倒班制”（Sh
     *   如果引入了新的环境变量，必须写明在 `.env.example`。
     *   **Git Commit & Push**: 在本地日志更新完毕后，必须使用 `git commit -am "feat: <feature_id> description"` 进行本地提交，并执行 `git push` 同步到远程仓库，确保进度不丢失。
 
+5.  **Navigation Contract Check（导航契约自检）**
+    *   任何新增或改动的页面，只要存在上下级路由关系，都必须声明“逻辑上的上一级页面”，不能把浏览器历史 `navigate(-1)` 当作主返回方案。
+    *   页面进入子页时，必须显式传递 `returnContext` / chained return state；子页渲染主返回时，优先消费上游上下文，没有上下文时再回显式 fallback。
+    *   所有 workspace 页面都必须遵循 applicant dashboard 的壳层约定：稳定的主返回、稳定的 `Back to portal` 出口、以及 `Account` 下拉，而不是把返回链接散落在侧栏或卡片里。
+    *   在提交前，Agent 必须补或更新至少一条代表性导航测试，覆盖 list/detail 或 dashboard/queue/detail 的返回链路，避免新增页面靠手动验收才能发现断链。
+
 ## 3. 开发会话的标准流程 (Standard Session Flow)
 
 每当你作为 Agent 启动一次全新的开发任务时，请自动执行以下流程：
