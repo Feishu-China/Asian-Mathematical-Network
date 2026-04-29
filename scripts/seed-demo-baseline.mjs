@@ -6,53 +6,31 @@ const require = createRequire(import.meta.url);
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const backendDir = path.resolve(scriptDir, '../backend');
+const backendRequire = createRequire(path.join(backendDir, 'package.json'));
 
 process.env.TS_NODE_PROJECT = path.join(backendDir, 'tsconfig.json');
 process.chdir(backendDir);
-process.env.DATABASE_URL ??= 'file:./dev.db';
 
-require('../backend/node_modules/ts-node/register/transpile-only');
+if (!process.env.DATABASE_URL) {
+  throw new Error('DATABASE_URL must be set before running seed-demo-baseline.mjs');
+}
 
-const { PrismaClient } = require('../backend/node_modules/@prisma/client');
+backendRequire('ts-node/register/transpile-only');
+
+const { PrismaClient } = backendRequire('@prisma/client');
 const {
-  DEMO_BASELINE_FIXTURE,
+  buildDemoBaselineSummary,
   ensureDemoBaseline,
-} = require('../backend/src/lib/demoBaseline.ts');
+} = backendRequire('./src/lib/demoBaseline.ts');
 
 const prisma = new PrismaClient();
 
 const main = async () => {
   const fixture = await ensureDemoBaseline(prisma);
+  const summary = buildDemoBaselineSummary(fixture);
 
   console.log('Demo baseline ready');
-  console.log(
-    JSON.stringify(
-      {
-        conference: {
-          id: fixture.conference.id,
-          slug: fixture.conference.slug,
-          status: fixture.conference.status,
-        },
-        accounts: {
-          organizer: {
-            email: DEMO_BASELINE_FIXTURE.creatorEmail,
-            password: DEMO_BASELINE_FIXTURE.creatorPassword,
-          },
-          reviewer: {
-            email: DEMO_BASELINE_FIXTURE.reviewerEmail,
-            password: DEMO_BASELINE_FIXTURE.reviewerPassword,
-          },
-        },
-        grant: {
-          id: fixture.grant.id,
-          slug: fixture.grant.slug,
-          status: fixture.grant.status,
-        },
-      },
-      null,
-      2
-    )
-  );
+  console.log(JSON.stringify(summary, null, 2));
 };
 
 main()

@@ -1,32 +1,75 @@
 import type {
   EditableProfile,
   ProfileProvider,
+  PublicScholarSummary,
   PublicScholarProfile,
 } from './types';
 
-let profileState: EditableProfile = {
+const demoReviewerProfile: PublicScholarProfile = {
+  slug: 'prof-reviewer',
+  fullName: 'Prof Reviewer',
+  title: 'Professor',
+  institutionId: null,
+  institutionNameRaw: 'University of Tokyo',
+  countryCode: 'JP',
+  careerStage: 'faculty',
+  bio: 'Supports review governance, algebraic geometry, and cross-border mathematical collaboration through public-facing scholarly context.',
+  personalWebsite: 'https://example.org/scholars/prof-reviewer',
+  researchKeywords: [
+    'review governance',
+    'algebraic geometry',
+    'cross-border mathematical collaboration',
+  ],
+  mscCodes: [
+    { code: '14J60', isPrimary: true },
+    { code: '14E05', isPrimary: false },
+  ],
+  orcidId: '0000-0003-5100-0042',
+  updatedAt: new Date('2026-04-21T09:15:00Z').toISOString(),
+};
+
+const initialProfileState: EditableProfile = {
   userId: 'local-user',
   slug: 'alice-chen-demo',
   fullName: 'Alice Chen',
-  title: 'Dr',
+  title: 'Associate Professor',
   institutionId: null,
   institutionNameRaw: 'National University of Singapore',
   countryCode: 'SG',
   careerStage: 'faculty',
-  bio: 'Interested in algebraic geometry.',
-  personalWebsite: 'https://example.org',
-  researchKeywords: ['algebraic geometry', 'birational geometry'],
-  mscCodes: [{ code: '14J60', isPrimary: true }],
-  orcidId: null,
-  coiDeclarationText: '',
+  bio: 'Builds a demo-ready scholar profile that can be explained consistently across private editing, public scholar display, and downstream application context.',
+  personalWebsite: 'https://example.org/scholars/alice-chen',
+  researchKeywords: ['algebraic geometry', 'birational geometry', 'mathematical networks'],
+  mscCodes: [
+    { code: '14J60', isPrimary: true },
+    { code: '14E05', isPrimary: false },
+  ],
+  orcidId: '0000-0002-5100-0001',
+  coiDeclarationText: 'Private demo-only COI note for the shared scholar profile.',
   isProfilePublic: true,
-  verificationStatus: 'unverified',
-  verifiedAt: null,
+  verificationStatus: 'verified',
+  verifiedAt: new Date('2026-04-18T09:00:00Z').toISOString(),
   createdAt: new Date('2026-04-14T10:00:00Z').toISOString(),
   updatedAt: new Date('2026-04-14T10:06:00Z').toISOString(),
 };
 
 const clone = <T,>(value: T): T => structuredClone(value);
+let profileState: EditableProfile = clone(initialProfileState);
+
+export const resetProfileFakeState = () => {
+  profileState = clone(initialProfileState);
+};
+
+export const seedProfileFakeState = (partial: Partial<EditableProfile>) => {
+  profileState = {
+    ...profileState,
+    ...clone(partial),
+    researchKeywords: partial.researchKeywords
+      ? clone(partial.researchKeywords)
+      : clone(profileState.researchKeywords),
+    mscCodes: partial.mscCodes ? clone(partial.mscCodes) : clone(profileState.mscCodes),
+  };
+};
 
 const toPublicProfile = (profile: EditableProfile): PublicScholarProfile | null => {
   if (!profile.isProfilePublic) {
@@ -85,10 +128,33 @@ export const fakeProfileProvider: ProfileProvider = {
   },
 
   async getScholarProfile(slug) {
-    if (slug !== profileState.slug) {
-      return null;
+    if (slug === demoReviewerProfile.slug) {
+      return clone(demoReviewerProfile);
     }
 
-    return clone(toPublicProfile(profileState));
+    if (slug === profileState.slug) {
+      return clone(toPublicProfile(profileState));
+    }
+
+    return null;
   },
+};
+
+export const readEditablePublicScholarSummary = (): PublicScholarSummary | null => {
+  const publicProfile = toPublicProfile(profileState);
+
+  if (!publicProfile) {
+    return null;
+  }
+
+  return {
+    slug: publicProfile.slug,
+    fullName: publicProfile.fullName,
+    title: publicProfile.title,
+    institutionNameRaw: publicProfile.institutionNameRaw,
+    countryCode: publicProfile.countryCode,
+    researchKeywords: publicProfile.researchKeywords,
+    primaryMscCode: publicProfile.mscCodes.find((item) => item.isPrimary)?.code ?? null,
+    bio: publicProfile.bio,
+  };
 };

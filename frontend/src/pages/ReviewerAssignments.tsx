@@ -1,9 +1,25 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { WorkspaceShell } from '../components/layout/WorkspaceShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
+import { DASHBOARD_RETURN_CONTEXT } from '../features/demo/demoWalkthrough';
+import {
+  clearAuthSession,
+  readStoredAuthUser,
+} from '../features/auth/authSession';
+import { WorkspaceSwitcher } from '../features/navigation/WorkspaceSwitcher';
+import { buildWorkspaceAccountMenu } from '../features/navigation/workspaceAccountMenu';
+import {
+  buildWorkspaceChildState,
+  resolveWorkspaceReturnContext,
+  REVIEWER_QUEUE_RETURN_CONTEXT,
+} from '../features/navigation/workspaceNavigation';
+import {
+  getApplicantReviewerWorkspaces,
+  writeStoredWorkspace,
+} from '../features/navigation/workspaces';
 import { reviewProvider } from '../features/review/reviewProvider';
 import type { ReviewerQueueItem } from '../features/review/types';
 import './Review.css';
@@ -11,11 +27,30 @@ import './Review.css';
 export const routePath = '/reviewer';
 
 export default function ReviewerAssignmentsPage() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [items, setItems] = useState<ReviewerQueueItem[] | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const returnContext = resolveWorkspaceReturnContext(
+    location.state,
+    location.pathname,
+    DASHBOARD_RETURN_CONTEXT
+  );
+  const detailState = buildWorkspaceChildState(REVIEWER_QUEUE_RETURN_CONTEXT, returnContext);
+  const applicantReviewerWorkspaces = getApplicantReviewerWorkspaces(
+    readStoredAuthUser()?.available_workspaces
+  );
+  const accountMenu = buildWorkspaceAccountMenu({
+    role: 'reviewer',
+    onLogout: () => {
+      clearAuthSession();
+      navigate('/portal');
+    },
+  });
 
   useEffect(() => {
     let active = true;
+    writeStoredWorkspace('reviewer');
 
     reviewProvider
       .listReviewerAssignments()
@@ -51,6 +86,29 @@ export default function ReviewerAssignmentsPage() {
           <StatusBadge tone="info">Task queue</StatusBadge>
         </>
       }
+      actions={
+        <>
+          <Link
+            to={returnContext.to}
+            state={returnContext.state}
+            className="my-applications__section-link"
+          >
+            {returnContext.label}
+          </Link>
+          <Link to="/portal" className="my-applications__section-link">
+            Back to portal
+          </Link>
+        </>
+      }
+      accountMenu={accountMenu}
+      workspaceSwitcher={
+        applicantReviewerWorkspaces.length > 1 ? (
+          <WorkspaceSwitcher
+            currentWorkspace="reviewer"
+            availableWorkspaces={applicantReviewerWorkspaces}
+          />
+        ) : undefined
+      }
     >
       <div className="review-page">
         {items.length === 0 ? (
@@ -76,7 +134,11 @@ export default function ReviewerAssignmentsPage() {
                 </div>
 
                 <div className="conference-form-actions">
-                  <Link className="conference-primary-link" to={`/reviewer/assignments/${item.assignmentId}`}>
+                  <Link
+                    className="conference-primary-link"
+                    to={`/reviewer/assignments/${item.assignmentId}`}
+                    state={detailState}
+                  >
                     Open assignment
                   </Link>
                 </div>

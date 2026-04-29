@@ -64,6 +64,23 @@ const publishedSeed: PublicConferenceRecord = {
   related_grants: [],
 };
 
+const publishedUpcomingSeed: PublicConferenceRecord = {
+  id: 'conf-published-002',
+  slug: 'seoul-number-theory-forum-2026',
+  title: 'Seoul Number Theory Forum 2026',
+  short_name: 'SNTF2026',
+  location_text: 'Seoul',
+  start_date: '2026-10-02',
+  end_date: '2026-10-05',
+  application_deadline: '2026-09-01T23:59:59.000Z',
+  status: 'published' as const,
+  is_application_open: false,
+  related_grant_count: 0,
+  description: 'A regional forum linking number theory seminars, mentor exchanges, and new collaborations.',
+  published_at: '2026-04-24T10:00:00.000Z',
+  related_grants: [],
+};
+
 const organizerSeed: OrganizerConferenceRecord = {
   id: 'conf-draft-001',
   slug: 'organizer-draft-2026',
@@ -85,12 +102,12 @@ const organizerSeed: OrganizerConferenceRecord = {
   staff: [{ user_id: 'organizer-1', staff_role: 'owner' }],
 };
 
-let publicConferenceState: PublicConferenceRecord[] = [publishedSeed];
+let publicConferenceState: PublicConferenceRecord[] = [publishedSeed, publishedUpcomingSeed];
 let organizerConferenceState: OrganizerConferenceRecord[] = [organizerSeed];
 let applicationState: ConferenceApplication[] = [];
 
 export const resetConferenceFakeState = () => {
-  publicConferenceState = [publishedSeed];
+  publicConferenceState = [publishedSeed, publishedUpcomingSeed];
   organizerConferenceState = [organizerSeed];
   applicationState = [];
 };

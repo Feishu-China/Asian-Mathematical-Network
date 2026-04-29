@@ -9,7 +9,11 @@ export const requireAuthenticatedUserId = (req: Request) => {
     throw new Error('UNAUTHORIZED');
   }
 
-  const token = authHeader.split(' ')[1];
-  const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
-  return decoded.userId;
+  try {
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
+    return decoded.userId;
+  } catch {
+    throw new Error('UNAUTHORIZED');
+  }
 };

@@ -14,15 +14,39 @@ We have adopted an auto-discovery routing architecture for both Frontend and Bac
 - **How to add a new page:**
   Simply create a new `.tsx` file inside `frontend/src/pages/`.
   For example, creating `frontend/src/pages/Profile.tsx` will automatically register the route `http://localhost:5173/profile`.
-- **To Start:** `cd frontend && npm install && npm run dev`
+- **To Start (default UI dev / proxy mode):** `cd frontend && npm install && npm run dev`
+- **Default local port:** `http://127.0.0.1:5173`
 
 ### ⚙️ Backend (`/backend`)
-- **Tech Stack:** Node.js + Express + Prisma (SQLite) + Jest
+- **Tech Stack:** Node.js + Express + Prisma (PostgreSQL) + Jest
 - **Zero-Conflict Routing:** You **do not** need to edit `app.ts` to register your new controllers.
 - **How to add a new API endpoint:**
   Simply create a new `.ts` file inside `backend/src/routes/`.
-  For example, creating `backend/src/routes/profile.ts` will automatically mount all your routes under `http://localhost:3000/api/v1/profile`.
-- **To Start:** `cd backend && npm install && npm run dev`
+  For example, creating `backend/src/routes/profile.ts` will automatically mount all your routes under `http://127.0.0.1:3000/api/v1/profile` in default local dev.
+- **To Start (default backend dev):** `cd backend && npm install && npm run dev`
+- **Default local port:** `http://127.0.0.1:3000`
+
+## 🔁 Local Run Modes
+
+Use one of these two modes explicitly. Do not mix them during debugging or acceptance.
+
+### 1. Default local development (`5173 + proxy -> 3000`)
+- **Use this when:** you want the lightest frontend/backend loop or are doing routine UI work.
+- **Backend:** `cd backend && npm run dev`
+- **Frontend:** `cd frontend && npm run dev`
+- **Browser:** `http://127.0.0.1:5173`
+- **API wiring:** leave `VITE_API_BASE_URL` unset so frontend requests to `/api/v1` go through the Vite proxy to `http://127.0.0.1:3000`
+
+### 2. Real-flow / acceptance (`5175 + direct API base -> 3001`)
+- **Use this when:** you are running browser acceptance or `npm run test:portal:int` / `npm run test:grant:int`, or when a `3000/3001` mismatch could create false failures.
+- **Backend:** run `npm run build --workspace backend`, then `cd backend && PORT=3001 npm run start`
+- **Frontend:** run `VITE_API_BASE_URL="http://127.0.0.1:3001/api/v1" npm run dev --workspace frontend -- --host 127.0.0.1 --port 5175`
+- **Browser target:** `http://127.0.0.1:5175`
+- **Why this mode exists:** it bypasses the default proxy and talks directly to the stable local backend instance on `3001`
+
+### 3. Which mode should I pick?
+- Use **default local development** for routine UI work and faster iteration.
+- Use **real-flow / acceptance** for real auth/application flows, browser acceptance, and any run where frontend/backend ports need to be explicit instead of inferred through the proxy.
 
 ## 🛠️ The Development Workflow (Shift Work)
 
@@ -58,8 +82,8 @@ Here is the layout and what each folder is used for:
 ├── 📁 database/                # 🗄️ Raw SQL definitions
 │   └── ddl/                    # 🏗️ DDL (Data Definition Language) files for creating tables
 │
-├── 📁 src/                     # 🔗 Shared Code (Used by BOTH frontend and backend)
-│   └── types/                  # 🧱 Shared TypeScript models (e.g., `models.ts` defining User, Profile)
+├── 📁 packages/                # 📦 Shared workspace packages
+│   └── shared/                 # 🧱 Shared TypeScript models consumed by frontend and backend
 │
 ├── 📁 mocks/                   # 🤡 Mock API server configurations and test data fixtures
 │
@@ -77,7 +101,7 @@ Here is the layout and what each folder is used for:
 ### 🚦 Where do I start? (For New Engineers)
 1. **Read the Rules**: Read `AGENT_HARNESS.md` to understand how we work (One Feature at a time, Smoke Tests).
 2. **Find a Task**: Open `docs/planning/asiamath-feature-list-v4.0-optimized.json` and find a feature marked `"status": "not_started"`.
-3. **Read the Contract**: Check `docs/specs/openapi.yaml` and `src/types/models.ts` to understand the data structure you need to implement.
+3. **Read the Contract**: Check `docs/specs/openapi.yaml` and `packages/shared/src/models.ts` to understand the data structure you need to implement.
 4. **Develop**: Go to `frontend/` or `backend/` and start coding.
 
 Happy coding! If you follow the isolated file structure, you will never see a merge conflict.

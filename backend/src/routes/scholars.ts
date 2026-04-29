@@ -1,8 +1,9 @@
 import { Router } from 'express';
-import { getPublicScholarProfile } from '../controllers/profile';
+import { getPublicScholarProfile, listPublicScholars } from '../controllers/profile';
 
 const router = Router();
 
+router.get('/', listPublicScholars);
 router.get('/:slug', getPublicScholarProfile);
 
 export default router;

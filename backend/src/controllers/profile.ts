@@ -3,7 +3,11 @@ import jwt from 'jsonwebtoken';
 import { Prisma } from '@prisma/client';
 import { prisma } from '../lib/prisma';
 import { buildStarterProfile, getStarterFullName, mapProfileRecord } from '../lib/profile';
-import { serializeProfile, serializePublicProfile } from '../serializers/profile';
+import {
+  serializeProfile,
+  serializePublicProfile,
+  serializePublicScholarSummary,
+} from '../serializers/profile';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_key_for_development';
 const CAREER_STAGES = new Set(['undergraduate', 'masters', 'phd', 'postdoc', 'faculty', 'other']);
@@ -46,9 +50,13 @@ const getAuthenticatedUserId = (req: Request) => {
     return null;
   }
 
-  const token = authHeader.split(' ')[1];
-  const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
-  return decoded.userId;
+  try {
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
+    return decoded.userId;
+  } catch {
+    return null;
+  }
 };
 
 const parseNullableTrimmedString = (
@@ -415,6 +423,107 @@ const sendPublicProfileResponse = (res: Response, record: ProfileRecord) => {
   });
 };
 
+const SCHOLAR_CLUSTER_DEFINITIONS = [
+  {
+    id: 'cluster-ag',
+    label: 'Algebraic Geometry',
+    summary: 'Birational geometry, moduli, and arithmetic interfaces.',
+    matches: (keywords: string[], primaryMscCode: string | null) =>
+      primaryMscCode?.startsWith('14') ||
+      keywords.some((keyword) =>
+        ['algebraic geometry', 'birational geometry', 'moduli'].includes(keyword)
+      ),
+  },
+  {
+    id: 'cluster-nt',
+    label: 'Number Theory',
+    summary: 'Automorphic forms, arithmetic geometry, and analytic methods.',
+    matches: (keywords: string[], primaryMscCode: string | null) =>
+      primaryMscCode?.startsWith('11') ||
+      keywords.some((keyword) =>
+        ['number theory', 'automorphic forms', 'l-functions'].includes(keyword)
+      ),
+  },
+  {
+    id: 'cluster-pde',
+    label: 'PDE',
+    summary: 'Dispersive equations, harmonic analysis, and applied models.',
+    matches: (keywords: string[], primaryMscCode: string | null) =>
+      primaryMscCode?.startsWith('35') ||
+      keywords.some((keyword) =>
+        ['pde', 'harmonic analysis', 'dispersive equations'].includes(keyword)
+      ),
+  },
+  {
+    id: 'cluster-top',
+    label: 'Topology',
+    summary: 'Low-dimensional topology and geometry across training cohorts.',
+    matches: (keywords: string[], primaryMscCode: string | null) =>
+      primaryMscCode?.startsWith('57') ||
+      keywords.some((keyword) => keyword.includes('topology')),
+  },
+];
+
+const normalizeKeyword = (keyword: string) => keyword.trim().toLocaleLowerCase();
+
+const readPrimaryMscCode = (record: ReturnType<typeof mapProfileRecord>) =>
+  record.mscCodes.find((item) => item.isPrimary)?.code ?? null;
+
+const buildScholarClusters = (profiles: Array<ReturnType<typeof mapProfileRecord>>) => {
+  const buckets = new Map<
+    string,
+    {
+      id: string;
+      label: string;
+      summary: string;
+      scholarCount: number;
+      institutions: Set<string>;
+    }
+  >();
+
+  for (const definition of SCHOLAR_CLUSTER_DEFINITIONS) {
+    buckets.set(definition.id, {
+      id: definition.id,
+      label: definition.label,
+      summary: definition.summary,
+      scholarCount: 0,
+      institutions: new Set<string>(),
+    });
+  }
+
+  for (const profile of profiles) {
+    const keywords = profile.researchKeywords.map(normalizeKeyword);
+    const primaryMscCode = readPrimaryMscCode(profile);
+    const cluster = SCHOLAR_CLUSTER_DEFINITIONS.find((definition) =>
+      definition.matches(keywords, primaryMscCode)
+    );
+
+    if (!cluster) {
+      continue;
+    }
+
+    const bucket = buckets.get(cluster.id);
+    if (!bucket) {
+      continue;
+    }
+
+    bucket.scholarCount += 1;
+    if (profile.institutionNameRaw) {
+      bucket.institutions.add(profile.institutionNameRaw);
+    }
+  }
+
+  return Array.from(buckets.values())
+    .filter((bucket) => bucket.scholarCount > 0)
+    .map((bucket) => ({
+      id: bucket.id,
+      label: bucket.label,
+      summary: bucket.summary,
+      scholar_count: bucket.scholarCount,
+      institution_count: bucket.institutions.size,
+    }));
+};
+
 export const getMyProfile = async (req: Request, res: Response) => {
   let userId: string;
   try {
@@ -509,6 +618,32 @@ export const getPublicScholarProfile = async (req: Request, res: Response) => {
     }
 
     sendPublicProfileResponse(res, record);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const listPublicScholars = async (_req: Request, res: Response) => {
+  try {
+    const records = await prisma.profile.findMany({
+      where: { isProfilePublic: true },
+      include: { mscCodes: true },
+      orderBy: [{ updatedAt: 'desc' }],
+    });
+
+    const profiles = records
+      .map((record) => mapProfileRecord(record))
+      .sort((left, right) => left.fullName.localeCompare(right.fullName));
+
+    res.status(200).json({
+      data: {
+        scholars: profiles.map(serializePublicScholarSummary),
+        clusters: buildScholarClusters(profiles),
+      },
+      meta: {
+        total: profiles.length,
+      },
+    });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }

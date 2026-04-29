@@ -26,6 +26,10 @@ type DecisionContext = {
   releasedAt: Date | null;
 } | null;
 
+type PostVisitReportContext = {
+  status: string;
+} | null;
+
 export type DashboardApplicationRecord = {
   id: string;
   applicationType: string;
@@ -41,6 +45,7 @@ export type DashboardApplicationRecord = {
   conference: ConferenceContext;
   grant: GrantContext;
   decision: DecisionContext;
+  postVisitReport: PostVisitReportContext;
 };
 
 export const serializeMyApplicationItem = (application: DashboardApplicationRecord) => {
@@ -60,13 +65,18 @@ export const serializeMyApplicationItem = (application: DashboardApplicationReco
           released_at: application.decision.releasedAt?.toISOString() ?? null,
         }
       : null;
+  const postVisitReportStatus = application.postVisitReport?.status ?? null;
+  const reportPending =
+    application.applicationType === 'grant_application' &&
+    releasedDecision?.final_status === 'accepted' &&
+    application.grant?.reportRequired === true &&
+    postVisitReportStatus === null;
+
   const nextAction =
     viewerStatus === 'draft'
       ? 'continue_draft'
       : viewerStatus === 'result_released'
-        ? application.applicationType === 'grant_application' &&
-          releasedDecision?.final_status === 'accepted' &&
-          application.grant?.reportRequired
+        ? reportPending
           ? 'submit_post_visit_report'
           : 'view_result'
         : 'view_submission';
@@ -76,12 +86,13 @@ export const serializeMyApplicationItem = (application: DashboardApplicationReco
     application_type: application.applicationType,
     source_module: application.sourceModule,
     source_id: application.conferenceId ?? application.grantId,
+    source_slug: application.conference?.slug ?? application.grant?.slug ?? null,
     source_title: application.conference?.title ?? application.grant?.title ?? null,
     linked_conference_title: application.grant?.linkedConference?.title ?? null,
     viewer_status: viewerStatus,
     submitted_at: application.submittedAt?.toISOString() ?? null,
     released_decision: releasedDecision,
     next_action: nextAction,
-    post_visit_report_status: null,
+    post_visit_report_status: postVisitReportStatus,
   };
 };

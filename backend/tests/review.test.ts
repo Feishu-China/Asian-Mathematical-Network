@@ -89,14 +89,14 @@ const registerUser = async (email: string, fullName: string) => {
 };
 
 const promoteReviewer = async (userId: string) => {
-  await prisma.$executeRawUnsafe(
-    `
-      INSERT INTO "UserRole" ("id", "userId", "role", "isPrimary", "createdAt")
-      VALUES (?, ?, 'reviewer', 0, CURRENT_TIMESTAMP)
-    `,
-    `role-${userId}`,
-    userId
-  );
+  await prisma.userRole.create({
+    data: {
+      id: `role-${userId}`,
+      userId,
+      role: 'reviewer',
+      isPrimary: false,
+    },
+  });
 };
 
 const createPublishedConference = async (organizerToken: string, slug: string, title: string) => {
@@ -189,7 +189,7 @@ const submitConferenceApplication = async (
 };
 
 describe('Review API', () => {
-  beforeAll(async () => {
+  beforeEach(async () => {
     await cleanupReviewFixtures();
   });
 
@@ -356,6 +356,11 @@ describe('Review API', () => {
       id: applicationId,
       application_type: 'conference_application',
       viewer_status: 'under_review',
+      participation_type: 'talk',
+      statement: 'I would like to present new work.',
+      abstract_title: 'A note on birational geometry',
+      abstract_text: 'This talk discusses a compactness result.',
+      interested_in_travel_support: true,
       released_decision: null,
     });
     expect(applicantDetailBeforeRelease.body.data.application).not.toHaveProperty('decision');

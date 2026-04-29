@@ -3,8 +3,32 @@
   gap: var(--space-6);
 }
 
-.profile-card,
+.profile-context-grid,
+.profile-empty-card,
 .scholar-card {
+  width: 100%;
+  max-width: var(--layout-narrow);
+}
+
+.profile-context-grid {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+.profile-context-card,
+.profile-empty-card:not(.public-browse-card) {
+  display: grid;
+  gap: 0.9rem;
+  padding: 1.25rem;
+}
+
+.profile-context-card--wide {
+  grid-column: 1 / -1;
+}
+
+.profile-card,
+.scholar-card:not(.public-browse-card) {
   width: 100%;
   max-width: var(--layout-narrow);
   padding: 1.75rem;
@@ -27,7 +51,8 @@
 }
 
 .profile-eyebrow,
-.scholar-kicker {
+.scholar-kicker,
+.profile-section-kicker {
   margin: 0;
   font-size: 0.82rem;
   font-weight: 700;
@@ -41,10 +66,79 @@
   color: var(--color-text-muted);
 }
 
+.profile-definition-list,
+.scholar-facts {
+  display: grid;
+  gap: 0.85rem;
+  margin: 0;
+}
+
+.profile-definition-list div,
+.scholar-facts div {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.profile-definition-list dt,
+.scholar-facts dt {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-muted);
+}
+
+.profile-definition-list dd,
+.scholar-facts dd {
+  margin: 0;
+}
+
 .profile-grid {
   display: grid;
   gap: var(--space-4);
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.profile-boundary-grid,
+.scholar-stack {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.profile-bullet-list,
+.scholar-links {
+  margin: 0;
+  padding-left: 1.1rem;
+  color: var(--color-text-muted);
+}
+
+.profile-link-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.profile-inline-note,
+.profile-field-note {
+  color: var(--color-text-muted);
+}
+
+.profile-pill-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.profile-pill-list li {
+  padding: 0.45rem 0.8rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.78);
+  color: var(--color-text-muted);
 }
 
 .profile-toggle {
@@ -76,16 +170,18 @@
   font-weight: 700;
 }
 
-.scholar-chip-list,
-.scholar-links {
-  margin: 0;
-  padding-left: 1.1rem;
-  color: var(--color-text-muted);
+.scholar-stack h3 {
+  margin: 0 0 0.55rem;
+  font-size: 0.92rem;
+  font-family: var(--font-body);
+  font-weight: 700;
 }
 
 @media (max-width: 768px) {
   .profile-card,
-  .scholar-card {
+  .scholar-card:not(.public-browse-card),
+  .profile-context-card,
+  .profile-empty-card:not(.public-browse-card) {
     padding: 1.2rem;
   }
 
@@ -96,5 +192,9 @@
 
   .profile-save-button {
     width: 100%;
+  }
+
+  .profile-context-card--wide {
+    grid-column: auto;
   }
 }

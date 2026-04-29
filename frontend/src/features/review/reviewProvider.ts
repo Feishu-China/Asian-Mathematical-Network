@@ -1,6 +1,7 @@
 import { fakeReviewProvider } from './fakeReviewProvider';
 import { httpReviewProvider } from './httpReviewProvider';
+import { shouldUseFakeProvider } from '../providerMode';
 
-const isTestEnv = import.meta.env.MODE === 'test' || import.meta.env.VITEST;
-
-export const reviewProvider = isTestEnv ? fakeReviewProvider : httpReviewProvider;
+export const reviewProvider = shouldUseFakeProvider(import.meta.env)
+  ? fakeReviewProvider
+  : httpReviewProvider;

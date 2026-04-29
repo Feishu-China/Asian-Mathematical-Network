@@ -199,6 +199,14 @@ describe('GET /api/v1/me/applications', () => {
     expect(res.status).toBe(401);
   });
 
+  it('returns 401 when the Bearer token is malformed', async () => {
+    const res = await request(app)
+      .get('/api/v1/me/applications')
+      .set('Authorization', 'Bearer applicant-1');
+
+    expect(res.status).toBe(401);
+  });
+
   it('returns an empty list when the user has no applications', async () => {
     const res = await request(app)
       .get('/api/v1/me/applications')
@@ -236,6 +244,7 @@ describe('GET /api/v1/me/applications', () => {
       application_type: 'conference_application',
       source_module: 'M2',
       source_id: conferenceId,
+      source_slug: 'me-apps-conf-2026',
       source_title: 'Me Applications Conference 2026',
       linked_conference_title: null,
       viewer_status: 'under_review',
@@ -257,6 +266,7 @@ describe('GET /api/v1/me/applications', () => {
       application_type: 'grant_application',
       source_module: 'M7',
       source_id: grantId,
+      source_slug: 'me-apps-grant-2026',
       source_title: 'Me Applications Grant 2026',
       linked_conference_title: 'Me Applications Conference 2026',
       viewer_status: 'draft',

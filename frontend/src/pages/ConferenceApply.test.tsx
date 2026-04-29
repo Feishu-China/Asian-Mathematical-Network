@@ -1,12 +1,25 @@
 import { beforeEach, describe, expect, it } from 'vitest';
+import { render } from '@testing-library/react';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { renderWithRouter } from '../test/renderWithRouter';
 import {
   fakeConferenceProvider,
   resetConferenceFakeState,
 } from '../features/conference/fakeConferenceProvider';
+import Conferences from './Conferences';
+import ConferenceDetail from './ConferenceDetail';
 import ConferenceApply from './ConferenceApply';
+
+function LoginStateProbe() {
+  const location = useLocation();
+
+  return <div>{JSON.stringify(location.state)}</div>;
+}
+
+const hasExactText = (expected: string) => (_content: string, element: Element | null) =>
+  element?.textContent?.replace(/\s+/g, ' ').trim() === expected;
 
 describe('conference apply page', () => {
   beforeEach(() => {
@@ -15,13 +28,24 @@ describe('conference apply page', () => {
   });
 
   it('shows an authentication prompt when no token is present', async () => {
-    renderWithRouter(
-      <ConferenceApply />,
-      '/conferences/asiamath-2026-workshop/apply',
-      '/conferences/:slug/apply'
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter initialEntries={['/conferences/asiamath-2026-workshop/apply']}>
+        <Routes>
+          <Route path="/conferences/:slug/apply" element={<ConferenceApply />} />
+          <Route path="/login" element={<LoginStateProbe />} />
+        </Routes>
+      </MemoryRouter>
     );
 
     expect(await screen.findByText(/sign in to start a conference application/i)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('link', { name: /go to login/i }));
+
+    expect(
+      screen.getByText('{"returnTo":"/conferences/asiamath-2026-workshop/apply"}')
+    ).toBeInTheDocument();
   });
 
   it('creates a draft and submits it for an authenticated applicant', async () => {
@@ -48,6 +72,118 @@ describe('conference apply page', () => {
     expect(await screen.findByText(/application submitted/i)).toBeInTheDocument();
   });
 
+  it('shows only the statement requirement for participant applications', async () => {
+    localStorage.setItem('token', 'applicant-1');
+    const user = userEvent.setup();
+
+    renderWithRouter(
+      <ConferenceApply />,
+      '/conferences/asiamath-2026-workshop/apply',
+      '/conferences/:slug/apply'
+    );
+
+    await screen.findByRole('heading', { name: /conference application/i });
+    await user.selectOptions(screen.getByLabelText(/participation type/i), 'participant');
+
+    expect(screen.getAllByText(hasExactText('Participation type *'))[0]).toBeInTheDocument();
+    expect(screen.getAllByText(hasExactText('Statement *'))[0]).toBeInTheDocument();
+    expect(
+      screen.getByText(/you only need a short statement for participant registration/i)
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText(/abstract title/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/abstract text/i)).not.toBeInTheDocument();
+  });
+
+  it('requires abstract fields for poster submissions', async () => {
+    localStorage.setItem('token', 'applicant-1');
+    const user = userEvent.setup();
+
+    renderWithRouter(
+      <ConferenceApply />,
+      '/conferences/asiamath-2026-workshop/apply',
+      '/conferences/:slug/apply'
+    );
+
+    await screen.findByRole('heading', { name: /conference application/i });
+
+    expect(screen.getByText(/save this draft once before submitting/i)).toBeInTheDocument();
+
+    await user.selectOptions(screen.getByLabelText(/participation type/i), 'poster');
+    expect(
+      screen.getByText(/an abstract title and abstract text are required for presentation submissions/i)
+    ).toBeInTheDocument();
+    expect(screen.getAllByText(hasExactText('Abstract title *'))[0]).toBeInTheDocument();
+    expect(screen.getAllByText(hasExactText('Abstract text *'))[0]).toBeInTheDocument();
+    await user.type(screen.getByLabelText(/statement/i), 'I want to present new work.');
+    await user.type(screen.getByLabelText(/abstract title/i), 'A New Theorem');
+    await user.click(screen.getByRole('button', { name: /save draft/i }));
+
+    expect(await screen.findByText(/draft saved/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/abstract text is required for poster submissions/i)
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /submit application/i })).toBeDisabled();
+  });
+
+  it('allows participant submissions without abstract fields once the draft is saved', async () => {
+    localStorage.setItem('token', 'applicant-1');
+    const user = userEvent.setup();
+
+    renderWithRouter(
+      <ConferenceApply />,
+      '/conferences/asiamath-2026-workshop/apply',
+      '/conferences/:slug/apply'
+    );
+
+    await screen.findByRole('heading', { name: /conference application/i });
+
+    await user.selectOptions(screen.getByLabelText(/participation type/i), 'participant');
+    await user.type(screen.getByLabelText(/statement/i), 'I would like to attend and join discussions.');
+    await user.click(screen.getByRole('button', { name: /save draft/i }));
+
+    expect(await screen.findByText(/draft saved/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /submit application/i })).toBeEnabled();
+  });
+
+  it('preserves abstract values when toggling back from participant to talk', async () => {
+    localStorage.setItem('token', 'applicant-1');
+    const user = userEvent.setup();
+
+    renderWithRouter(
+      <ConferenceApply />,
+      '/conferences/asiamath-2026-workshop/apply',
+      '/conferences/:slug/apply'
+    );
+
+    await screen.findByRole('heading', { name: /conference application/i });
+
+    await user.selectOptions(screen.getByLabelText(/participation type/i), 'talk');
+    await user.type(screen.getByLabelText(/abstract title/i), 'Stored abstract title');
+    await user.type(screen.getByLabelText(/abstract text/i), 'Stored abstract text');
+    await user.selectOptions(screen.getByLabelText(/participation type/i), 'participant');
+
+    expect(screen.queryByLabelText(/abstract title/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/abstract text/i)).not.toBeInTheDocument();
+
+    await user.selectOptions(screen.getByLabelText(/participation type/i), 'talk');
+
+    expect(screen.getByDisplayValue('Stored abstract title')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Stored abstract text')).toBeInTheDocument();
+  });
+
+  it('renders the shared applicant account menu for signed-in applicants', async () => {
+    localStorage.setItem('token', 'applicant-1');
+
+    renderWithRouter(
+      <ConferenceApply />,
+      '/conferences/asiamath-2026-workshop/apply',
+      '/conferences/:slug/apply'
+    );
+
+    await screen.findByRole('heading', { name: /conference application/i });
+    expect(screen.getByRole('button', { name: 'Account' })).toBeInTheDocument();
+  });
+
   it('hydrates an existing draft when the page reloads', async () => {
     localStorage.setItem('token', 'applicant-1');
 
@@ -66,12 +202,43 @@ describe('conference apply page', () => {
       '/conferences/:slug/apply'
     );
 
-    expect(await screen.findByText(/draft saved/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/this conference application draft is already on file/i)
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/^Draft saved$/i)).not.toBeInTheDocument();
     expect(await screen.findByDisplayValue('talk')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Saved statement')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Saved abstract title')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Saved abstract text')).toBeInTheDocument();
     expect(screen.getByLabelText(/interested in travel support/i)).toBeChecked();
+  });
+
+  it('shows a submitted-state notice and locks editing after a submitted application reloads', async () => {
+    localStorage.setItem('token', 'applicant-1');
+
+    const created = await fakeConferenceProvider.createConferenceApplication('conf-published-001', {
+      participationType: 'talk',
+      statement: 'Submitted statement',
+      abstractTitle: 'Submitted abstract title',
+      abstractText: 'Submitted abstract text',
+      interestedInTravelSupport: true,
+      extraAnswers: {},
+    });
+    await fakeConferenceProvider.submitConferenceApplication(created.id);
+
+    renderWithRouter(
+      <ConferenceApply />,
+      '/conferences/asiamath-2026-workshop/apply',
+      '/conferences/:slug/apply'
+    );
+
+    expect(await screen.findByText(/submitted and under review/i)).toBeInTheDocument();
+    expect(
+      screen.queryByText(/this conference application draft is already on file/i)
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /save draft/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /submit application/i })).toBeDisabled();
+    expect(screen.getByLabelText(/statement/i)).toBeDisabled();
   });
 
   it('updates an existing draft after the page reloads', async () => {
@@ -100,5 +267,55 @@ describe('conference apply page', () => {
 
     expect(await screen.findByText(/draft saved/i)).toBeInTheDocument();
     expect(screen.getByDisplayValue('Updated after reload')).toBeInTheDocument();
+  });
+
+  it('preserves the portal-origin return path through conference apply and back out to the list', async () => {
+    localStorage.setItem('token', 'applicant-1');
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter
+        initialEntries={[
+          {
+            pathname: '/conferences',
+            state: {
+              returnContext: {
+                to: '/portal',
+                label: 'Back to portal',
+              },
+            },
+          },
+        ]}
+      >
+        <Routes>
+          <Route path="/conferences" element={<Conferences />} />
+          <Route path="/conferences/:slug" element={<ConferenceDetail />} />
+          <Route path="/conferences/:slug/apply" element={<ConferenceApply />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByRole('link', { name: /back to portal/i })).toHaveAttribute(
+      'href',
+      '/portal'
+    );
+
+    await user.click(screen.getAllByRole('link', { name: /view details/i })[0]);
+    expect(await screen.findByRole('link', { name: /apply for conference/i })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('link', { name: /apply for conference/i }));
+    expect(await screen.findByRole('link', { name: /back to conference detail/i })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('link', { name: /back to conference detail/i }));
+    expect(await screen.findByRole('link', { name: /back to conferences/i })).toHaveAttribute(
+      'href',
+      '/conferences'
+    );
+
+    await user.click(screen.getByRole('link', { name: /back to conferences/i }));
+    expect(await screen.findByRole('link', { name: /back to portal/i })).toHaveAttribute(
+      'href',
+      '/portal'
+    );
   });
 });

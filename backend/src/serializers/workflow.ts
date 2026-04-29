@@ -281,7 +281,11 @@ export const serializeApplicantApplicationDetail = (application: {
   linkedConferenceId: string | null;
   linkedConferenceApplicationId: string | null;
   status: string;
+  participationType: string | null;
   statement: string | null;
+  abstractTitle: string | null;
+  abstractText: string | null;
+  interestedInTravelSupport: boolean;
   travelPlanSummary: string | null;
   fundingNeedSummary: string | null;
   extraAnswersJson: string;
@@ -290,6 +294,13 @@ export const serializeApplicantApplicationDetail = (application: {
   conference?: { title: string } | null;
   grant?: { title: string; linkedConference?: { title: string } | null } | null;
   decision: InternalDecisionRecord | null;
+  postVisitReport?: {
+    id: string;
+    status: string;
+    reportNarrative: string;
+    attendanceConfirmed: boolean;
+    submittedAt: Date | null;
+  } | null;
 }) => {
   const viewerStatus = getApplicantViewerStatus(
     application.status,
@@ -308,6 +319,15 @@ export const serializeApplicantApplicationDetail = (application: {
           released_at: application.decision.releasedAt?.toISOString() ?? null,
         }
       : null;
+  const postVisitReport = application.postVisitReport
+    ? {
+        id: application.postVisitReport.id,
+        status: application.postVisitReport.status,
+        report_narrative: application.postVisitReport.reportNarrative,
+        attendance_confirmed: application.postVisitReport.attendanceConfirmed,
+        submitted_at: application.postVisitReport.submittedAt?.toISOString() ?? null,
+      }
+    : null;
 
   return {
     id: application.id,
@@ -321,7 +341,11 @@ export const serializeApplicantApplicationDetail = (application: {
     linked_conference_title: application.grant?.linkedConference?.title ?? null,
     linked_conference_application_id: application.linkedConferenceApplicationId,
     viewer_status: viewerStatus,
+    participation_type: application.participationType,
     statement: application.statement,
+    abstract_title: application.abstractTitle,
+    abstract_text: application.abstractText,
+    interested_in_travel_support: application.interestedInTravelSupport,
     travel_plan_summary: application.travelPlanSummary,
     funding_need_summary: application.fundingNeedSummary,
     extra_answers: parseJson<Record<string, unknown>>(application.extraAnswersJson, {}),
@@ -329,6 +353,7 @@ export const serializeApplicantApplicationDetail = (application: {
     files: [],
     submitted_at: application.submittedAt?.toISOString() ?? null,
     released_decision: releasedDecision,
-    post_visit_report_status: null,
+    post_visit_report: postVisitReport,
+    post_visit_report_status: postVisitReport?.status ?? null,
   };
 };

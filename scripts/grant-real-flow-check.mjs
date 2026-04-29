@@ -6,19 +6,23 @@ const require = createRequire(import.meta.url);
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const backendDir = path.resolve(scriptDir, '../backend');
+const backendRequire = createRequire(path.join(backendDir, 'package.json'));
 
 process.env.TS_NODE_PROJECT = path.join(backendDir, 'tsconfig.json');
 process.chdir(backendDir);
-process.env.DATABASE_URL ??= 'file:./dev.db';
 
-require('../backend/node_modules/ts-node/register/transpile-only');
+if (!process.env.DATABASE_URL) {
+  throw new Error('DATABASE_URL must be set before running grant-real-flow-check.mjs');
+}
 
-const { PrismaClient } = require('../backend/node_modules/@prisma/client');
+backendRequire('ts-node/register/transpile-only');
+
+const { PrismaClient } = backendRequire('@prisma/client');
 const {
   ensureDemoBaseline,
   DEMO_BASELINE_FIXTURE,
   cleanupDemoBaseline,
-} = require('../backend/src/lib/demoBaseline.ts');
+} = backendRequire('./src/lib/demoBaseline.ts');
 
 const prisma = new PrismaClient();
 
@@ -170,6 +174,18 @@ const registerApplicant = async () => {
 };
 
 const main = async () => {
+  console.log('Grant integration origins:', {
+    backendOrigin: BACKEND_ORIGIN,
+    frontendOrigin: FRONTEND_ORIGIN,
+  });
+  if (!process.env.GRANT_INT_BACKEND_ORIGIN && !process.env.GRANT_INT_FRONTEND_ORIGIN) {
+    console.log(
+      'Grant real-flow note: default script origins follow local proxy-mode dev (3000/5173). ' +
+        'For acceptance against the stable backend, rerun with GRANT_INT_BACKEND_ORIGIN=http://127.0.0.1:3001 ' +
+        'GRANT_INT_FRONTEND_ORIGIN=http://127.0.0.1:5175 and start the frontend with ' +
+        'VITE_API_BASE_URL=http://127.0.0.1:3001/api/v1.'
+    );
+  }
   await cleanupVerifierArtifacts();
   console.log('Seeding deterministic grant integration fixture...');
   const fixture = await ensureDemoBaseline(prisma);

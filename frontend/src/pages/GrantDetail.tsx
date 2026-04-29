@@ -1,5 +1,13 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
+import { PublicPortalNav } from '../components/layout/PublicPortalNav';
+import { PortalShell } from '../components/layout/PortalShell';
+import { PageModeBadge } from '../components/ui/PageModeBadge';
+import { RoleBadge } from '../components/ui/RoleBadge';
+import { StatusBadge } from '../components/ui/StatusBadge';
+import { DemoStatePanel } from '../features/demo/DemoStatePanel';
+import { getLinkedOpportunityCopy } from '../features/grant/linkedOpportunity';
+import { readReturnContext, toReturnContextState } from '../features/navigation/returnContext';
 import { grantProvider } from '../features/grant/grantProvider';
 import type { GrantDetail as GrantDetailModel } from '../features/grant/types';
 import './Conference.css';
@@ -8,65 +16,150 @@ export const routePath = '/grants/:slug';
 
 export default function GrantDetail() {
   const { slug = '' } = useParams();
+  const location = useLocation();
+  const returnContext = readReturnContext(location.state);
   const [grant, setGrant] = useState<GrantDetailModel | null | undefined>(undefined);
+  const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
-    grantProvider.getGrantBySlug(slug).then(setGrant);
+    let active = true;
+
+    setGrant(undefined);
+    setHasError(false);
+
+    grantProvider
+      .getGrantBySlug(slug)
+      .then((value) => {
+        if (active) {
+          setGrant(value);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setHasError(true);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
   }, [slug]);
 
-  if (grant === undefined) {
-    return <div className="conference-page">Loading grant...</div>;
-  }
-
-  if (grant === null) {
-    return <div className="conference-page">Grant not found.</div>;
-  }
+  const grantDetail = grant ?? null;
+  const linkedOpportunityCopy = grantDetail
+    ? getLinkedOpportunityCopy(grantDetail.linkedOpportunityType)
+    : null;
 
   return (
-    <div className="conference-page conference-detail-page">
-      <header className="conference-hero">
-        <p className="conference-eyebrow">Grant detail</p>
-        <h1>{grant.title}</h1>
-        <p>{grant.description || 'No description has been published yet.'}</p>
-      </header>
-
-      <section className="conference-detail-grid">
-        <div className="conference-detail-card">
-          <h2>Support snapshot</h2>
-          <dl>
-            <div>
-              <dt>Grant type</dt>
-              <dd>Conference travel grant</dd>
-            </div>
-            <div>
-              <dt>Deadline</dt>
-              <dd>{grant.applicationDeadline || 'Pending'}</dd>
-            </div>
-            <div>
-              <dt>Coverage</dt>
-              <dd>{grant.coverageSummary || 'Pending'}</dd>
-            </div>
-            <div>
-              <dt>Eligibility</dt>
-              <dd>{grant.eligibilitySummary || 'Pending'}</dd>
-            </div>
-          </dl>
-        </div>
-
-        <aside className="conference-detail-card conference-cta-card">
-          <span className={grant.isApplicationOpen ? 'conference-chip open' : 'conference-chip closed'}>
-            {grant.isApplicationOpen ? 'Applications open' : 'Applications closed'}
-          </span>
-          <p>Submit your conference application first, then request travel support through a separate grant application.</p>
-          {grant.isApplicationOpen ? (
-            <Link className="conference-primary-link" to={`/grants/${grant.slug}/apply`}>
-              Apply for grant
-            </Link>
-          ) : (
-            <div className="conference-muted-note">This grant is no longer accepting applications.</div>
-          )}
-        </aside>
-      </section>
-    </div>
+    <PortalShell
+      masthead={<PublicPortalNav />}
+      eyebrow="Grant detail"
+      title={grantDetail?.title ?? 'Grant detail'}
+      description={
+        grantDetail?.description ||
+        'Review the public grant record, prerequisite copy, and applicant handoff from here.'
+      }
+      badges={
+        <>
+          <RoleBadge role="visitor" />
+          <PageModeBadge mode="hybrid" />
+          <StatusBadge tone={grantDetail ? (grantDetail.isApplicationOpen ? 'success' : 'neutral') : hasError ? 'danger' : 'info'}>
+            {grantDetail
+              ? grantDetail.isApplicationOpen
+                ? 'Applications open'
+                : 'Applications closed'
+              : hasError
+                ? 'Unavailable'
+                : 'Published detail'}
+          </StatusBadge>
+        </>
+      }
+      actions={
+        <Link
+          to="/grants"
+          state={toReturnContextState(returnContext)}
+          className="my-applications__section-link"
+        >
+          Back to grants
+        </Link>
+      }
+      aside={
+        grantDetail && linkedOpportunityCopy ? (
+          <div className="conference-detail-card conference-cta-card public-browse-card public-browse-aside-card stack-sm">
+            <h2>Applicant handoff</h2>
+            <p className="public-browse-copy">{linkedOpportunityCopy.handoffSummary}</p>
+            <p className="conference-muted-note public-browse-copy">
+              {linkedOpportunityCopy.handoffHint}
+            </p>
+            {grantDetail.isApplicationOpen ? (
+              <Link
+                className="conference-primary-link"
+                to={`/grants/${grantDetail.slug}/apply`}
+                state={toReturnContextState(returnContext)}
+              >
+                Start grant application
+              </Link>
+            ) : (
+              <div className="conference-muted-note public-browse-copy">
+                This grant is no longer accepting applications.
+              </div>
+            )}
+          </div>
+        ) : null
+      }
+    >
+      <div className="conference-page conference-detail-page public-browse-page">
+        {hasError ? (
+          <DemoStatePanel
+            badgeLabel="Error"
+            title="Grant detail unavailable"
+            description="We could not load this grant right now."
+            tone="danger"
+          />
+        ) : grant === undefined ? (
+          <DemoStatePanel
+            badgeLabel="Loading"
+            title="Loading grant detail"
+            description="Preparing this published grant record for the demo."
+            tone="info"
+          />
+        ) : !grantDetail || !linkedOpportunityCopy ? (
+          <DemoStatePanel
+            badgeLabel="Unavailable"
+            title="Grant not found"
+            description="This grant is not published or is unavailable in the current demo dataset."
+            tone="neutral"
+          />
+        ) : (
+          <section className="conference-detail-card public-browse-card">
+            <h2>Support snapshot</h2>
+            <dl>
+              <div>
+                <dt>Grant type</dt>
+                <dd>{linkedOpportunityCopy.grantTypeLabel}</dd>
+              </div>
+              {grantDetail.linkedOpportunityTitle ? (
+                <div>
+                  <dt>Linked opportunity</dt>
+                  <dd>{grantDetail.linkedOpportunityTitle}</dd>
+                </div>
+              ) : null}
+              <div>
+                <dt>Deadline</dt>
+                <dd>{grantDetail.applicationDeadline || 'Pending'}</dd>
+              </div>
+              <div>
+                <dt>Coverage</dt>
+                <dd>{grantDetail.coverageSummary || 'Pending'}</dd>
+              </div>
+              <div>
+                <dt>Eligibility</dt>
+                <dd>{grantDetail.eligibilitySummary || 'Pending'}</dd>
+              </div>
+            </dl>
+          </section>
+        )}
+      </div>
+    </PortalShell>
   );
 }

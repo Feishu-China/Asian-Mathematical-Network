@@ -4,6 +4,8 @@ import type {
   GrantDetail,
   GrantFormSchema,
   GrantListItem,
+  LinkedOpportunityType,
+  SupportedGrantFieldKey,
 } from './types';
 
 type TransportGrantListItem = {
@@ -11,7 +13,10 @@ type TransportGrantListItem = {
   slug: string;
   title: string;
   grant_type: GrantListItem['grantType'];
-  linked_conference_id: string;
+  linked_conference_id: string | null;
+  linked_opportunity_type?: LinkedOpportunityType | null;
+  linked_opportunity_id?: string | null;
+  linked_opportunity_title?: string | null;
   application_deadline: string | null;
   status: GrantListItem['status'];
   report_required: boolean;
@@ -31,8 +36,12 @@ type TransportGrantApplication = {
   source_module: string;
   grant_id: string;
   grant_title: string;
-  linked_conference_id: string;
-  linked_conference_application_id: string;
+  linked_conference_id: string | null;
+  linked_conference_application_id: string | null;
+  linked_opportunity_type?: LinkedOpportunityType | null;
+  linked_opportunity_id?: string | null;
+  linked_opportunity_title?: string | null;
+  linked_opportunity_application_id?: string | null;
   applicant_user_id: string;
   status: GrantApplication['status'];
   statement: string | null;
@@ -48,15 +57,39 @@ type TransportGrantApplication = {
 
 type TransportGrantApplicationForm = {
   grant_id: string;
-  schema: GrantFormSchema;
+  schema: {
+    fields: Array<{
+      key: SupportedGrantFieldKey;
+      type: GrantFormSchema['fields'][number]['type'];
+      required: boolean;
+      options?: string[];
+    }>;
+  };
 };
+
+const resolveLinkedOpportunityType = (
+  value: Pick<
+    TransportGrantListItem,
+    'linked_conference_id' | 'linked_opportunity_type' | 'linked_opportunity_id'
+  >
+): LinkedOpportunityType =>
+  value.linked_opportunity_type ??
+  (value.linked_opportunity_id && value.linked_opportunity_id !== value.linked_conference_id
+    ? 'school'
+    : 'conference');
+
+const resolveLinkedOpportunityId = (
+  value: Pick<TransportGrantListItem, 'linked_conference_id' | 'linked_opportunity_id'>
+) => value.linked_opportunity_id ?? value.linked_conference_id ?? '';
 
 export const fromTransportGrantListItem = (item: TransportGrantListItem): GrantListItem => ({
   id: item.id,
   slug: item.slug,
   title: item.title,
   grantType: item.grant_type,
-  linkedConferenceId: item.linked_conference_id,
+  linkedOpportunityType: resolveLinkedOpportunityType(item),
+  linkedOpportunityId: resolveLinkedOpportunityId(item),
+  linkedOpportunityTitle: item.linked_opportunity_title ?? null,
   applicationDeadline: item.application_deadline,
   status: item.status,
   reportRequired: item.report_required,
@@ -79,8 +112,13 @@ export const fromTransportGrantApplication = (
   sourceModule: application.source_module,
   grantId: application.grant_id,
   grantTitle: application.grant_title,
-  linkedConferenceId: application.linked_conference_id,
-  linkedConferenceApplicationId: application.linked_conference_application_id,
+  linkedOpportunityType: resolveLinkedOpportunityType(application),
+  linkedOpportunityId: resolveLinkedOpportunityId(application),
+  linkedOpportunityTitle: application.linked_opportunity_title ?? null,
+  linkedOpportunityApplicationId:
+    application.linked_opportunity_application_id ??
+    application.linked_conference_application_id ??
+    '',
   applicantUserId: application.applicant_user_id,
   status: application.status,
   statement: application.statement,
@@ -96,10 +134,18 @@ export const fromTransportGrantApplication = (
 
 export const fromTransportGrantApplicationForm = (
   form: TransportGrantApplicationForm
-): GrantFormSchema => form.schema;
+): GrantFormSchema => ({
+  fields: form.schema.fields.map((field) => ({
+    ...field,
+    key:
+      field.key === 'linked_conference_application_id'
+        ? 'linked_opportunity_application_id'
+        : field.key,
+  })),
+});
 
 export const toTransportGrantApplicationPayload = (values: GrantApplicationValues) => ({
-  linked_conference_application_id: values.linkedConferenceApplicationId,
+  linked_conference_application_id: values.linkedOpportunityApplicationId,
   statement: values.statement.trim(),
   travel_plan_summary: values.travelPlanSummary.trim(),
   funding_need_summary: values.fundingNeedSummary.trim(),

@@ -1,0 +1,128 @@
+import { useEffect, useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { PublicPortalNav } from '../components/layout/PublicPortalNav';
+import { PortalShell } from '../components/layout/PortalShell';
+import { PageModeBadge } from '../components/ui/PageModeBadge';
+import { RoleBadge } from '../components/ui/RoleBadge';
+import { StatusBadge } from '../components/ui/StatusBadge';
+import { DemoStatePanel } from '../features/demo/DemoStatePanel';
+import { buildChainedReturnState } from '../features/demo/demoWalkthrough';
+import { readReturnContext } from '../features/navigation/returnContext';
+import { schoolProvider } from '../features/school/schoolProvider';
+import type { SchoolListItem } from '../features/school/types';
+import './School.css';
+
+export const routePath = '/schools';
+
+export default function Schools() {
+  const [items, setItems] = useState<SchoolListItem[] | null>(null);
+  const [hasError, setHasError] = useState(false);
+  const location = useLocation();
+  const returnContext = readReturnContext(location.state);
+  const detailState = returnContext
+    ? buildChainedReturnState(
+        {
+          to: '/schools',
+          label: 'Back to schools',
+        },
+        returnContext
+      )
+    : undefined;
+
+  useEffect(() => {
+    let active = true;
+
+    setItems(null);
+    setHasError(false);
+
+    schoolProvider
+      .listPublicSchools()
+      .then((value) => {
+        if (active) {
+          setItems(value);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setHasError(true);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  return (
+    <PortalShell
+      masthead={<PublicPortalNav />}
+      eyebrow="Training opportunities"
+      title="Schools"
+      description="Programs that emphasize guided learning, cohort building, and pedagogical progression rather than conference presentation."
+      badges={
+        <>
+          <RoleBadge role="visitor" />
+          <PageModeBadge mode="hybrid" />
+          <StatusBadge tone="info">School opportunities</StatusBadge>
+        </>
+      }
+      actions={
+        returnContext ? (
+          <Link
+            to={returnContext.to}
+            state={returnContext.state}
+            className="my-applications__section-link"
+          >
+            {returnContext.label}
+          </Link>
+        ) : null
+      }
+    >
+      <div className="school-page public-browse-page">
+        {items === null ? (
+          <DemoStatePanel
+            badgeLabel={hasError ? 'Error' : 'Loading'}
+            title={hasError ? 'School list unavailable' : 'Loading schools'}
+            description={
+              hasError
+                ? 'We could not load the published school opportunities right now.'
+                : 'Preparing the published school opportunities used in the demo.'
+            }
+            tone={hasError ? 'danger' : 'info'}
+          />
+        ) : items.length === 0 ? (
+          <DemoStatePanel
+            badgeLabel="Empty"
+            title="No schools or training programs yet"
+            description="Published schools and training programs will appear here once they are ready for the demo."
+            tone="neutral"
+          />
+        ) : (
+          <div className="school-grid public-browse-grid">
+            {items.map((school) => (
+              <article key={school.id} className="school-card public-browse-card">
+                <div className="school-card__meta public-browse-meta">
+                  <span>{school.locationText || 'Location pending'}</span>
+                  <span>{school.startDate || 'Date pending'}</span>
+                </div>
+                <h2>{school.title}</h2>
+                <p className="school-card__subtitle public-browse-copy">{school.shortLabel}</p>
+                <p className="school-card__summary public-browse-copy">{school.summary}</p>
+                <div className="school-card__actions public-browse-actions">
+                  <StatusBadge tone={school.travelSupportAvailable ? 'success' : 'neutral'}>
+                    {school.travelSupportAvailable
+                      ? 'Travel support available'
+                      : 'Travel support unavailable'}
+                  </StatusBadge>
+                  <Link to={`/schools/${school.slug}`} state={detailState}>
+                    {school.ctaLabel}
+                  </Link>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </div>
+    </PortalShell>
+  );
+}

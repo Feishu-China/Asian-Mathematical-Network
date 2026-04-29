@@ -283,7 +283,7 @@
         "Integrate with mock endpoints"
       ],
       "status": "completed",
-      "passes": false
+      "passes": true
     },
     {
       "id": "BE-PROFILE-001",
@@ -301,7 +301,7 @@
         "Write backend unit tests"
       ],
       "status": "completed",
-      "passes": false
+      "passes": true
     },
     {
       "id": "INT-PROFILE-001",
@@ -316,6 +316,25 @@
       "steps": [
         "Switch FE adapter to Real API for profiles",
         "Test profile update persistence",
+        "Mark feature passes=true"
+      ],
+      "status": "completed",
+      "passes": true
+    },
+    {
+      "id": "INT-PROFILE-002",
+      "epic": "PROFILE",
+      "title": "[集成] Scholar Directory 真实数据接通",
+      "category": "integration",
+      "description": "让公开学者目录与 portal scholar teaser 使用真实公开 profile 数据，而不是前端 seed。",
+      "priority": "P2",
+      "delivery_track": "integration",
+      "depends_on": ["INT-PROFILE-001"],
+      "parallel_ready": false,
+      "steps": [
+        "Implement public scholar directory list API / contract",
+        "Switch scholar directory and portal scholar teaser adapters to Real API",
+        "Verify /scholars and /portal reflect live public scholar data",
         "Mark feature passes=true"
       ],
       "status": "completed",
@@ -338,7 +357,7 @@
         "Integrate with mock endpoints"
       ],
       "status": "completed",
-      "passes": false
+      "passes": true
     },
     {
       "id": "BE-CONF-001",
@@ -356,7 +375,7 @@
         "Write backend unit tests"
       ],
       "status": "completed",
-      "passes": false
+      "passes": true
     },
     {
       "id": "INT-CONF-001",
@@ -393,7 +412,7 @@
         "Integrate with mock endpoints"
       ],
       "status": "completed",
-      "passes": false
+      "passes": true
     },
     {
       "id": "BE-GRANT-001",
@@ -411,7 +430,7 @@
         "Enforce conference linkage validation"
       ],
       "status": "completed",
-      "passes": false
+      "passes": true
     },
     {
       "id": "INT-GRANT-001",
@@ -502,8 +521,8 @@
         "Show separate records for Conference vs Grant",
         "Integrate with mock endpoints"
       ],
-      "status": "not_started",
-      "passes": false
+      "status": "completed",
+      "passes": true
     },
     {
       "id": "BE-PORTAL-001",
@@ -519,8 +538,8 @@
         "Implement GET /applications/my endpoints",
         "Ensure data returns released vs unreleased status correctly"
       ],
-      "status": "not_started",
-      "passes": false
+      "status": "completed",
+      "passes": true
     },
     {
       "id": "INT-PORTAL-001",
@@ -537,8 +556,8 @@
         "Verify dashboard reflects final issued decisions",
         "Mark feature passes=true"
       ],
-      "status": "not_started",
-      "passes": false
+      "status": "completed",
+      "passes": true
     }
   ]
 }

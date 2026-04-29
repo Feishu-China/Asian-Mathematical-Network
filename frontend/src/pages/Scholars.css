@@ -1,0 +1,54 @@
+.scholar-directory-page,
+.scholar-directory-page__clusters,
+.scholar-directory-page__list,
+.scholar-directory-page__section-copy {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.scholar-summary-card__eyebrow {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-navy-700);
+}
+
+.scholar-summary-card__card-link {
+  color: inherit;
+  text-decoration: none;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.scholar-summary-card__card-link:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-1px);
+}
+
+.scholar-summary-card__card-link:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.scholar-summary-card__card-link:hover .scholar-summary-card__title {
+  color: var(--color-accent);
+}
+
+.scholar-summary-card__title {
+  font-family: var(--font-heading);
+  font-size: 1.35rem;
+  color: var(--color-navy-900);
+  text-decoration: none;
+}
+
+.scholar-cluster-card h3 {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 1.2rem;
+  color: var(--color-navy-900);
+}

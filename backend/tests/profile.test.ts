@@ -69,6 +69,21 @@ describe('Profile API', () => {
     password: 'password123',
     fullName: '张伟',
   };
+  const directoryScholarOneUser = {
+    email: 'be.profile.directory-one@example.com',
+    password: 'password123',
+    fullName: 'Directory Algebraic Geometer',
+  };
+  const directoryScholarTwoUser = {
+    email: 'be.profile.directory-two@example.com',
+    password: 'password123',
+    fullName: 'Directory PDE Scholar',
+  };
+  const directoryHiddenUser = {
+    email: 'be.profile.directory-hidden@example.com',
+    password: 'password123',
+    fullName: 'Directory Hidden Scholar',
+  };
 
   beforeAll(async () => {
     await prisma.user.deleteMany({
@@ -88,6 +103,9 @@ describe('Profile API', () => {
             badMscUser.email,
             validationUser.email,
             unicodeUser.email,
+            directoryScholarOneUser.email,
+            directoryScholarTwoUser.email,
+            directoryHiddenUser.email,
           ],
         },
       },
@@ -119,6 +137,9 @@ describe('Profile API', () => {
             badMscUser.email,
             validationUser.email,
             unicodeUser.email,
+            directoryScholarOneUser.email,
+            directoryScholarTwoUser.email,
+            directoryHiddenUser.email,
           ],
         },
       },
@@ -627,6 +648,116 @@ describe('Profile API', () => {
         },
       },
     });
+  });
+
+  it('returns the public scholar directory list and expertise clusters from real public profiles', async () => {
+    await prisma.mscCode.createMany({
+      data: [{ code: '14J60' }, { code: '35Q55' }, { code: '11B05' }],
+      skipDuplicates: true,
+    });
+
+    const firstRegisterRes = await request(app)
+      .post('/api/v1/auth/register')
+      .send(directoryScholarOneUser);
+    const secondRegisterRes = await request(app)
+      .post('/api/v1/auth/register')
+      .send(directoryScholarTwoUser);
+    const hiddenRegisterRes = await request(app)
+      .post('/api/v1/auth/register')
+      .send(directoryHiddenUser);
+
+    expect(firstRegisterRes.status).toBe(201);
+    expect(secondRegisterRes.status).toBe(201);
+    expect(hiddenRegisterRes.status).toBe(201);
+
+    await request(app)
+      .put('/api/v1/profile/me')
+      .set('Authorization', `Bearer ${firstRegisterRes.body.accessToken}`)
+      .send({
+        full_name: directoryScholarOneUser.fullName,
+        title: 'Professor',
+        institution_name_raw: 'Kyoto University',
+        country_code: 'JP',
+        career_stage: 'faculty',
+        bio: 'Works on birational geometry and moduli.',
+        research_keywords: ['algebraic geometry', 'moduli'],
+        msc_codes: [{ code: '14J60', is_primary: true }],
+        is_profile_public: true,
+      });
+
+    await request(app)
+      .put('/api/v1/profile/me')
+      .set('Authorization', `Bearer ${secondRegisterRes.body.accessToken}`)
+      .send({
+        full_name: directoryScholarTwoUser.fullName,
+        title: 'Associate Professor',
+        institution_name_raw: 'Seoul National University',
+        country_code: 'KR',
+        career_stage: 'faculty',
+        bio: 'Works on PDE and harmonic analysis.',
+        research_keywords: ['PDE', 'harmonic analysis'],
+        msc_codes: [{ code: '35Q55', is_primary: true }],
+        is_profile_public: true,
+      });
+
+    await request(app)
+      .put('/api/v1/profile/me')
+      .set('Authorization', `Bearer ${hiddenRegisterRes.body.accessToken}`)
+      .send({
+        full_name: directoryHiddenUser.fullName,
+        title: 'Researcher',
+        institution_name_raw: 'Hidden Institute',
+        country_code: 'CN',
+        career_stage: 'postdoc',
+        bio: 'Should stay hidden from the public directory.',
+        research_keywords: ['number theory'],
+        msc_codes: [{ code: '11B05', is_primary: true }],
+        is_profile_public: false,
+      });
+
+    const directoryRes = await request(app).get('/api/v1/scholars');
+
+    expect(directoryRes.status).toBe(200);
+    expect(directoryRes.body.meta.total).toBeGreaterThanOrEqual(2);
+    expect(directoryRes.body.data.scholars).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          slug: `directory-algebraic-geometer-${firstRegisterRes.body.user.id.slice(0, 8)}`,
+          full_name: directoryScholarOneUser.fullName,
+          institution_name_raw: 'Kyoto University',
+          country_code: 'JP',
+          research_keywords: ['algebraic geometry', 'moduli'],
+          primary_msc_code: '14J60',
+        }),
+        expect.objectContaining({
+          slug: `directory-pde-scholar-${secondRegisterRes.body.user.id.slice(0, 8)}`,
+          full_name: directoryScholarTwoUser.fullName,
+          institution_name_raw: 'Seoul National University',
+          country_code: 'KR',
+          research_keywords: ['PDE', 'harmonic analysis'],
+          primary_msc_code: '35Q55',
+        }),
+      ])
+    );
+    expect(
+      directoryRes.body.data.scholars.find(
+        (item: { full_name: string }) => item.full_name === directoryHiddenUser.fullName
+      )
+    ).toBeUndefined();
+    expect(directoryRes.body.data.clusters).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          label: 'Algebraic Geometry',
+          scholar_count: 1,
+          institution_count: 1,
+        }),
+        expect.objectContaining({
+          label: 'PDE',
+          scholar_count: 1,
+          institution_count: 1,
+        }),
+      ])
+    );
   });
 
   it('rejects publishing a profile when only institution_id is provided without public-facing affiliation text', async () => {

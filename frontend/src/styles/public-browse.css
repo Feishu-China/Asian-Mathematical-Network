@@ -1,0 +1,187 @@
+.public-browse-page {
+  display: grid;
+  gap: clamp(1.5rem, 2vw, 2.3rem);
+  text-align: left;
+}
+
+.public-browse-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-5);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.public-browse-grid--compact {
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-4);
+}
+
+.public-browse-card {
+  display: grid;
+  gap: var(--space-4);
+  align-content: start;
+  min-width: 0;
+  padding: clamp(1.2rem, 2vw, 1.55rem);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 253, 249, 0.98) 0%,
+    rgba(247, 243, 235, 0.94) 100%
+  );
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(10px);
+}
+
+.public-browse-card > :is(h2, h3),
+.public-browse-card header :is(h2, h3) {
+  margin: 0;
+  color: var(--color-navy-900);
+}
+
+.public-browse-card > h2,
+.public-browse-card header h2 {
+  font-size: clamp(1.3rem, 1.7vw, 1.65rem);
+  line-height: 1.15;
+}
+
+.public-browse-card > h3,
+.public-browse-card header h3 {
+  font-size: 1.08rem;
+  line-height: 1.22;
+}
+
+.public-browse-copy {
+  margin: 0;
+  color: var(--color-text-muted);
+  line-height: 1.65;
+}
+
+.public-browse-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.5rem 0.9rem;
+  color: var(--color-text-muted);
+  font-size: 0.92rem;
+}
+
+.public-browse-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  padding-top: var(--space-3);
+  border-top: 1px solid rgba(21, 35, 59, 0.08);
+}
+
+.public-browse-actions a,
+.public-browse-card > a:not(.conference-primary-link, .school-primary-link, .prize-primary-link, .public-browse-primary-link),
+.public-browse-card .school-output-links a,
+.page-shell--portal .page-shell__actions .my-applications__section-link {
+  font-weight: 600;
+  color: var(--color-navy-800);
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.15em;
+}
+
+.public-browse-actions a:hover,
+.public-browse-card
+  > a:not(.conference-primary-link, .school-primary-link, .prize-primary-link, .public-browse-primary-link):hover,
+.public-browse-card .school-output-links a:hover,
+.page-shell--portal .page-shell__actions .my-applications__section-link:hover {
+  color: var(--color-navy-900);
+}
+
+.public-browse-aside-card {
+  gap: var(--space-3);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.98) 0%,
+    rgba(245, 240, 231, 0.96) 100%
+  );
+  border-color: var(--border-strong);
+}
+
+.public-browse-aside-card :is(h2, h3) {
+  font-size: 1.12rem;
+}
+
+.public-browse-card > :is(.conference-primary-link, .school-primary-link, .prize-primary-link, .public-browse-primary-link) {
+  justify-self: start;
+  width: fit-content;
+}
+
+.page-shell--portal .page-shell__actions .my-applications__section-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: 0.6rem 0.95rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: var(--shadow-sm);
+  text-decoration: none;
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.page-shell--portal .page-shell__actions .my-applications__section-link:hover {
+  border-color: var(--border-strong);
+  background: rgba(255, 253, 249, 0.98);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.page-shell--portal .page-shell__actions .my-applications__section-link:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.public-browse-card .profile-pill-list,
+.public-browse-card .scholar-summary-card__keywords {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.public-browse-card .profile-pill-list li,
+.public-browse-card .scholar-summary-card__keywords li {
+  padding: 0.36rem 0.74rem;
+  border-radius: var(--radius-pill);
+  background: rgba(42, 70, 111, 0.08);
+  color: var(--color-navy-900);
+  font-size: 0.9rem;
+}
+
+.public-browse-list {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: grid;
+  gap: 0.6rem;
+}
+
+@media (max-width: 900px) {
+  .page-shell--portal .page-shell__actions {
+    width: 100%;
+  }
+
+  .page-shell--portal .page-shell__actions .my-applications__section-link {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .public-browse-actions {
+    align-items: stretch;
+  }
+}

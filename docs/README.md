@@ -15,7 +15,7 @@ The main goal of this README is to answer four questions quickly:
 - `specs/`
   Implementation-facing specifications. Includes design, technical, API, and database semantics.
 - `planning/`
-  Execution planning artifacts. The current feature backlog lives here.
+  Execution planning artifacts. The current post-MVP backlog, demo-readiness sprint docs, and baseline-freeze rules live here; older feature lists are historical planning records.
 - `reference/`
   External or stakeholder-provided baseline materials.
 - `archive/`
@@ -47,8 +47,20 @@ The main goal of this README is to answer four questions quickly:
 
 ### Planning
 
-- `docs/planning/asiamath-feature-list-v2.2.json`
-  Current execution backlog and feature-level delivery plan.
+- `docs/planning/asiamath-mvp-status-inventory-2026-04-29.md`
+  Current post-MVP state inventory. Use this first to understand what is complete, what is still only demo-operationally stable, and why the project has moved beyond the old feature-list cadence.
+- `docs/planning/asiamath-post-mvp-backlog-v1.md`
+  Current post-MVP execution backlog. Use this for next-task prioritization instead of the older MVP feature list.
+- `docs/planning/asiamath-sprint-1-demo-readiness-2026-04-29.md`
+  Current demo-readiness sprint contract. Use this for `d0` acceptance, rehearsal, preview smoke, and exit criteria.
+- `docs/planning/asiamath-d0-baseline-freeze-2026-04-29.md`
+  Short-term source of truth for the stable branch, deployment source, `main` handoff role, and transition sync rules.
+- `docs/planning/asiamath-demo-preview-ops-d0.md`
+  Hosted demo preview runbook. Use this for Railway/Vercel preview checks, hosted reseeding, and recurring deployment pitfalls.
+- `docs/planning/asiamath-demo-seed-contract-d0.md`
+  Real demo seed contract. Use this to understand which demo accounts, opportunities, and workflow states are intentionally seeded.
+- `docs/planning/asiamath-feature-list-v4.0-optimized.json`
+  Historical MVP feature completion record. Do not use this as the default execution backlog for current post-MVP demo work.
 
 ### Reference
 
@@ -83,7 +95,8 @@ Read in this order:
 3. `docs/specs/asiamath-api-spec-v2.1.md`
 4. `docs/specs/asiamath-database-schema-v1.1.md`
 5. `database/ddl/asiamath-database-ddl-v1.1.sql`
-6. `docs/planning/asiamath-feature-list-v2.2.json`
+6. `docs/planning/asiamath-feature-list-v4.0-optimized.json` for the historical MVP completion record
+7. `docs/planning/asiamath-mvp-status-inventory-2026-04-29.md` and `docs/planning/asiamath-post-mvp-backlog-v1.md` for the current execution phase
 
 ### For demo implementation
 
@@ -92,7 +105,12 @@ Read in this order:
 1. `docs/product/asiamath-demo-prd-v3.1.md`
 2. `docs/specs/asiamath-design-spec-v2.1.md`
 3. `docs/specs/asiamath-api-spec-v2.1.md`
-4. `docs/planning/asiamath-feature-list-v2.2.json`
+4. `docs/planning/asiamath-mvp-status-inventory-2026-04-29.md`
+5. `docs/planning/asiamath-post-mvp-backlog-v1.md`
+6. `docs/planning/asiamath-sprint-1-demo-readiness-2026-04-29.md`
+7. `docs/planning/asiamath-d0-baseline-freeze-2026-04-29.md`
+8. `docs/planning/asiamath-demo-seed-contract-d0.md`
+9. `docs/planning/asiamath-demo-preview-ops-d0.md`
 
 ### For full product context
 
@@ -127,9 +145,10 @@ When a change affects more than one layer, update documents in this order:
 2. Design spec if route/page/state semantics changed
 3. API spec if contract changed
 4. Database schema and DDL if persistence semantics changed
-5. Feature list if delivery breakdown changed
+5. Current planning docs (`post-MVP backlog`, `demo-readiness sprint`, `baseline freeze`) if execution or handoff rules changed
+6. Historical feature list only if the completion record itself changed
 
-Do not leave the feature list ahead of the specs for long.
+Do not leave the planning docs ahead of the specs for long, and do not let the old feature list override the newer post-MVP planning set.
 
 ## Notes on Older Concepts
 

@@ -4,11 +4,818 @@
 
 ## 当前项目状态
 *   **最新版本**: V4.0-Optimized
-*   **总览**: `AUTH`、`PROFILE`、`CONF` 与 `GRANT` 四个 Epic 已完成并通过真实联调验证。`PORTAL` Epic 已落地后端聚合接口 `BE-PORTAL-001`，等待 `FE-PORTAL-001`（仪表板 UI）与 `INT-PORTAL-001`（仍依赖未启动的 `REVIEW` Epic 提供 release 语义）。
+*   **总览**: `AUTH`、`PROFILE`、`CONF`、`GRANT`、`REVIEW` 与 `PORTAL` 六个 Epic 现在都已完成到当前 feature-list 口径；`/portal`、`/me/applications`、grant post-visit report、public scholar directory / portal scholar teaser、以及 applicant/reviewer workspace switcher 都已落地并完成本地验证。项目已从“功能型 MVP 实现”切换到 `post-MVP` 阶段：下一步主任务不再是沿旧 feature list 继续补功能，而是围绕 `docs/planning/asiamath-mvp-status-inventory-2026-04-29.md`、`asiamath-post-mvp-backlog-v1.md` 与 `asiamath-sprint-1-demo-readiness-2026-04-29.md` 做收口、验收、部署与节奏化迭代。
 
 ---
 
 ## 📅 Handoff 历史记录
+
+### 2026-04-29 (Session 55)
+*   **Agent 角色**: Coding Agent (Growth planning)
+*   **关联 Feature**: 无新增产品功能；本轮目标是把 post-MVP / post-Sprint-1 的下一阶段能力扩展，整理成新的增长期 feature list，而不是继续沿用 MVP 时代的 `FE-* / BE-* / INT-*` 顶层结构。
+*   **变更记录**:
+    *   新增 `docs/planning/asiamath-feature-list-v5-growth.json`，作为下一阶段的增长规划真理源。
+    *   `v5` 明确声明其接替 `docs/planning/asiamath-feature-list-v4.0-optimized.json`，但不否定 `v4` 的历史价值；`v4` 仍是 MVP 构建与 Sprint 1 收口的完成记录。
+    *   新文件不再以 `FE/BE/INT` 作为 roadmap 顶层，而改为：
+        *   `initiative`
+        *   `feature`
+        *   `evidence`
+    *   `v5` 当前定义了四个增长期 initiative：
+        *   `M4-NEXT` (`P0`): Scholar & Reviewer Foundation
+        *   `M8-LITE` (`P1`): Schools & Training Applications
+        *   `UX-WORKSPACE` (`P1`): Workspace Usability & Copy Unification
+        *   `M3-JOBS-LITE` (`P2`): Jobs & Referee Workflow
+    *   这份计划的核心判断是：
+        *   下一轮最值得优先做的，不是 breadth 页面 productize，也不是 prize/newsletter/video 系统
+        *   而是把 `M4-lite` 提升成更可复用的 scholar / reviewer foundation，再决定是否进入 `M8-lite` 或 `M3 jobs`
+    *   `v5` 顶层 metadata 已直接写入：
+        *   `phase`
+        *   `purpose`
+        *   `supersedes`
+        *   `source_of_truth`
+        *   `baseline_assumptions`
+        *   `working_mode`
+        *   `status_rules`
+        *   `passes_rules`
+      因此本轮没有再额外写一份单独说明文档。
+*   **结论**:
+    *   当前项目已经不适合继续扩写旧 `v4` feature list。
+    *   下一阶段如果从 `main` 开新功能，推荐直接以 `v5` 作为增长期执行清单。
+    *   第一优先 initiative 应为 `M4-NEXT`，即：directory search/filter/pagination、reviewer access request、reviewer candidate picker、identity/ORCID tightening，以及对应的 integration acceptance。
+*   **下一步**:
+    *   先把当前 `codex/demo-d0-postgres-deploy` 基线并入 `main`。
+    *   然后从 `main` 切下一条新功能分支，按 `M4-NEXT` 开 Sprint 2。
+
+### 2026-04-29 (Session 54)
+*   **Agent 角色**: Coding Agent (CI baseline)
+*   **关联 Feature**: 无新增产品 feature；本轮目标是在 `codex/demo-d0-postgres-deploy` 上补第一版最小 GitHub Actions CI，并把因页面真实文案演进而失效的过时前端测试回填到当前口径。
+*   **变更记录**:
+    *   新增 `.github/workflows/ci.yml`，作为第一版最小 CI baseline。
+    *   workflow 当前覆盖：
+        *   `npm ci`
+        *   `npm run build:shared`
+        *   `npm run build:backend`
+        *   `npm run build:frontend`
+        *   `npm run test:workspace-config`
+        *   `npm run test:run --workspace frontend`
+        *   `npm run test:backend`
+    *   CI 使用 GitHub Actions 内置的 `postgres:16` service，统一在干净的 `5432` 上提供 `TEST_DATABASE_URL`，不再依赖本机 `colima/lima` 的 `5433` override。
+    *   `frontend/src/App.test.tsx` 已更新为当前真实首页口径：根路由重定向到 `/portal` 后，校验 heading 为 `Connecting Asia's Mathematical Community`。
+    *   `frontend/src/pages/Prizes.test.tsx` 已更新为当前真实 prize archive / detail copy 与 teaser 数量，解决本地全量 frontend suite 中因文案/内容演进留下的历史假失败。
+*   **验证记录**:
+    *   `npm run build:shared` 通过
+    *   `npm run build:backend` 通过
+    *   `npm run build:frontend` 通过
+    *   `npm run test:workspace-config` 通过
+    *   `npm run test:run --workspace frontend` 通过（`40` files / `196` tests）
+    *   在本机 `5433` override 下，`TEST_DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5433/asiamath_test?schema=public npm run test:backend` 通过（`10` suites / `59` tests）
+    *   `git diff --check` 通过
+*   **结论**:
+    *   当前 baseline 已具备第一版 PR/branch 级自动校验防线；后续若将该分支提升为新的 trunk candidate，`main` 将可直接继承这套 CI。
+    *   这轮修的是测试基线和工程防线，不是新增产品能力。
+*   **下一步**:
+    *   若要继续强化 CI，优先考虑把 `test:portal:int` / `test:grant:int` 设计成手动或 nightly workflow，而不是立即塞进每个 PR。
+    *   在当前 CI baseline 跑通后，再决定是先并回 `main`，还是继续沿 demo/delivery 线补 deploy cadence。
+
+### 2026-04-29 (Session 53)
+*   **Agent 角色**: Coding Agent (Sprint 1 closeout)
+*   **关联 Feature**: 无新增 feature；本轮目标是把 `Sprint 1: Demo Readiness` 从“实际上已完成”正式收口为文档状态上的 `completed`。
+*   **变更记录**:
+    *   新增 `docs/planning/asiamath-sprint-1-closeout-2026-04-29.md`，作为 Sprint 1 的关账文档。
+    *   文档明确确认以下 exit gate 全部满足：
+        *   `d0` 基线明确
+        *   本地运行与 Postgres 契约明确
+        *   `DR-004` 修后复跑为 `Pass`
+        *   `DR-005` hosted reseed + smoke 为 `Pass`
+        *   当前没有已知 `P0` demo blocker
+        *   `DR-007` demo kit 已完成
+    *   `docs/planning/asiamath-sprint-1-demo-readiness-2026-04-29.md` 已显式改成 `Current status: completed`，并链接到 closeout 记录。
+    *   `docs/planning/asiamath-post-mvp-backlog-v1.md` 已补 `Sprint 1 closeout snapshot`，明确 `PMB-001 ~ PMB-007` 已关闭。
+*   **结论**:
+    *   `Sprint 1` 现在不应再视为 `in progress`。
+    *   当前项目的主选择已经从“继续修 demo blockers”切换为“下一轮是继续 demo/delivery，还是恢复 product growth”。
+*   **下一步**:
+    *   若近期仍频繁面向外部演示，优先进入 demo/delivery 路线：preview branch 策略、移动端 polish、operator rehearsal cadence。
+    *   若演示基线已足够稳定，则可以从 `PMB-008 ~ PMB-010` 里选一个真实产品增量开下一轮 sprint。
+
+### 2026-04-29 (Session 52)
+*   **Agent 角色**: Coding Agent (`DR-004` rerun closeout)
+*   **关联 Feature**: 无新增 feature；本轮只关闭 `DR-004` 修后复跑，并收掉 applicant 侧残留的过时 demo shortcut。
+*   **变更记录**:
+    *   `01c2bb0 fix: remove obsolete portal restart shortcut`
+        *   从 `frontend/src/pages/MyApplicationDetail.tsx` 删除误恢复的 `Restart from portal` shortcut。
+        *   同步删除对应测试，并把 `docs/planning/asiamath-d0-rehearsal-checklist-2026-04-29.md` 与 `docs/planning/asiamath-d0-rehearsal-run-2026-04-29.md` 改成当前正确口径：detail 页不再要求保留这条 demo affordance。
+    *   `4e3233a fix: simplify applicant public browse shortcuts`
+        *   从 `frontend/src/pages/MyApplications.tsx` 删除 applicant list 上残留的 `Restart from portal` demo shortcut，只保留真实产品需要的 applicant-safe public browse 入口。
+        *   `frontend/src/features/demo/demoWalkthrough.ts` 的 applicant list copy 改为 `applicant-safe public browsing`，不再把 list 讲成“restart 控制点”。
+        *   `frontend/src/pages/MyApplications.test.tsx` 补回归，锁住 `Restart from portal` 不再长回 applicant list。
+        *   rehearsal checklist 与 run 文档同步放弃旧的统一 `Browse opportunities` 预期，正式接受当前 section-level `Browse conferences` / `Browse grants` 模式。
+*   **验证记录**:
+    *   `npm run test:run --workspace frontend -- src/pages/MyApplicationDetail.test.tsx` 通过（`6/6`）
+    *   `npm run test:run --workspace frontend -- src/pages/MyApplications.test.tsx` 通过（`16/16`）
+    *   `git diff --check` 通过
+    *   在沙箱外按文档允许的 `5433` override 重新执行 `npm run seed:demo`，结果恢复为：
+        *   `publishedConferences = 3`
+        *   `grants = 2`
+        *   clean applicant `0` applications
+        *   showcase applicant `4` workflow records
+*   **`DR-004` 修后复跑结论**:
+    *   clean applicant `/me/applications` 现在用 applicant-safe public browse CTA；浏览器级 spot-check 确认 `Browse conferences` 实际导航到 `/conferences`。
+    *   organizer dashboard 的 `Open conference workspace` 浏览器级 spot-check 已通过，能进入 `/organizer/conferences/:id/applications`。
+    *   reviewer queue 现在能看到 seeded assignment，且 `Open assignment -> detail -> Back to reviewer queue` 浏览器级 spot-check 已通过。
+    *   public `/scholars` 列表仍能正常打开 scholar detail，spot-check 落在 `/scholars/aisha-rahman`。
+    *   因此，原始 failed run 中的 `R1`、`R2`、`R3` 都已关闭；在文档允许的 `5433` 本机 override 下，`DR-004` blocker-focused rerun 现在可视为 `Pass`。
+*   **环境说明**:
+    *   本机 `5432/5433` 不是宿主机原生 Postgres listener，而是 `colima/lima` 通过 `ssh` 转发出来的端口；因此凡是要连本地数据库的验证，沙箱内不可靠，需在沙箱外执行。
+    *   browser automation 在跨路由单步 eval 时偶尔会报 CDP `target navigated or closed`，但只要最终 URL / snapshot 正确，这属于 transport-level caveat，不再算产品 blocker。
+*   **下一步**:
+    *   `Sprint 1: Demo Readiness` 的主要本地 blocker 已清空。下一步更像是决定要不要把这轮结果合流到新的 trunk candidate，或者开始下一轮 demo / deployment 节奏，而不是继续修 applicant portal 主链。
+
+### 2026-04-29 (Session 51)
+*   **Agent 角色**: Coding Agent (`DR-005` / `PMB-006` integration + `DR-006` blocker fixes)
+*   **关联 Feature**: 无新增 feature；本轮目标是把 Sprint 1 的 hosted smoke、feature-list passes 收口，以及修复 `DR-004` 暴露的两个 `P1` blocker。
+*   **执行结果总览**:
+    *   `DR-005` 已真实执行并通过，结果见 `docs/planning/asiamath-d0-hosted-smoke-run-2026-04-29.md`。
+    *   `PMB-006` 已完成，`docs/planning/asiamath-feature-list-v4.0-optimized.json` 中剩余 `passes: false` 已回填为 `0`，决议记录见 `docs/planning/asiamath-feature-list-passes-resolution-2026-04-29.md`。
+    *   `DR-004` 原始本地 rehearsal 仍保持 `P0=0 / P1=2 / P2=1` 的失败记录；但本轮已经对两条 `P1` blocker 进行了代码修复，等待本地环境恢复后重跑。
+*   **Hosted smoke (`DR-005`) 结论**:
+    *   当前 live hosted preview 实际来源仍是 `codex/demo-d0-postgres-deploy`，未自动切到 `main`。
+    *   Vercel preview URL 为 `https://asiamath-demo-d0-frontend-preview-b9dty01s0-feishus-projects.vercel.app`，对应 commit `7443fdeb95c2249ef66f9e3e232d915b3c2528d6`。
+    *   Railway backend 为 `https://backend-production-2d8c.up.railway.app`。
+    *   `Postgres.DATABASE_PUBLIC_URL` 路径下的真实 reseed 成功，public `/conferences`、`/grants`、`/scholars` API、showcase/clean applicant `/me/applications`、以及 `/portal`、`/dashboard`、`/me/applications`、grant detail、`/scholars` 的 browser smoke 全部通过。
+    *   最大 caveat 不是产品问题，而是 `agent-browser` 对匿名/public navbar 状态清理不完全可靠，因此 public 面验证主要依赖页面内容、网络请求和 error check。
+*   **Feature-list passes (`PMB-006`) 结论**:
+    *   这轮把以下 `8` 个历史遗留 implementation item 从 `passes: false` 回填为 `passes: true`：
+        *   `FE-PROFILE-001`
+        *   `BE-PROFILE-001`
+        *   `FE-CONF-001`
+        *   `BE-CONF-001`
+        *   `FE-GRANT-001`
+        *   `BE-GRANT-001`
+        *   `FE-PORTAL-001`
+        *   `BE-PORTAL-001`
+    *   理由不是“这轮新做完了功能”，而是这些实现早已落仓，后续 `INT-*`、real-flow、browser evidence 都已经在历史 `PROGRESS.md` 和 run 文档中闭环，只是 frozen feature-list 从未回填。
+    *   当前 frozen MVP feature-list 已经变成 `24/24 completed` 且 `passes: false = 0`。后续 readiness 风险不再用旧 feature-list 的红灯表示，而由 post-MVP backlog / Sprint 文档承担。
+*   **`DR-006` 已落的 blocker 修复**:
+    *   **`R1` 导航交互回归** 已修：
+        *   根因不是 route 不存在，而是若干 surface 视觉上像整块 CTA/card，但真实可点击区域只挂在小块 inline `Link` 上，本地 rehearsal 点击正文时不会导航。
+        *   已在 applicant 空态、grant detail presenter shortcut、dashboard organizer/reviewer workspace 入口、scholar card 四处改成整块可触发的导航卡片，并补齐前端回归测试。
+        *   前端验证通过：
+            *   `npm run test --workspace frontend -- src/pages/MyApplications.test.tsx src/pages/MyApplicationDetail.test.tsx src/pages/Dashboard.test.tsx src/pages/Scholars.test.tsx`
+            *   `41` 个测试全部通过
+            *   `npm run build --workspace frontend` 通过（只有既有 chunk-size warning）
+    *   **`R2` reviewer queue 空态导致无法验 `queue -> detail -> back`** 已修：
+        *   根因是 demo baseline 过去只 seed 了 reviewer/applicant/showcase 的 `Application`，没有 seed `ReviewAssignment`，而 reviewer queue 直接查 `reviewAssignment`。
+        *   已在 `backend/src/lib/demoBaseline.ts` 增加最小 reviewer assignment fixture，并在 `backend/tests/demoBaseline.test.ts` 加回归测试，保证 reviewer demo 账号至少拥有一条与当前 under-review showcase contract 一致的 assignment。
+        *   线程执行时在本机 `5433` override 下已跑过 `tests/demoBaseline.test.ts` 并通过；但主线程补验时，当前机器上的 `5432` 与 `5433` 都无法被 Prisma 连通，因此主线程未能再次独立复跑同组 backend tests。
+*   **当前环境 blocker**:
+    *   尝试重跑本地 `DR-004` 时，`npm run seed:demo` 在 `5432` 和 `5433` 两条路径上都收到 Prisma `Can't reach database server at 127.0.0.1:<port>`。
+    *   `lsof` 显示 `5432` 和 `5433` 都由 `ssh` 进程监听，说明当前机器更像是依赖本地端口转发而不是真正本地 Postgres 实例；但从 Prisma 视角看，这两个端口当前都不可用。
+    *   因此，`DR-004` 的**修后复跑尚未完成**，原因是环境 blocker，不是这轮代码修复再次失败。
+*   **建议下一步**:
+    *   先恢复一个可用的本地 Postgres 路径（无论是 `5432` 官方默认还是 `5433` 本机 override），再重跑 `DR-004`。
+    *   如果你不想先处理本地数据库，也可以先整合并提交本轮代码/文档结果，因为 `DR-005` 与 `PMB-006` 都已完成，`DR-006` 两个代码 blocker 也已落地。
+
+### 2026-04-29 (Session 50)
+*   **Agent 角色**: Coding Agent (Sprint 1 `DR-004` / `DR-005` / `DR-007` parallel artifact integration)
+*   **关联 Feature**: 无新增 feature；本轮只并行产出并整合 Sprint 1 第二批 demo-readiness artifact，不执行真实 rehearsal 或 hosted smoke。
+*   **问题现象**:
+    *   `DR-001` / `DR-002` / `DR-003` 完成后，下一阶段已经从“口径收口”进入“执行资产准备”，但还缺三类可以直接交给操作者的文档：本地 rehearsal checklist、hosted preview reseed + smoke runbook、以及 presenter-safe demo kit。
+    *   这三类产物彼此依赖同一套基线、账号、seed 与 hosted source-branch 约定；如果并行编写后不统一交叉审查，最容易发生的漂移是：本地 rehearsal 说一套模式、hosted smoke 按另一条分支判断、demo kit 再写第三套账号/密码。
+*   **变更记录**:
+    *   新增 `docs/planning/asiamath-d0-rehearsal-checklist-2026-04-29.md`，把 `DR-004` 收成一份只面向本地人工验收的 checklist，明确主路径固定为 `acceptance / real-flow`：frontend `5175` + direct API base -> backend `3001`。文档覆盖 preflight、seed、showcase applicant / clean applicant、reviewer / organizer / admin 条件性检查、public portal / scholars / opportunities 回归，以及 `P0/P1/P2` issue log 与 handoff 字段。
+    *   新增 `docs/planning/asiamath-d0-hosted-smoke-runbook-2026-04-29.md`，把 `DR-005` 收成 Railway/Vercel hosted preview 的 reseed + smoke runbook。它明确当前 hosted `d0` preview 仍按 `codex/demo-d0-postgres-deploy` 作为 source branch 判断，reseed 必须优先读取 `Postgres.DATABASE_PUBLIC_URL`，并给出 public API smoke、browser smoke、失败分流与结果记录模板。
+    *   新增 `docs/planning/asiamath-demo-kit-d0-2026-04-29.md`，把 `DR-007` 收成 presenter-safe demo kit，区分“可以按真实能力讲”的 applicant 主链与 “只能按 preview breadth 讲”的模块，给出 `3` 分钟 / `10` 分钟脚本、fallback 路径、operator notes 与“不要过度承诺”的边界说明。
+    *   作为本轮整合的一部分，`asiamath-demo-kit-d0-2026-04-29.md` 与 `asiamath-d0-rehearsal-checklist-2026-04-29.md` 已补齐当前 seed 实现共享 demo 密码 `demo123456` 的说明，并标注该值应在正式对外演示前再次复核，避免与 hosted smoke runbook 的凭证口径分叉。
+*   **最终对齐的口径**:
+    *   **本地 rehearsal**: 统一用 `acceptance / real-flow` 路径执行，不在同一轮混用 `5173/3000` 与 `5175/3001`。
+    *   **hosted preview 判断口径**: 在部署来源 cutover 前，仍以 `codex/demo-d0-postgres-deploy` 作为 hosted `d0` preview 的预期 source branch。
+    *   **demo 账号口径**:
+        *   clean applicant: `demo.applicant@asiamath.org`
+        *   showcase applicant: `demo.showcase.applicant@asiamath.org`
+        *   reviewer: `demo.reviewer@asiamath.org`
+        *   organizer: `demo.organizer@asiamath.org`
+        *   当前 seed 实现共享密码: `demo123456`
+    *   **执行边界**:
+        *   `DR-004` 文档只定义本地 rehearsal，不替代 hosted smoke
+        *   `DR-005` 文档只定义 hosted reseed + smoke，不改部署平台设置
+        *   `DR-007` 文档只定义对外讲法与 fallback，不承诺 breadth 页面已 fully live
+*   **验证记录**:
+    *   三个并行线程都各自只写入一个新文档文件，未触碰 `PROGRESS.md`、产品代码或配置。
+    *   每个线程各自执行并报告了 `git diff --check` 通过。
+    *   整合后再次执行 `git diff --check`，确认新增文档与本轮补充说明没有格式问题。
+*   **边界与说明**:
+    *   本轮没有启动真实本地 rehearsal，没有执行 Railway reseed，没有访问 hosted preview，也没有进入 `DR-006` blocker 修复。
+    *   `Hosted preview URL`、最近一次成功 reseed/smoke 的时间戳、reviewer / organizer sample queue item 仍保留为待执行时确认的信息；这属于 runbook 执行产出，不应在 planning 文档里预写死。
+
+### 2026-04-29 (Session 49)
+*   **Agent 角色**: Coding Agent (Sprint 1 `DR-001` / `DR-002` / `DR-003` integration closeout)
+*   **关联 Feature**: 无新增 feature；本轮只整合 Sprint 1 第一批收口项，不扩展到 `DR-004` rehearsal 或 `DR-005` hosted smoke。
+*   **问题现象**:
+    *   虽然项目已经进入 `post-MVP` 阶段，但本地开发与验收口径仍存在两层漂移：一是 frontend/backend 的 `3000/3001` 与 `5173/5175` 运行方式没有被正式收口；二是 Postgres dev/test 仍混有 `5432/5433` 与 “哪些命令会自动读取 `backend/.env`” 的隐性知识。
+    *   另外，`main` 与 `codex/demo-d0-postgres-deploy` 的角色已经在 planning 层被重新定义，但还缺一个明确的短期 freeze 文档来约束“代码主线”和“当前部署来源”在过渡期如何并存。
+*   **变更记录**:
+    *   新增 `docs/planning/asiamath-d0-baseline-freeze-2026-04-29.md`，冻结短期规则：`codex/demo-d0-postgres-deploy` 继续是当前稳定 `d0` 基线与当前部署来源；一旦候选 PR merge，`main` 立即成为代码主线，但部署分支只作为受控同步的 release pointer 短期存在，直到 hosted reseed + smoke 与 Sprint 1 exit gate 满足后再切部署来源。
+    *   新增 `docs/planning/asiamath-postgres-dev-test-contract-2026-04-29.md`，明确官方默认 dev/test 契约为 `127.0.0.1:5432`，`5433` 只作为本地 override；并明确 backend runtime、backend test、root seed/integration scripts 三类命令的 env-loading 规则不同，不能再假设 `backend/.env` 会自动覆盖所有命令。
+    *   `README.md` 与 `SMOKE_TEST_CHECKLIST.md` 现在把本地运行收口成两种显式模式：
+        *   默认本地开发：`5173 + proxy -> 3000`
+        *   real-flow / acceptance：`5175 + direct API base -> 3001`
+      这样 UI 开发与真实链路验收不再混用同一套口头约定。
+    *   `frontend/.env.example` 与 `frontend/vite.config.ts` 明确保留 proxy-mode 作为默认本地开发路径，同时把 `3001` real-flow 说明为一等公民的 acceptance 模式，而不是偷偷改默认值。
+    *   `backend/.env.example`、`backend/tests/databaseConfig.test.ts`、`tests/workspace-config.test.mjs` 现在显式锁定 Postgres 默认端口、override 规则，以及 “root-level seed/integration scripts 需要外部显式 export env” 的约束。
+    *   `scripts/me-applications-real-flow-check.mjs` 与 `scripts/grant-real-flow-check.mjs` 没有改默认 origin，但新增运行提示：若要跑稳定 backend 的 acceptance 模式，应显式覆盖 `*_BACKEND_ORIGIN=http://127.0.0.1:3001`、`*_FRONTEND_ORIGIN=http://127.0.0.1:5175`，并用 `VITE_API_BASE_URL=http://127.0.0.1:3001/api/v1` 启前端。
+    *   `docs/README.md` 已改口径：当前 planning 真理源是 post-MVP inventory/backlog/sprint/freeze 文档集，不再把旧 `feature-list-v2.2.json` 当成当前执行入口。
+*   **最终采用的口径**:
+    *   **代码主线 / 部署过渡**:
+        *   `main` 在候选 PR merge 后作为默认代码主线
+        *   `codex/demo-d0-postgres-deploy` 在 cutover 前继续作为当前 hosted `d0` preview 的部署来源
+    *   **默认本地开发口径**:
+        *   backend: `http://127.0.0.1:3000`
+        *   frontend: `http://127.0.0.1:5173`
+        *   frontend 不设 `VITE_API_BASE_URL`，通过 Vite proxy 把 `/api/v1` 转发到 `3000`
+    *   **real-flow / acceptance 口径**:
+        *   backend: `http://127.0.0.1:3001`
+        *   frontend: `http://127.0.0.1:5175`
+        *   frontend 显式设置 `VITE_API_BASE_URL="http://127.0.0.1:3001/api/v1"`
+    *   **Postgres dev/test 契约**:
+        *   官方默认：`5432`
+        *   本地 override：`5433` 仅在机器无法使用 `5432` 时采用
+        *   backend runtime 可依赖 `backend/.env`
+        *   backend test、root seed、integration scripts 需要显式 export `TEST_DATABASE_URL` / `DATABASE_URL`
+*   **验证记录**:
+    *   `git diff --check` 通过。
+    *   前端配置相关改动验证通过：`npm run build --workspace frontend`。
+    *   workspace / contract 约束验证通过：`npm run test:workspace-config`。
+    *   backend config 约束验证通过：`cd backend && ../node_modules/.bin/jest --runInBand tests/databaseConfig.test.ts`。
+*   **边界与说明**:
+    *   本轮没有修改 hosted deploy 平台设置，没有做 Railway/Vercel 切主线，也没有进入 `DR-004` 人工 rehearsal 或 `DR-005` hosted smoke。
+    *   当前仍保留一个已知技术背景：最近 portal/browser acceptance 多次在 `3001/5175/5433` 路径上得到稳定结果，因此这次把它正式定义为 acceptance 模式；但官方默认本地开发口径仍保留在 `3000/5173/5432`，避免为了一个机器上的 workaround 直接改掉全仓库默认值。
+
+### 2026-04-29 (Session 48)
+*   **Agent 角色**: Coding Agent (post-MVP planning closeout)
+*   **关联 Feature**: 无新增 feature；本轮目标是把项目从 `feature implementation` 口径切换到 `post-MVP execution` 口径。
+*   **问题现象**:
+    *   当前 `docs/planning/asiamath-feature-list-v4.0-optimized.json` 已是 `24/24 completed`，但它回答的是“哪些功能被做出来了”，不再适合回答“当前系统是否已适合稳定演示、部署、交接，以及下一轮 sprint 应该先做什么”。
+    *   仓库里已有 `mvp-demo-dual-track-governance.md` 等治理文档，但缺三类可以直接拿来排会和排 sprint 的执行工件：`MVP 状态盘点`、`post-MVP backlog`、以及 `Sprint 1 Demo Readiness`。
+*   **变更记录**:
+    *   新增 `docs/planning/asiamath-mvp-status-inventory-2026-04-29.md`，把当前系统分成 `真实闭环`、`demo breadth`、`仍需收口的发布/演示风险` 三层来看，并明确给出结论：Asiamath 已达到“功能型 MVP 完成”，但尚未达到“完全发布就绪”。
+    *   新增 `docs/planning/asiamath-post-mvp-backlog-v1.md`，把下一阶段任务重排为 `Bug / Stability`、`Core Usability`、`Demo Readiness`、`Engineering / Delivery` 四类，并给出 `P0 Now / P1 Next / P2 Later` 的执行顺序。
+    *   新增 `docs/planning/asiamath-sprint-1-demo-readiness-2026-04-29.md`，把下一轮 sprint 收口为“稳定 demo 基线、统一环境口径、完成 hosted preview smoke、准备 presenter-safe demo kit”的收口型 sprint，而不是继续铺新功能。
+    *   `PROGRESS.md` 顶部总览同步更新，明确项目已进入 `post-MVP` 阶段，后续默认围绕上述三份新文档推进。
+*   **验证记录**:
+    *   读取并对齐了以下真理源后再落文档：`docs/planning/asiamath-feature-list-v4.0-optimized.json`、`docs/planning/mvp-demo-dual-track-governance.md`、`docs/planning/asiamath-demo-coverage-matrix-d0.md`、`docs/planning/asiamath-demo-preview-ops-d0.md`、`docs/planning/asiamath-demo-manual-test-checkpoints-d0.md`、`PROGRESS.md`。
+    *   用 Node 脚本复核了当前 feature-list 状态：总数 `24`，全部 `completed`；同时确认仍有 `8` 个 implementation feature 保持 `passes: false`，并在新 backlog 中把这一点转译成治理任务，而不是误判为“功能未做完”。
+    *   本轮为文档性交接，没有新增代码路径或运行时行为；后续如按 `Sprint 1: Demo Readiness` 执行，再进入对应的测试、hosted smoke 与部署验收。
+*   **边界与说明**:
+    *   本轮没有修改 feature list 的定义，没有新增产品功能，也没有改动当前 `codex/demo-d0-postgres-deploy` 的代码行为。
+    *   三份新文档的目的是把项目从“功能建设清单”切换到“收口与迭代节奏清单”；它们不替代现有 PRD、API spec、数据库 schema 或 demo coverage 文档。
+
+### 2026-04-29 (Session 47)
+*   **Agent 角色**: Coding Agent (applicant/reviewer workspace switcher rollout)
+*   **关联 Feature**: applicant/reviewer multi-workspace account follow-up only
+*   **问题现象**:
+    *   认证链路仍默认把所有人送回 `/dashboard`，而前端只按“单一主角色”理解当前用户；一旦同一账号同时具备 applicant + reviewer 权限，就无法在 applicant/reviewer 工作台之间稳定切换，也不会记住上次使用的 workspace。
+    *   applicant/reviewer 二级页没有统一读取可用 workspace 的地方，导致就算 dashboard 能识别 reviewer 权限，`/me/applications`、`/me/profile`、`/reviewer`、`/reviewer/assignments/:id` 这些页头也无法继续切换工作台。
+*   **变更记录**:
+    *   backend `packages/shared/src/models.ts` 新增 `WorkspaceKey`；`backend/src/lib/userRoles.ts` 新增 `listAvailableWorkspaces()`；`backend/src/controllers/auth.ts` 现在会在 `register`、`login`、`getMe` 中统一返回 `user.available_workspaces`。
+    *   `backend/tests/auth.test.ts` 新增 applicant-only 与 reviewer-enabled 两条回归，锁定统一注册用户默认只拿到 `['applicant']`，管理员开通 reviewer 权限后 `GET /auth/me` 必须返回 `['applicant', 'reviewer']`。
+    *   frontend `src/api/auth.ts` 现在有显式 `AuthUser` / `MeResponse` 类型；新增 `src/features/navigation/workspaces.ts` 管理 workspace vocabulary、root route、last-workspace localStorage，以及 applicant/reviewer 过滤逻辑。
+    *   新增 `src/features/auth/authSession.ts` 作为轻量本地 session 层：登录/注册会持久化 `asiamath.authUser`，退出和 401 会统一清掉 token + authUser，applicant/reviewer 二级页可直接从这里读 `available_workspaces`。
+    *   新增 `src/features/navigation/WorkspaceSwitcher.tsx`；`WorkspaceShell.tsx` / `src/styles/layout.css` 增加 switcher slot 与样式，header 现在能在 `Account` 旁边并列承载 workspace switcher。
+    *   `src/features/navigation/authReturn.ts` 新增 post-auth resolver：显式 `returnTo` 仍然优先；没有 deep-link target 时，登录会恢复上一次仍然有效的 workspace root，首次注册则默认 applicant。
+    *   `src/pages/Login.tsx` / `Register.tsx` 现在会写入 token + auth user，并在无显式 `returnTo` 时按上次 workspace 或 applicant 默认值跳转。
+    *   `src/pages/Dashboard.tsx` 现在把 `/dashboard` 固定视为 applicant root：如果账号同时具备 applicant + reviewer，则 dashboard 仍显示 applicant workspace 内容、加载 applicant applications、显示 `Browse opportunities`，同时在页头提供 switcher；reviewer root 明确留在 `/reviewer`。organizer/admin 旧分支行为保持不变。
+    *   applicant 页 `src/pages/MyApplications.tsx`、`MyApplicationDetail.tsx`、`MeProfile.tsx` 以及 reviewer 页 `ReviewerAssignments.tsx`、`ReviewerAssignmentDetail.tsx` 都接入了同一枚 switcher；reviewer 页头明确不显示 `Browse opportunities`。
+    *   多处 logout / unauthorized 分支已经从只删 token 收口为 `clearAuthSession()`，避免 reviewer 权限的本地残留把 switcher 状态带脏。
+*   **验证记录**:
+    *   backend auth 回归通过：在 `postgresql://postgres:postgres@127.0.0.1:5433/asiamath_test?schema=public` 上执行 `npx prisma migrate reset --force --skip-seed` 后，`../node_modules/.bin/jest --runInBand tests/auth.test.ts` 全部通过（`6` tests）。
+    *   frontend foundation / auth-entry / applicant / reviewer / public-nav 相关回归通过：
+        *   `cd frontend && npm run test:run -- src/components/layout/Shell.test.tsx src/pages/Login.test.tsx src/pages/Register.test.tsx src/pages/Dashboard.test.tsx src/pages/MyApplications.test.tsx src/pages/MyApplicationDetail.test.tsx src/pages/MeProfile.test.tsx src/pages/ReviewWorkspaces.test.tsx src/pages/Conferences.test.tsx src/components/layout/PublicPortalNav.test.tsx`
+        *   共 `10` 个 test files、`77` 个 tests 全部通过。
+    *   因 auth 类型收严带出的 grant mock 回归已补齐：`cd frontend && npm run test:run -- src/pages/Dashboard.test.tsx src/pages/GrantApply.test.tsx` 通过（`23` tests）。
+    *   frontend build 通过：`cd frontend && npm run build`；仅保留既有 Vite chunk-size warning，无新的类型或构建错误。
+*   **边界与说明**:
+    *   本轮只打开 applicant/reviewer switcher，不把 organizer/admin 也一起并入 switcher；helper 虽然保留了 organizer/admin vocabulary，但 UI 只在 applicant + reviewer 双 workspace 账号上显示切换器。
+    *   reviewer 权限的获取方式仍是“管理员直接开通”；统一注册后自助申请 reviewer access 的流程只写进 spec，尚未实现。
+
+### 2026-04-29 (Session 46)
+*   **Agent 角色**: Coding Agent (workspace navigation contract + workspace-shell unification rollout)
+*   **关联 Feature**: `PORTAL` / `REVIEW` navigation hardening follow-up only
+*   **问题现象**:
+    *   reviewer / organizer workflow 页面对“逻辑上一级”的表达不稳定：有的页面缺主返回，有的只在侧栏里放局部返回，有的从 dashboard 进入后不会把来源链路继续传下去，导致 `dashboard -> queue -> detail` 这类路径仍然需要手测补洞。
+    *   applicant dashboard 之前已经有较稳定的 workspace shell，但 reviewer / organizer 还没有并入同一套 `Account`、`Back to portal`、header actions 约定，因此新页面很容易在壳层能力上掉队。
+*   **变更记录**:
+    *   新增 `frontend/src/features/navigation/workspaceNavigation.ts`，在既有 `returnContext` 之上补一层 workspace helper，统一处理 dashboard entry state、queue fallback、detail chained return state。
+    *   `frontend/src/features/navigation/workspaceAccountMenu.ts` 从 applicant-only 薄适配层扩展为 role-aware account menu builder，reviewer / organizer / admin 现在也能复用 applicant 同款 `Account` 下拉骨架。
+    *   `frontend/src/pages/Dashboard.tsx` 现在会把 dashboard return context 传入 reviewer / organizer 入口链接；`Dashboard.test.tsx` 同步锁定 organizer workspace 入口必须带上 `Back to dashboard` state。
+    *   `frontend/src/pages/OrganizerConferenceApplications.tsx`、`OrganizerApplicationDetail.tsx`、`ReviewerAssignments.tsx`、`ReviewerAssignmentDetail.tsx` 全部接入 applicant-style `WorkspaceShell` actions：主返回走逻辑上一级，额外提供稳定的 `Back to portal` 出口，并通过 shared `Account` 菜单统一 reviewer / organizer workspace header。
+    *   organizer / reviewer detail 页原本散落在侧栏里的返回链接已移除，返回职责收口到统一 header actions；queue -> detail 链路现在会显式传递 chained return state，而不是靠浏览器历史回退。
+    *   `frontend/src/pages/ReviewWorkspaces.test.tsx` 新增 reviewer / organizer queue/detail 的 header-action coverage；`frontend/src/pages/Conferences.test.tsx` 追加代表性 public regression，锁定 `portal -> conferences -> detail -> conferences -> portal` 的返回链不被这轮改动带歪。
+    *   `AGENT_HARNESS.md` 新增 `Navigation Contract Check`，把“声明逻辑父级、传递 chained return state、workspace 页必须有主返回 + portal 出口 + Account、补代表性导航测试”写成后续 Agent 必须执行的自检项。
+*   **验证记录**:
+    *   preflight baseline 通过：`cd frontend && npm run test:run -- src/pages/Dashboard.test.tsx src/pages/ReviewWorkspaces.test.tsx src/pages/Conferences.test.tsx`
+    *   preflight build 通过：`cd frontend && npm run build`
+    *   按 TDD 先补失败测试后实现：
+        *   `Dashboard.test.tsx` 初始暴露 reviewer / organizer dashboard 入口没有传 workspace return state。
+        *   `ReviewWorkspaces.test.tsx` 初始暴露 reviewer / organizer queue/detail 缺少 `Back to dashboard` / `Back to portal` / `Account` 壳层动作。
+    *   reviewer / organizer workspace 回归通过：`cd frontend && npm run test:run -- src/pages/ReviewWorkspaces.test.tsx`
+    *   最终定向回归通过：`cd frontend && npm run test:run -- src/pages/Dashboard.test.tsx src/pages/ReviewWorkspaces.test.tsx src/pages/Conferences.test.tsx`，`3` 个 test files、`28` 个 tests 全部通过。
+    *   最终 build 通过：`cd frontend && npm run build`（`tsc -b && vite build`）；保留既有 Vite chunk-size warning，但无新的类型或构建错误。
+*   **边界与说明**:
+    *   本轮没有重写全局路由体系，也没有替换既有 public `returnContext` 机制；只是把 workspace contract 建在现有 helper 之上，并用 `Conferences` 这条公共链做代表性回归锁定。
+    *   当前 worktree 里另有 `ConferenceApplyForm` / `Conference.css` / `ConferenceApply.test.tsx` / `styles/components.css` 等既存未提交修改，本轮没有改它们，也没有把这些无关变更纳入导航契约实现。
+
+### 2026-04-28 (Session 45)
+*   **Agent 角色**: Coding Agent (`INT-PROFILE-002` scholar directory real-data integration)
+*   **关联 Feature**: `INT-PROFILE-002`
+*   **问题现象**:
+    *   `/scholars` 与 `/portal` 的 scholar teaser 虽然界面已经存在，但 `frontend/src/features/profile/scholarDirectoryProvider.ts` 在 real mode 下仍直接返回 `directorySeed`，导致 public scholar directory 不是实际公开 profile 数据。
+    *   后端当前只有 `GET /api/v1/scholars/:slug` public detail route，没有 public scholar directory list endpoint，因此前端没有真实数据源可以切换。
+*   **变更记录**:
+    *   backend 新增 `GET /api/v1/scholars`，路由位于 `backend/src/routes/scholars.ts`，实现位于 `backend/src/controllers/profile.ts`，返回 `data.scholars` 与 `data.clusters`，只包含 `is_profile_public = true` 的公开 profile。
+    *   `backend/src/serializers/profile.ts` 新增 public scholar summary serializer；directory payload 会回传 `primary_msc_code`，供前端卡片与 cluster 逻辑复用。
+    *   backend scholar cluster 现按公开 profile 的 primary MSC / 关键词做最小归类，当前覆盖 `Algebraic Geometry`、`Number Theory`、`PDE`、`Topology` 四类，用于 `/scholars` 与 `/portal` teaser 的真实数据展示。
+    *   frontend `src/api/profile.ts` 新增 `fetchScholarDirectory()`；`src/features/profile/profileMappers.ts` 新增 scholar summary / cluster transport mapper；`src/features/profile/scholarDirectoryProvider.ts` 在 fake mode 下保持 seed 行为，在 real mode 下改为调用真实 `/scholars` API。
+    *   `docs/planning/asiamath-feature-list-v4.0-optimized.json` 已新增并完成 `INT-PROFILE-002`，当前 feature list 口径下所有 feature 均为 `completed`。
+*   **验证记录**:
+    *   按 TDD 先补失败测试：
+        *   `frontend/src/features/profile/scholarDirectoryProvider.test.ts` 在 real mode 下要求 provider 调用真实 API 而不是继续回 seed。
+        *   `backend/tests/profile.test.ts` 要求 `GET /api/v1/scholars` 返回公开 scholar 列表与 expertise clusters，并排除 hidden profile。
+    *   前端定向测试通过：`npm run test:run --workspace frontend -- src/features/profile/scholarDirectoryProvider.test.ts`
+    *   后端定向测试通过：先对 `postgresql://agent:agent@127.0.0.1:5432/asiamath_test?schema=public` 执行 `../node_modules/.bin/prisma migrate reset --force --skip-seed`，再执行 `DATABASE_URL="postgresql://agent:agent@127.0.0.1:5432/asiamath_test?schema=public" ../node_modules/.bin/jest --runInBand tests/profile.test.ts`
+    *   前端关联回归通过：`npm run test:run --workspace frontend -- src/features/profile/scholarDirectoryProvider.test.ts src/pages/Scholars.test.tsx src/features/portal/homepageViewModel.test.ts src/pages/Portal.test.tsx`
+    *   前端 build 通过：`npm run build --workspace frontend`
+    *   real runtime verification 通过：
+        *   isolated backend: `PORT=3002 DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:5433/asiamath_dev?schema=public" node -e 'const app=require("./dist/app").default; ...'`
+        *   isolated frontend: `VITE_API_BASE_URL="http://127.0.0.1:3002/api/v1" npm run dev --workspace frontend -- --host 127.0.0.1 --port 5176`
+        *   `curl http://127.0.0.1:3002/api/v1/scholars` 实际返回 `Aisha Rahman` / `Ravi Iyer` 及 `Number Theory` / `PDE` clusters，不再是前端 seed。
+        *   `agent-browser` 抽查 `http://127.0.0.1:5176/scholars`：可见 `Aisha Rahman`、`Ravi Iyer`、`Number Theory`、`PDE`，console 无错误。
+        *   `agent-browser` 抽查 `http://127.0.0.1:5176/portal`：`Scholars & expertise` teaser 同样展示 `Aisha Rahman`、`Ravi Iyer` 与真实 cluster，console 无错误。
+*   **边界与说明**:
+    *   本轮只解决 public scholar directory / portal scholar teaser 的 real-data 接通，没有改 public scholar detail contract 本身，也没有扩展 profile search / filtering / pagination。
+    *   当前 scholar cluster 是基于公开 profile 的 primary MSC / 关键词做最小静态归类，足够支撑当前 `/scholars` 与 `/portal` 展示，但还不是完整 taxonomy 系统。
+
+### 2026-04-28 (Session 44)
+*   **Agent 角色**: Coding Agent (`PORTAL` browser-level acceptance close-out)
+*   **关联 Feature**: `INT-PORTAL-001` browser evidence close-out only
+*   **问题现象**:
+    *   Session 43 虽然已经让 `test:portal:int` 在 real backend/frontend 环境下通过，但仍缺浏览器层证据，无法确认 applicant 在真实登录态下的 `/portal`、`/me/applications`、grant detail 是否无报错且正确渲染 released result / post-visit report。
+    *   本地 `frontend/vite.config.ts` 的 dev proxy 仍指向 `http://localhost:3000`，而稳定可用的 backend 实例位于 `3001`；如果继续用默认代理做验收，会把 `3000` 根目录启动上下文的已知异常混进 portal 验收结果里。
+*   **变更记录**:
+    *   `scripts/me-applications-real-flow-check.mjs` 新增 `PORTAL_INT_SKIP_CLEANUP`、`PORTAL_INT_USER_EMAIL`、`PORTAL_INT_USER_PASSWORD` 与 `PORTAL_INT_USER_FULL_NAME` 环境变量支持，并把 applicant 登录凭据回显到脚本 JSON 输出中，方便把 real-flow fixture 复用于浏览器验收。
+    *   没有修改 feature list，也没有改 portal 页面代码；本轮目标是给 Session 43 已完成的主链补浏览器证据，而不是新增功能。
+*   **验证记录**:
+    *   执行通过 `PORTAL_INT_BACKEND_ORIGIN="http://127.0.0.1:3001" PORTAL_INT_FRONTEND_ORIGIN="http://127.0.0.1:5174" DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:5433/asiamath_dev?schema=public" npm run test:portal:int`，确认脚本增强后默认清理路径没有回归。
+    *   额外启动一条直连稳定 backend 的 frontend dev server：`VITE_API_BASE_URL="http://127.0.0.1:3001/api/v1" npm run dev --workspace frontend -- --host 127.0.0.1 --port 5175`。
+    *   执行通过 `PORTAL_INT_BACKEND_ORIGIN="http://127.0.0.1:3001" PORTAL_INT_FRONTEND_ORIGIN="http://127.0.0.1:5175" PORTAL_INT_SKIP_CLEANUP="true" PORTAL_INT_USER_EMAIL="portal.int.browser@example.com" PORTAL_INT_USER_PASSWORD="password123" PORTAL_INT_USER_FULL_NAME="Portal Browser Acceptance" DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:5433/asiamath_dev?schema=public" npm run test:portal:int`，保留了一组浏览器可登录的真实 applicant fixture。
+    *   使用 `agent-browser` 在 `http://127.0.0.1:5175` 完成 applicant 验收：
+        *   登录 `portal.int.browser@example.com / password123` 成功。
+        *   `/me/applications` 实际显示 `Integration Grant Conference 2026` 与 `Integration Grant 2026 Travel Support` 两条 released 记录，grant 的 next action 已变成 `View result`。
+        *   grant detail `/me/applications/c44d65c9-fce0-45bd-a599-d91855024ffa` 实际渲染 `Awarded`、`Post-visit report`、`Status: submitted`、`Attendance: Confirmed` 与 narrative `Attended the workshop, presented a talk, and met two collaborators.`。
+        *   `/portal` 公共入口页在登录态下正常渲染 featured call / opportunities / scholars 等模块，浏览器控制台无错误。
+*   **边界与说明**:
+    *   `/login` 在没有 `returnTo` state 时默认跳到 `/dashboard` 是当前设计行为，来自 `frontend/src/features/navigation/authReturn.ts` 的 `DEFAULT_AUTH_RETURN_TO = '/dashboard'`；这次验收不把它视为 portal bug。
+    *   这轮仍未推进 scholar directory real-data；如果继续补 `PORTAL` 尾项，下一块应该转到 scholar-directory provider 和真实 profile 数据链路。
+
+### 2026-04-28 (Session 43)
+*   **Agent 角色**: Coding Agent (`PORTAL` post-visit detail + real-flow integration follow-up)
+*   **关联 Feature**: `FE-GRANT-001` / `INT-PORTAL-001` partial close-out
+*   **问题现象**:
+    *   applicant grant detail 虽然已经能显示 released result，但在 `accepted + reportRequired` 的场景下仍缺 `post-visit report` 提交与已提交展示，导致 dashboard 的 `submit_post_visit_report` next action 没有完整落点。
+    *   现有 `scripts/me-applications-real-flow-check.mjs` 只验证 applicant dashboard/detail 的 released decision，不覆盖 post-visit report submit 后的 dashboard/detail 状态切换，因此还不能真正证明 `INT-PORTAL-001` 关掉了这条 grant follow-up 链。
+*   **变更记录**:
+    *   `frontend/src/api/review.ts`、`frontend/src/features/review/{types,reviewMappers,httpReviewProvider,fakeReviewProvider}.ts` 补齐 applicant detail 的 `postVisitReport` domain 映射和 `submitMyPostVisitReport()` 真实/假 provider 接口。
+    *   `frontend/src/pages/MyApplicationDetail.tsx` / `MyApplicationDetail.css` 在 grant detail 中新增 applicant-visible `Submit post-visit report` 表单；提交成功后本地状态切换为 `Post-visit report` 已提交视图，conference detail 则继续不显示该区块。
+    *   `frontend/src/features/review/httpReviewProvider.test.ts` 与 `frontend/src/pages/MyApplicationDetail.test.tsx` 先补失败测试，再锁定 real mapper、submit API 调用、grant accepted detail 的表单/已提交双态，以及 conference detail 的隐藏行为。
+    *   `scripts/me-applications-real-flow-check.mjs` 现在会在 released grant decision 之后真实调用 `/api/v1/me/applications/:id/post-visit-report`，并断言 dashboard `next_action` 从 `submit_post_visit_report` 收口为 `view_result`，同时确认 grant detail 返回完整 `post_visit_report` payload。
+*   **验证记录**:
+    *   按 TDD 先扩 `frontend/src/features/review/httpReviewProvider.test.ts` 与 `frontend/src/pages/MyApplicationDetail.test.tsx`，执行 `cd frontend && npm run test:run -- src/features/review/httpReviewProvider.test.ts src/pages/MyApplicationDetail.test.tsx`，确认新增 `postVisitReport` mapper / submit / detail-form 断言先失败。
+    *   修复后执行通过同一命令：`2` 个 test files、`10` 个 tests 全部通过。
+    *   执行通过 `cd frontend && npm run test:run -- src/pages/MyApplications.test.tsx src/pages/MyApplicationDetail.test.tsx src/features/review/httpReviewProvider.test.ts`：`3` 个 test files、`24` 个 tests 全部通过。
+    *   执行通过 `cd frontend && npm run build`（`tsc -b && vite build`）。
+    *   本地 real-flow 验证通过：
+        *   用本地 `postgres:16-alpine` 临时容器在 host `5433` 提供 `asiamath_dev`。
+        *   frontend dev server 实际监听 `http://127.0.0.1:5174`。
+        *   backend 以 `backend/` 目录为 cwd、`PORT=3001` 的 built app 方式稳定提供 API；同样的 app 若从仓库根目录用 ad-hoc wrapper 启在 `3000`，会出现 register/conferences 异常 500，因此这轮 real-flow 以 `3001` 作为可信 backend origin。
+        *   执行通过 `PORTAL_INT_BACKEND_ORIGIN="http://127.0.0.1:3001" PORTAL_INT_FRONTEND_ORIGIN="http://127.0.0.1:5174" DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:5433/asiamath_dev?schema=public" npm run test:portal:int`，脚本成功验证：real applicant register、conference + linked grant submit、released dashboard/detail、post-visit report submit、submit 后 dashboard/detail 状态切换，以及 unauthenticated dashboard 401。
+*   **边界与说明**:
+    *   本轮没有做 browser-driven acceptance，因此虽然 `test:portal:int` 已经覆盖了 real backend contract 和 frontend route shell 可达性，但还没有用浏览器实际验证 applicant 在 `/me/applications` / grant detail 上的真实渲染与交互。
+    *   本轮没有推进 scholar directory real-data 接通，也没有修改 `docs/planning/asiamath-feature-list-v4.0-optimized.json` 的 feature 状态。
+    *   backend `3000` 根目录启动上下文的异常 500 仍值得后续单独收口，但它不再阻塞 `INT-PORTAL-001` 的真实链路验证，因为 `3001` 的同代码实例已证明 contract 本身可用。
+
+### 2026-04-28 (Session 42)
+*   **Agent 角色**: Coding Agent (Conference apply UX hint follow-up)
+*   **关联 Feature**: `CONF` applicant apply flow partial follow-up only
+*   **问题现象**:
+    *   conference apply 表单里，`Submit application` 在未满足条件时会直接禁用，但用户看不到哪些字段必填，也不知道当前是“还没先保存 draft”还是“talk submission 还缺 abstract”。
+*   **变更记录**:
+    *   `frontend/src/features/conference/ConferenceApplyForm.tsx` 为 `Participation type`、`Statement` 增加可见必填标记，并为 `Abstract title`、`Abstract text` 增加 `required for talk` 标签说明。
+    *   submit 区域现在会在按钮禁用时显示单行条件提示，至少覆盖 `Save this draft once before submitting`、缺 `Participation type`、缺 `Statement`、以及 `talk` submission 缺 abstract title / text 这几类状态。
+    *   `frontend/src/pages/ConferenceApply.test.tsx` 先补失败测试，再锁定新标签与 submit hint 行为；同时把原有 portal-origin return-path 断言从单个 `View details` 收紧为首个匹配项，避免测试因列表里存在多个 conference card 而误报。
+    *   `frontend/src/pages/Conference.css` 增加必填标记、条件标签和 submit hint 的最小样式，不改整体 page layout。
+*   **验证记录**:
+    *   按 TDD 先修改 `frontend/src/pages/ConferenceApply.test.tsx`，执行 `cd frontend && npm run test:run -- src/pages/ConferenceApply.test.tsx`，确认新增 required-marker / submit-hint 断言先失败。
+    *   修复后执行通过同一命令：`1` 个 test file、`9` 个 tests 全部通过。
+    *   执行通过 `cd frontend && npm run build`（`tsc -b && vite build`）。
+*   **边界与说明**:
+    *   本轮没有改 submit 流程本身，仍保持“先 save draft，再 submit”的现有实现；只补可见提示，降低用户猜测成本。
+    *   本轮没有扩展 organizer / reviewer 相关表单，也没有改 backend conference application contract。
+
+### 2026-04-28 (Session 41)
+*   **Agent 角色**: Coding Agent (Applicant summary parity fix)
+*   **关联 Feature**: `FE-PORTAL-001` partial follow-up only
+*   **问题现象**:
+    *   applicant 提交 conference application 后，在 `/me/applications/:id` 的 `Application summary` 中只能看到 `Statement`，看不到已填写的 `Participation type`、`Abstract title`、`Abstract text` 和 `Interested in travel support`。
+    *   同一条 application 在 reviewer / organizer 视图中已经能看到 abstract 相关字段，因此 applicant detail 明显比其它角色视图缺字段。
+*   **根因定位**:
+    *   applicant detail contract 单独走 `serializeApplicantApplicationDetail()` / `ApplicantApplicationDetail`，这条链路没有序列化或映射 `participation_type`、`abstract_title`、`abstract_text`、`interested_in_travel_support`。
+    *   同时 `frontend/src/pages/MyApplicationDetail.tsx` 的 `Application summary` 区块只渲染了 `statement`、grant-specific summary 字段、extra answers 和 files，即使这些 conference fields 存在也不会显示。
+*   **变更记录**:
+    *   `backend/src/serializers/workflow.ts` 为 applicant detail payload 补回 `participation_type`、`abstract_title`、`abstract_text`、`interested_in_travel_support`。
+    *   `frontend/src/features/review/types.ts`、`reviewMappers.ts`、`fakeReviewProvider.ts` 对齐 applicant detail contract，确保 real/fake provider 都携带这些字段。
+    *   `frontend/src/pages/MyApplicationDetail.tsx` 的 `Application summary` 现在会显示 participation type、abstract title、abstract text，以及 conference application 的 travel support 状态。
+    *   `frontend/src/pages/MyApplicationDetail.test.tsx` 与 `frontend/src/features/review/httpReviewProvider.test.ts` 补回归，锁定 applicant detail summary 和 real API mapper 不再漏字段。
+    *   `backend/tests/review.test.ts` 扩展 applicant detail API 断言，要求 `/api/v1/me/applications/:id` 返回这些 conference-specific fields。
+*   **验证记录**:
+    *   按 TDD 先补失败测试，执行 `cd frontend && npm run test:run -- src/pages/MyApplicationDetail.test.tsx src/features/review/httpReviewProvider.test.ts`，确认 applicant detail mapper / summary 断言先失败。
+    *   修复后执行通过同一命令：`2` 个 test files、`7` 个 tests 全部通过。
+    *   执行通过 `cd frontend && npm run build`（`tsc -b && vite build`）。
+    *   backend full DB integration test 这轮未完成：当前 worktree 未配置 `TEST_DATABASE_URL`，而 `cd backend && npx tsc --noEmit` 还会命中 postgres 分支已有的 Prisma typing / implicit any 历史问题，无法把 serializer 改动单独跑成一轮 clean backend green。
+*   **边界与说明**:
+    *   本轮只修 applicant detail summary 的字段缺失，没有改 reviewer / organizer detail grammar，也没有改 submit flow 本身。
+    *   backend serializer 已随代码补齐，但仍需要在有 `TEST_DATABASE_URL` 的 postgres 环境里补跑一次 `review.test.ts`，确认真实 `/api/v1/me/applications/:id` 集成返回与前端当前展示一致。
+
+### 2026-04-28 (Session 40)
+*   **Agent 角色**: Coding Agent (Role workspace fix)
+*   **关联 Feature**: `FE-PORTAL-001` partial follow-up only
+*   **问题现象**:
+    *   使用 reviewer / organizer 账号登录后，前端仍统一落到 applicant-only `/dashboard` 内容。
+    *   `Dashboard` 会无差别请求 applicant `My Applications` 数据，并渲染 applicant badge、入口与 walkthrough 文案，导致 reviewer / organizer 看不到属于自己角色的工作台内容。
+*   **变更记录**:
+    *   `frontend/src/pages/Dashboard.tsx` 改为按 `getMe()` 返回的 `role` / `primary_role` 分流：reviewer / organizer / admin 不再走 applicant application aggregation，而是进入各自角色的 workspace landing。
+    *   reviewer 登录后，`/dashboard` 现在呈现 reviewer badge、review queue 主入口，以及 reviewer scope 说明，不再显示 applicant application widget。
+    *   organizer 登录后，`/dashboard` 现在呈现 organizer badge、conference workspace 主入口；若账号存在 `conference_staff_memberships`，主入口会直接落到对应 conference application queue，否则回落到 `Create organizer conference`。
+    *   dashboard account menu 现在同样按角色收口：applicant 保持 `My Applications` / `My Profile`，reviewer 指向 `Reviewer Queue`，organizer 指向 `Conference Workspace`，避免登录后菜单仍暴露 applicant-only 主入口。
+    *   `frontend/src/pages/Dashboard.test.tsx` 新增 reviewer / organizer 两条回归，锁定“非 applicant 不再拉 applicant dashboard 数据”和“dashboard 内容随角色切换”这两个行为。
+*   **验证记录**:
+    *   preflight：新 worktree 创建后执行 `npm run test:smoke`；其中前端 baseline 通过，backend baseline 在 Prisma migrate 阶段触发已有的 `Schema engine error`，确认这是当前 `demo/d0` 基线问题，不是本轮 role workspace 改动引入。
+    *   按 TDD 先修改 `frontend/src/pages/Dashboard.test.tsx`，执行 `cd frontend && npm run test:run -- src/pages/Dashboard.test.tsx`，确认 reviewer / organizer 断言先失败。
+    *   修复后执行通过 `cd frontend && npm run test:run -- src/pages/Dashboard.test.tsx`：`1` 个 test file、`7` 个 tests 全部通过。
+    *   执行通过 `cd frontend && npm run test:run -- src/pages/Login.test.tsx src/pages/Dashboard.test.tsx`：`2` 个 test files、`10` 个 tests 全部通过。
+    *   执行通过 `cd frontend && npm run build`（`tsc -b && vite build`），无类型或构建错误。
+*   **边界与说明**:
+    *   本轮只修 authenticated dashboard 的角色分流，没有新增 organizer root route，也没有改 reviewer queue / organizer queue 详情页本身。
+    *   `FE-PORTAL-001` 仍是更大的 portal + applicant dashboard feature，本轮只是收口其中一个实际 demo 缺口，因此没有把 feature list 直接标记为 `completed`。
+
+### 2026-04-27 (PostgreSQL deployment slice)
+*   **Agent 角色**: Coding Agent (Deployment and database migration)
+*   **完成 Slice**: `demo/d0` PostgreSQL baseline + Vercel/Railway split deployment preview
+*   **变更记录**:
+    *   Prisma datasource 改为 PostgreSQL，并重建 active migration 历史。
+    *   backend `start` / `dev` / `test` 改为环境变量驱动，不再依赖 SQLite 文件库。
+    *   seed / integration 脚本移除 SQLite fallback，改为显式要求 `DATABASE_URL`。
+    *   frontend API client 改为 `VITE_API_BASE_URL` 可配置，Vercel 增加 SPA rewrite 配置。
+*   **验证记录**:
+    *   backend Jest suite 通过 PostgreSQL test database 运行。
+    *   `npm run test:portal:int` 与 `npm run test:grant:int` 在 PostgreSQL development database 上通过。
+    *   Railway backend preview 可启动并执行 `prisma migrate deploy`。
+    *   Vercel frontend preview 可通过配置的 Railway API origin 访问真实后端。
+*   **边界与说明**:
+    *   本轮未迁移旧 SQLite 数据。
+    *   backend 生产运行时暂时保留 `ts-node`，后续再切换到 `tsc + node dist`。
+
+### 2026-04-27 (Session 39)
+*   **Agent 角色**: Coding Agent (Applicant workspace bugfix)
+*   **完成 Feature**: `PORTAL` local applicant workspace schema-drift repair
+*   **问题现象**:
+    *   在 real backend + real-aligned frontend 下，applicant 提交 conference application 后回到 `/me/applications`，页面会落到 `My applications unavailable` error state。
+*   **根因定位**:
+    *   通过 `npm run test:portal:int` 复现后确认，真实失败点不是前端 return flow，而是 backend `GET /api/v1/me/applications` 返回 `500`.
+    *   进一步排查发现 `listMyApplications()` 新 include 的 `postVisitReport` relation 依赖 `PostVisitReport` 表；本地 `dev.db` 在某些开发机会话中没有应用 `20260426021200_add_post_visit_report_model` migration，于是 Prisma 在读 applicant dashboard 时直接报表不存在。
+    *   这属于 local dev database schema drift，不是 submit payload 或 MyApplications page 自身的展示逻辑错误。
+*   **变更记录**:
+    *   `backend/package.json` 的 `start` / `dev` 脚本现在都会先执行 `prisma migrate deploy`，确保本地 backend 在启动前把 `dev.db` 迁到当前 schema，而不是继续带着旧 SQLite 结构提供 API。
+    *   `backend/tests/databaseConfig.test.ts` 补了配置级约束，锁定 backend `dev` / `start` 必须先跑 migration，防止以后再次出现“新 relation 已入代码、旧 dev.db 未迁移”的同类回归。
+*   **验证记录**:
+    *   按 TDD 先补失败测试，再执行 `cd backend && npm test -- --runInBand tests/databaseConfig.test.ts`，确认新增约束在旧脚本配置下先失败。
+    *   修复脚本后再次执行 `cd backend && npm test -- --runInBand tests/databaseConfig.test.ts`，`3` 个 tests 全部通过。
+    *   对当前 local `dev.db` 手动执行一次 `cd backend && DATABASE_URL=file:./dev.db ./node_modules/.bin/prisma migrate deploy`，确认 `20260426021200_add_post_visit_report_model` 已成功应用。
+    *   复跑真实 applicant integration：`npm run test:portal:int`，conference submit -> grant submit -> `/api/v1/me/applications` -> detail reads 全链路通过，不再返回 `500`。
+*   **边界与说明**:
+    *   本轮没有改 conference apply / MyApplications 的产品逻辑，也没有扩展 review / dashboard data contract；修的是 local backend boot discipline，避免 dev schema drift 把 applicant workspace 打挂。
+
+### 2026-04-27 (Session 38)
+*   **Agent 角色**: Coding Agent (Public page visual unification Phase 2)
+*   **完成 Feature**: `PORTAL` public browse visual unification, Phase 2 only
+*   **计划微调**:
+    *   当前 `demo/d0` 已包含 Phase 1 结果与共享 `public-browse.css` 基座，因此本轮没有回头重做 implementation plan 的 Phase 1 任务。
+    *   本轮按 plan 保留了 preflight、Phase 2 contract tests、Phase 2 regression、full public-page regression、build 与 browser acceptance；Phase 1 页面只作为回归集参与验证。
+*   **变更记录**:
+    *   扩展 `frontend/src/styles/public-browse.css`，为 Phase 2 页面补齐共享 `public-browse-list`，并收紧 public card 内普通文本链接与 primary CTA 的分工，避免 detail-aside primary links 被 list-link grammar 覆盖。
+    *   `frontend/src/pages/Newsletters.tsx`、`NewsletterDetail.tsx`、`Publications.tsx`、`PublicationDetail.tsx`、`Videos.tsx`、`VideoDetail.tsx`、`Partners.tsx`、`Governance.tsx`、`Outreach.tsx` 全部接入既有 shared public-browse hooks：`public-browse-page`、`public-browse-grid`、`public-browse-card`、`public-browse-meta`、`public-browse-copy`、`public-browse-actions`、`public-browse-aside-card`，并把 detail-aside CTA 收口到共享 `public-browse-primary-link`。
+    *   `frontend/src/pages/Newsletter.css`、`Publication.css`、`Video.css`、`Partner.css`、`Governance.css`、`Outreach.css` 删除旧的 fallback-token card/grid 重复规则，只保留 route-specific 结构，例如 highlight list、matching teaser 与 teaser-card 对齐。
+    *   `frontend/src/pages/Newsletters.test.tsx`、`Partners.test.tsx`、`Governance.test.tsx`、`Outreach.test.tsx` 补强 Phase 2 contract tests，锁定 shared masthead、archive/detail CTA、meta 文案与 governance/outreach/partner teaser 内容。
+*   **验证记录**:
+    *   preflight baseline 通过：`cd frontend && npm run test:run -- src/pages/Conferences.test.tsx src/pages/Grants.test.tsx src/pages/Schools.test.tsx src/pages/Scholars.test.tsx src/pages/Prizes.test.tsx src/pages/Newsletters.test.tsx src/pages/Publications.test.tsx src/pages/Videos.test.tsx src/pages/Partners.test.tsx src/pages/Governance.test.tsx src/pages/Outreach.test.tsx`，`11` 个 test files、`43` 个 tests 全部通过。
+    *   preflight build 通过：`cd frontend && npm run build`。
+    *   Phase 2 contract tests 通过：`cd frontend && npm run test:run -- src/pages/Conferences.test.tsx src/pages/Prizes.test.tsx src/pages/Newsletters.test.tsx src/pages/Partners.test.tsx src/pages/Governance.test.tsx src/pages/Outreach.test.tsx`，`6` 个 test files、`19` 个 tests 全部通过。
+    *   Phase 2 regression 通过：`cd frontend && npm run test:run -- src/pages/Newsletters.test.tsx src/pages/Publications.test.tsx src/pages/Videos.test.tsx src/pages/Partners.test.tsx src/pages/Governance.test.tsx src/pages/Outreach.test.tsx`，`6` 个 test files、`19` 个 tests 全部通过。
+    *   最终 full public-page regression 通过：`cd frontend && npm run test:run -- src/pages/Conferences.test.tsx src/pages/Grants.test.tsx src/pages/Schools.test.tsx src/pages/Scholars.test.tsx src/pages/Prizes.test.tsx src/pages/Newsletters.test.tsx src/pages/Publications.test.tsx src/pages/Videos.test.tsx src/pages/Partners.test.tsx src/pages/Governance.test.tsx src/pages/Outreach.test.tsx`，`11` 个 test files、`43` 个 tests 全部通过。
+    *   最终 build 通过：`cd frontend && npm run build`（`tsc -b && vite build`）。
+    *   browser acceptance 通过：本地 Vite dev server 在 `http://127.0.0.1:4176` 下抽查了 `/portal` 基准页，以及 `/newsletter`、`/publications`、`/videos`、`/partners`、`/admin/governance`、`/outreach`，并补看 detail surfaces `/newsletter/asiamath-monthly-briefing-april-2026`、`/publications/asiamath-school-notes-preview`、`/videos/asiamath-research-school-session-recap`；shared public masthead、page-title rhythm、card/meta/aside grammar 均可见，secondary public pages 明显比 `/portal` 更克制，且所有抽查页面均无 browser page errors。
+*   **边界与说明**:
+    *   本轮严格只完成 Phase 2：newsletter、publications、videos、partners、governance、outreach，以及支撑它们的 shared public-browse style layer / tests / progress log。
+    *   没有回头修改 Phase 1 页面实现，没有改 `WorkspaceShell`、apply flows、`/me/*`、reviewer / organizer / admin workflow、login / register，也没有扩散到 stale applicant session 修复之外的无关分支工作。
+
+### 2026-04-27 (Session 37)
+*   **Agent 角色**: Coding Agent (UX follow-up note)
+*   **记录问题**: applicant workspace 缺少自然的 `back to portal` affordance
+*   **问题说明**:
+    *   当前从 `Account` 下拉进入 `My Applications` 或 `My Profile` 后，用户缺少稳定、自然、始终可见的返回 `Portal` 入口。
+    *   `Dashboard` 中现有的 `Restart from portal` 更像 demo walkthrough affordance，而不是产品级的全局导航能力，因此不能视为该问题已被解决。
+*   **设计判断**:
+    *   这个问题应视为 workspace-shell 级别的 IA / navigation gap，而不是 `Account` 菜单本身的问题。
+    *   更合理的修正方向是在 applicant workspace 顶层 shell 中提供公共浏览面的稳定出口，例如可感知的 `Portal` / `Browse opportunities` 入口，或让品牌位承担明确的 public-home return 语义。
+    *   不建议把 `Portal` 塞进 `Account` 下拉里，因为它属于主导航回流，不属于账户动作。
+*   **下一步**: 在继续 `public page visual unification` 之前，先为 applicant workspace 补一个简短 spec / implementation delta，明确 `portal return affordance` 应该落在 `WorkspaceShell` 而不是 dashboard-only CTA。
+
+### 2026-04-27 (Session 36)
+*   **Agent 角色**: Coding Agent (Public page visual unification Phase 1)
+*   **完成 Feature**: `PORTAL` public browse visual unification, Phase 1 only
+*   **变更记录**:
+    *   新增 `frontend/src/styles/public-browse.css`，抽出 Phase 1 public browse 共享语法层，统一 visitor-facing 主链路页面的 body style language：page body rhythm、list/detail card padding、meta row、CTA row、aside card 以及 public action link treatment。
+    *   `frontend/src/index.css` 接入新的 shared layer；`frontend/src/styles/layout.css` 收紧 `PortalShell` 的 public header rhythm；`frontend/src/styles/components.css` 把 `school` / `prize` primary link 拉到与 `conference-primary-link` 同一 CTA grammar。
+    *   `frontend/src/pages/Conferences.tsx`、`ConferenceDetail.tsx`、`Grants.tsx`、`GrantDetail.tsx`、`Schools.tsx`、`SchoolDetail.tsx`、`Prizes.tsx`、`PrizeDetail.tsx`、`Scholars.tsx`、`ScholarProfile.tsx` 以及对应 list/detail 展示组件补上 shared public-browse class hooks，让 Phase 1 主链路公共页都走同一套 shared public-browse primitives，而不迁移到 `WorkspaceShell`。
+    *   `frontend/src/pages/Conference.css` 仅对 public-browse-in-scope 元素让位给 shared layer，保留非本次范围的 conference/grant apply、editor、review 等页面继续走原规则；`School.css`、`Prize.css`、`Scholars.css`、`Profile.css` 删除或收窄只属于 public browse 的重复规则，保留 route-specific 内容结构。
+    *   `frontend/src/pages/Conferences.test.tsx`、`Grants.test.tsx`、`Prizes.test.tsx` 先补 contract tests，再实现样式统一，锁定 public masthead、标题、元信息、CTA 以及 prize hub/detail teaser 链路。
+*   **验证记录**:
+    *   preflight baseline 通过：`cd frontend && npm run test:run -- src/pages/Conferences.test.tsx src/pages/Grants.test.tsx src/pages/Schools.test.tsx src/pages/Scholars.test.tsx src/pages/Prizes.test.tsx src/pages/Newsletters.test.tsx src/pages/Publications.test.tsx src/pages/Videos.test.tsx src/pages/Partners.test.tsx src/pages/Governance.test.tsx src/pages/Outreach.test.tsx`，`11` 个 test files、`40` 个 tests 全部通过。
+    *   preflight build 通过：`cd frontend && npm run build`。
+    *   新增 contract tests 后执行通过：`cd frontend && npm run test:run -- src/pages/Conferences.test.tsx src/pages/Grants.test.tsx src/pages/Prizes.test.tsx`，`3` 个 test files、`19` 个 tests 全部通过。
+    *   Phase 1 regression 通过：`cd frontend && npm run test:run -- src/pages/Conferences.test.tsx src/pages/Grants.test.tsx src/pages/Schools.test.tsx src/pages/Scholars.test.tsx src/pages/Prizes.test.tsx src/pages/ConferenceDetail.test.tsx src/pages/ScholarProfile.test.tsx`，`7` 个 test files、`29` 个 tests 全部通过。
+    *   最终 build 通过：`cd frontend && npm run build`（`tsc -b && vite build`）。
+    *   browser acceptance 通过：本地 Vite dev server 在 `http://127.0.0.1:4176` 下成功加载 `/conferences`、`/grants`、`/schools`、`/scholars`、`/prizes`，并抽查了 detail surfaces：`/conferences/asiamath-2026-shanghai`、`/grants/integration-grant-2026-travel-support`、`/schools/algebraic-geometry-research-school-2026`、`/prizes/asiamath-early-career-prize-2026`；shared masthead、title rhythm、card/aside hierarchy 均可见，控制台无 runtime errors。`/scholars/prof-reviewer` 在当前 dev data 下呈现 unavailable state，但 header / empty-state surface 正常，且无 console errors。
+*   **边界与说明**:
+    *   本轮严格只做 Phase 1：`/conferences`、`/conferences/:slug`、`/grants`、`/grants/:slug`、`/schools`、`/schools/:slug`、`/scholars`、`/scholars/:slug`、`/prizes`、`/prizes/:slug`。
+    *   没有进入 Phase 2；`newsletter / publications / videos / partners / governance / outreach` 的 public breadth surfaces 未在本轮修改。
+    *   没有改 `WorkspaceShell`、apply flows、`/me/*`、reviewer / organizer / admin workflow、login / register，也没有触碰 account-menu 那批无关工作。
+    *   homepage dark hero 仍只属于 `/portal`；本轮统一的是 secondary public pages 的 body language，而不是把二级 public pages 改成第二个 homepage hero。
+*   **下一步**: 如需继续 public browse 统一，下一轮可按既有 spec/plan 做 Phase 2，把 newsletter / publications / videos / partners / outreach / governance 拉到同一 shared public-browse grammar。
+
+### 2026-04-27 (Session 35)
+*   **Agent 角色**: Coding Agent (Account menu / auth return baseline repair)
+*   **完成 Feature**: `PORTAL` account-menu + auth-return-flow baseline repair
+*   **变更记录**:
+    *   `frontend/src/features/navigation/accountMenu.ts` 与 `authReturn.ts` 新增共享 applicant account IA 与 `returnTo` helper；`WorkspaceShell.tsx` 正式接入可选 `accountMenu` 契约，修复 clean worktree 因 `Shell.test.tsx` 先于实现落地而导致的 build baseline 断裂。
+    *   `frontend/src/components/layout/PublicPortalNav.tsx` 改为消费共享 applicant account menu；public-shell `Log out` 现在会清 token 并停留在当前 public route，而不是强制跳回 `/portal`。`Login.tsx` / `Register.tsx` 同时改为通过共享 helper 读取和透传 `returnTo`。
+    *   `frontend/src/features/navigation/workspaceAccountMenu.ts` 作为薄适配层接入 shared applicant account IA，并把 `Account` 菜单 rollout 到 applicant-owned workspace surfaces：`Dashboard`、`MyApplications`、`MyApplicationDetail`、`MeProfile`、signed-in `ConferenceApply`、signed-in `GrantApply`。
+    *   applicant protected-route / auth-entry 行为收口：`Dashboard`、`MyApplications`、`MyApplicationDetail`、`MeProfile` 现在在未登录时会带 `returnTo` 跳到 `Login`；signed-out `ConferenceApply` / `GrantApply` 的 `Go to login` CTA 也会保留原目标页。
+    *   移除了 dashboard-local logout affordance 和残留 `.logout-btn` 样式；同时补强 `WorkspaceShell` account menu 的可访问性语义与 dismiss 行为（`aria-haspopup="menu"`、Escape dismiss、outside-click dismiss），并把静态 applicant link 列表收口成不可变定义。
+    *   新增或扩展测试：`Login.test.tsx`、`Register.test.tsx`、`Dashboard.test.tsx`、`MyApplications.test.tsx`、`MyApplicationDetail.test.tsx`、`ConferenceApply.test.tsx`、`GrantApply.test.tsx`，锁定 public-origin auth return、workspace logout、protected-route `returnTo`、以及 signed-in applicant account menu 可见性。
+*   **验证记录**:
+    *   clean worktree preflight 先复现旧基线问题：`cd frontend && npm run build` 因 `Shell.test.tsx` 中的 `accountMenu` 契约与 committed `WorkspaceShell` 实现不一致而失败。
+    *   Unit A focused verification 通过：`cd frontend && npm run test:run -- src/components/layout/Shell.test.tsx src/components/layout/PublicPortalNav.test.tsx src/pages/Login.test.tsx src/pages/Register.test.tsx`，`4` 个 test files、`12` 个 tests 全部通过；随后 `cd frontend && npm run build` 通过。
+    *   Unit B focused verification 通过：`cd frontend && npm run test:run -- src/pages/Dashboard.test.tsx src/pages/MyApplications.test.tsx src/pages/MyApplicationDetail.test.tsx src/pages/ConferenceApply.test.tsx src/pages/GrantApply.test.tsx`，`5` 个 test files、`36` 个 tests 全部通过；随后 `cd frontend && npm run build` 通过。
+    *   最终整组 targeted regression 通过：`cd frontend && npm run test:run -- src/components/layout/Shell.test.tsx src/components/layout/PublicPortalNav.test.tsx src/pages/Login.test.tsx src/pages/Register.test.tsx src/pages/Dashboard.test.tsx src/pages/MyApplications.test.tsx src/pages/MyApplicationDetail.test.tsx src/pages/ConferenceApply.test.tsx src/pages/GrantApply.test.tsx`，`9` 个 test files、`48` 个 tests 全部通过。
+    *   最终 `cd frontend && npm run build`（`tsc -b && vite build`）通过，无类型或构建错误。
+    *   browser-level acceptance 通过：
+        *   signed-in `/schools` 可见 `Account`，点击 `Log out` 后仍停留在 `/schools`，且 `Sign in` 恢复可见，`localStorage.token` 被清空。
+        *   signed-in `/me/applications` 可见 `Account`；点击 `Log out` 后回到 `/portal`，且 `localStorage.token` 被清空。
+        *   上述浏览器交互后 `agent-browser` console errors 为空。
+    *   final verification 过程中发现 `Register.test.tsx` 在大批量 suite 下存在时序性假红；根因是成功跳转断言使用同步 `getByText`。已在 `Login.test.tsx` / `Register.test.tsx` 中改成 `findByText`，复跑整组 regression 后稳定通过。
+*   **边界与说明**:
+    *   本轮只修 account-menu / auth-return-flow 基线，不涉及 public-page visual unification、homepage palette、或 reviewer / organizer / admin account menu。
+    *   `MeProfile` 的 protected-route 行为已收口，但本轮没有新增单独的 `MeProfile.test.tsx`；相关 deterministic redirect 主要通过代码审查与 scoped route behavior 一致性确认。
+    *   browser acceptance 对 auth return 的“成功后回原页”更多依赖 Vitest，因为本地浏览器验收环境没有稳定的 live auth backend 参与整条登录成功链路。
+*   **下一步**: 在此基线已恢复后，重新回到 `docs/superpowers/plans/2026-04-27-public-page-visual-unification-implementation.md` 的 `Phase 1`，用新的 clean worktree 执行 public browse surfaces 的 body-style unification，而不再被 `WorkspaceShell/accountMenu` 的 preflight blocker 卡住。
+
+### 2026-04-27 (Session 34)
+*   **Agent 角色**: Coding Agent (Homepage UI priority pass)
+*   **完成 Feature**: `PORTAL` homepage readability / hierarchy refinement
+*   **变更记录**:
+    *   `frontend/src/pages/Portal.tsx` / `Portal.css` 依照 2026-04-27 UI priority addendum 收口首页 hero：移除了 hero 右侧重复的 featured opportunity card，把右侧 panel 收回到纯 summary / orientation 角色，避免与主标题和下方 `Featured opportunities` 区块竞争。
+    *   `frontend/src/styles/tokens.css` 新增 dark-surface text tokens，并重新校准 public-facing `navy / stone / accent` 基础色值，让 hero 和浅色 surface 的对比关系更明确。
+    *   `frontend/src/pages/Portal.css` 提升了 hero headline、lede、stats、summary panel 的可读性，减弱了 grid / glow 的噪音，并统一了 hero CTA 与下方卡片的圆角和 surface grammar。
+    *   `frontend/src/components/layout/PublicPortalNav.css` 做轻量减重：降低 topbar prominence，收紧 nav height 与 link padding，减轻 `Sign in` 的视觉体量，但不改动 nav IA。
+    *   `frontend/src/pages/Portal.test.tsx` 新增失败后转绿的约束，锁定“featured opportunity 链接只应出现在 featured section，而不应在 hero 内重复”。
+*   **验证记录**:
+    *   按 TDD 先补 `src/pages/Portal.test.tsx` 的失败用例，再执行通过 `cd frontend && npm run test:run -- src/pages/Portal.test.tsx`。
+    *   执行通过 `cd frontend && npm run test:run -- src/components/layout/PublicPortalNav.test.tsx src/pages/Schools.test.tsx src/pages/ConferenceDetail.test.tsx`，`3` 个 test files、`8` 个 tests 全部通过。
+    *   执行通过 `cd frontend && npm run build`（`tsc -b && vite build`），无类型或构建错误。
+    *   浏览器验收通过：本地 `vite` dev server 在 `http://127.0.0.1:4173` 下可正常打开 `/portal` 与 `/schools`；`/portal` hero 内已不再出现重复 featured link，`/schools` 仍保留统一 public masthead，控制台无 runtime errors。
+*   **边界与说明**:
+    *   本轮只处理 UI 优先级最高的问题：可读性、hero hierarchy、palette 收敛、masthead 减重。
+    *   没有重做 section order，没有扩展新模块，也没有把 application flows 或 authenticated shell 拉进同一轮视觉重构。
+    *   颜色方向仍可能继续微调；这轮的目标是先从“读不清、抢焦点、风格不收口”退回到更稳定的 public homepage。
+*   **下一步**: 如果继续深化，建议先做一轮纯视觉 polish：更细的 palette tuning、hero / section vertical rhythm、以及 `Featured opportunities` 与 `Schools` 卡片在 typography 上的进一步统一。
+
+### 2026-04-27 (Session 33)
+*   **Agent 角色**: Coding Agent (Public shell consistency follow-up)
+*   **完成 Feature**: `PORTAL` public masthead rollout across visitor-facing pages
+*   **变更记录**:
+    *   将统一的 `PublicPortalNav` masthead 从 `/portal` / `/scholars` 扩展到 homepage nav 直接可达的 public pages 与其 detail pages：`Conferences`、`ConferenceDetail`、`Grants`、`GrantDetail`、`Schools`、`SchoolDetail`、`Prizes`、`PrizeDetail`、`ScholarProfile`、`Newsletters` / `NewsletterDetail`、`Publications` / `PublicationDetail`、`Videos` / `VideoDetail`。
+    *   继续把同一套 public shell 接到 public preview surfaces：`Partners`、`Governance`、`Outreach`，避免从 public detail teaser 深入后又掉回旧壳。
+    *   为 `Schools`、`ConferenceDetail`、`Partners`、`Governance`、`Outreach` 补充测试断言，锁定 “visitor-facing 页面必须保留 `Public sections` 导航” 这一约束。
+*   **验证记录**:
+    *   按 TDD 先让 `src/pages/Schools.test.tsx` 与 `src/pages/ConferenceDetail.test.tsx` 因缺少 public masthead 而失败，再完成实现。
+    *   执行通过 `cd frontend && npm run test:run -- src/pages/Schools.test.tsx src/pages/ConferenceDetail.test.tsx src/pages/Conferences.test.tsx src/pages/Grants.test.tsx src/pages/Prizes.test.tsx src/pages/ScholarProfile.test.tsx`，`6` 个 test files、`24` 个 tests 全部通过。
+    *   执行通过 `cd frontend && npm run test:run -- src/pages/Newsletters.test.tsx src/pages/Publications.test.tsx src/pages/Videos.test.tsx`，`3` 个 test files、`14` 个 tests 全部通过。
+    *   执行通过 `cd frontend && npm run test:run -- src/pages/Partners.test.tsx src/pages/Governance.test.tsx src/pages/Outreach.test.tsx`，`3` 个 test files、`5` 个 tests 全部通过。
+    *   浏览器抽查通过：本地 `vite` dev server 在 `http://127.0.0.1:4173` 正常提供 `/portal` 与 `/schools`，`/schools` 页面可见新的 `Public sections` masthead，控制台无 runtime errors。
+    *   执行通过 `cd frontend && npm run build`（`tsc -b && vite build`），无类型或构建错误。
+*   **边界与说明**:
+    *   本轮没有改色板，只推进 public shell 一致性；首页当前 palette 仍待后续单独调校。
+    *   `ConferenceApply` / `GrantApply` 仍保留 `WorkspaceShell`，因为它们已经进入 applicant-flow 语义，而不是纯 visitor-facing browse surface。
+    *   工作区中 account-menu 相关未提交改动继续保持未触碰。
+*   **下一步**: 如果继续深化 public 体验，优先做两件事：1) 重新校准 homepage / masthead 的色彩与对比度；2) 决定是否把 `WorkspaceShell` 的申请页也拉到更接近 public shell 的视觉语言，还是明确维持“浏览页 / 申请页”两套层级。
+
+### 2026-04-26 (Session 32)
+*   **Agent 角色**: Coding Agent (Homepage fidelity / public navigation follow-up)
+*   **完成 Feature**: `PORTAL` homepage fidelity pass + public return-context repair
+*   **变更记录**:
+    *   `frontend/src/components/layout/PublicPortalNav.tsx` / `PublicPortalNav.css` 重做 public masthead：加入 slim topbar、editorial-style nav shell、brand mark、参考稿风格的 topbar links，同时保留 resources dropdown 与 account / sign-in 分支。
+    *   `frontend/src/pages/Portal.tsx` / `Portal.css` 把 `/portal` 从“结构已对齐”的版本推进到更接近 `asiamath-home-fixed.html` 的高保真实现：深色 hero、grid/glow 背景、`Network at a glance` hero panel、hero stat strip、以及更接近参考稿的 section typography / pacing / card treatment。
+    *   `frontend/src/styles/tokens.css` 切换到更接近参考稿的 public typography 与 palette：`EB Garamond + DM Sans + DM Mono`，并把 accent / canvas / panel 色值向参考 HTML 收拢。
+    *   修复 public portal 返回链：`PublicPortalNav` 现在会在 portal-origin 或已有 return context 存在时把 state 继续传递到 public pages；`Scholars` / `ScholarSummaryCard` 与 `Schools` / `SchoolDetail` 也补齐了 list → detail → parent → portal 的 chained return-state 传播，不再从首页导航点进去后失去返回入口。
+*   **验证记录**:
+    *   改动前执行通过 `cd frontend && npm run test:run -- src/components/layout/PublicPortalNav.test.tsx src/pages/Portal.test.tsx src/pages/Schools.test.tsx src/pages/Scholars.test.tsx src/pages/ScholarProfile.test.tsx`。
+    *   改动前执行通过 `cd frontend && npm run build`（`tsc -b && vite build`）。
+    *   按 TDD 先补 portal return-context 失败测试，再执行通过 `cd frontend && npm run test:run -- src/components/layout/PublicPortalNav.test.tsx src/pages/Scholars.test.tsx src/pages/Schools.test.tsx`。
+    *   按 TDD 补 homepage fidelity 结构测试，再执行通过 `cd frontend && npm run test:run -- src/pages/Portal.test.tsx`。
+    *   执行通过 focused regression：`cd frontend && npm run test:run -- src/components/layout/PublicPortalNav.test.tsx src/pages/Portal.test.tsx src/pages/Schools.test.tsx src/pages/Scholars.test.tsx src/pages/ScholarProfile.test.tsx`，`5` 个 test files、`16` 个 tests 全部通过。
+    *   执行通过 public-breadth regression：`cd frontend && npm run test:run -- src/pages/ConferenceDetail.test.tsx src/pages/Prizes.test.tsx src/pages/Partners.test.tsx`，`3` 个 test files、`5` 个 tests 全部通过。
+    *   执行通过 `cd frontend && npm run build`（`tsc -b && vite build`），无类型或构建错误。
+*   **边界与说明**:
+    *   本轮没有扩展 backend，没有新增 real scholar search/filtering，也没有改 authenticated dashboard 或 account-menu in-progress 分支。
+    *   高保真目标是“视觉上明显接近参考 HTML”，不是直接拷贝静态 DOM；当前 React 数据结构、homepage section order、`M4` 位置与 hybrid provider 方案保持不变。
+    *   还没有做 browser-level acceptance，也没有逐页对 conference / grants / schools / scholars 的列表/detail 进行统一视觉重构；本轮只修它们的 portal return chain。
+*   **下一步**: 做 browser-level acceptance，重点检查 `/portal` hero / masthead 的实际呈现、`/portal -> /schools -> /schools/:slug -> back` 等公共链路，以及移动端 nav 收起后的可用性；若继续深化，再决定是否把 conference / grants / scholars page 自身也拉到与首页更一致的视觉语言。
+
+### 2026-04-26 (Session 31)
+*   **Agent 角色**: Coding Agent (Public portal / M4 breadth slice)
+*   **完成 Feature**: `PORTAL` homepage rebuild + `M4` public-directory demo slice
+*   **变更记录**:
+    *   `frontend/src/components/layout/PublicPortalNav.tsx` 新增 `Scholars` 公共导航入口，并以现有 React 架构补齐 `frontend/src/pages/Scholars.tsx` / `Scholars.css` / `Scholars.test.tsx`，让 `M4` 从单个 profile detail 扩展成可浏览的公共目录页。
+    *   `frontend/src/features/profile/` 新增 hybrid scholar directory 层：扩展 list-level public scholar / expertise cluster types，加入 `directorySeed.ts` 与 `scholarDirectoryProvider.ts`，并复用 editable public profile，让 `alice-chen-demo` 能在 public visibility 打开时稳定出现在目录与首页 teaser 里。
+    *   `frontend/src/features/portal/homepageViewModel.ts` 与 `frontend/src/pages/Portal.tsx` / `Portal.css` 重建 `/portal` 首页结构：hero 后依次呈现 featured opportunities、school spotlights、`Scholars & expertise` mixed teaser，并保留 `Browse Scholar Directory` 入口，符合 2026-04-26 版 homepage + M4 design spec。
+    *   `frontend/src/pages/ConferenceDetail.tsx` 新增 `Related scholar context` 侧栏卡片，把 conference public detail 显式连到 `/scholars/alice-chen-demo`；`frontend/src/pages/Prizes.tsx` 改成 hub + archive 结构，`frontend/src/pages/PrizeDetail.tsx` 把 scholar CTA 明确成 `View sample laureate profile`，让 `M4` 在 `M2` / `M6` demo surface 中可见复用。
+*   **验证记录**:
+    *   改动前执行通过 `cd frontend && npm run test:run -- src/pages/Portal.test.tsx src/pages/Prizes.test.tsx src/pages/ScholarProfile.test.tsx src/pages/Partners.test.tsx`。
+    *   执行通过 targeted tests：
+        *   `cd frontend && npm run test:run -- src/components/layout/PublicPortalNav.test.tsx`
+        *   `cd frontend && npm run test:run -- src/features/profile/scholarDirectoryProvider.test.ts`
+        *   `cd frontend && npm run test:run -- src/components/layout/Shell.test.tsx src/pages/Scholars.test.tsx`
+        *   `cd frontend && npm run test:run -- src/features/portal/homepageViewModel.test.ts src/pages/Portal.test.tsx`
+        *   `cd frontend && npm run test:run -- src/pages/ConferenceDetail.test.tsx src/pages/Prizes.test.tsx`
+    *   执行通过 `cd frontend && npm run test:run -- src/components/layout/PublicPortalNav.test.tsx src/features/profile/scholarDirectoryProvider.test.ts src/pages/Scholars.test.tsx src/features/portal/homepageViewModel.test.ts src/pages/Portal.test.tsx src/pages/ConferenceDetail.test.tsx src/pages/Prizes.test.tsx src/pages/ScholarProfile.test.tsx src/pages/Partners.test.tsx`：`9` 个 test files、`19` 个 tests 全部通过。
+    *   执行通过 `cd frontend && npm run build`（`tsc -b && vite build`），无类型或构建错误。
+*   **边界与说明**:
+    *   本轮没有新增任何 backend endpoint；`/scholars` 仍是 hybrid/demo data slice，由 seeded public scholars 加上当前 editable public profile 组成。
+    *   本轮只扩展 public breadth surfaces，没有把 scholar search、real filtering、institution browse、review-only scholar context、或新的 dashboard flow 一并拉进来。
+    *   工作区里其他与 account menu / auth shell 相关的本地修改继续保持未触碰、未提交。
+*   **下一步**: 做一轮 browser-level acceptance，确认 `/portal`、`/scholars`、conference detail、prize hub 的实际视觉与 click path 符合 demo narration；如果继续深化 `M4`，优先考虑 real scholar list contract 或更多 school / prize / partner 的 scholar-context reuse。
+
+### 2026-04-26 (Session 30)
+*   **Agent 角色**: Coding Agent (Demo rehearsal follow-up)
+*   **完成 Feature**: `DEMO-POLISH-001` 手测后修补
+*   **变更记录**:
+    *   修复 `frontend/src/pages/ConferenceApply.tsx` 在 reload 一个已提交 conference application 时仍显示 `Draft in progress` 的状态漂移；现在已提交记录会显示 `Submitted and under review`。
+    *   同步收口 `frontend/src/features/conference/ConferenceApplyForm.tsx` 的交互状态：当 `application.status === submitted` 时，表单字段、`Save draft` 与 `Submit application` 都会锁成只读，避免 reload 后仍出现可编辑假象。
+    *   新增 `ConferenceApply.test.tsx` 覆盖“已提交后重开页面”的 presenter-safe 行为，确保不再回退到 draft banner。
+*   **验证记录**:
+    *   改动前执行通过 `cd frontend && npm run test:run -- src/pages/ConferenceApply.test.tsx`。
+    *   按 TDD 先补失败测试，再执行同一命令，`1` 个 test file、`6` 个 tests 全部通过。
+    *   执行通过 `cd frontend && npm run test:run -- src/pages/ConferenceApply.test.tsx src/pages/MyApplications.test.tsx`：`2` 个 test files、`17` 个 tests 全部通过。
+    *   执行通过 `cd frontend && npm run build`（`tsc -b && vite build`），无类型或构建错误。
+*   **边界与说明**:
+    *   本轮只修 conference apply 的 submitted reload 状态，没有扩大到 grant apply 的额外 UX 收口。
+    *   本地未跟踪文件 `docs/planning/asiamath-demo-manual-test-checkpoints-d0.md` 继续按要求保持不提交。
+*   **下一步**: 继续 grant prerequisite / submit 手测，确认 demo applicant 主链已无状态漂移
+
+### 2026-04-26 (Session 29)
+*   **Agent 角色**: Coding Agent (Demo rehearsal follow-up)
+*   **完成 Feature**: `DEMO-POLISH-002` 手测后修补
+*   **变更记录**:
+    *   修复 `frontend/src/pages/MyApplications.tsx` 中 draft 行 CTA `Continue draft` 的落点错误；conference / grant draft 现在会基于真实 `sourceSlug` 返回对应的可编辑 apply 页，而不是统一落到只读的 applicant detail `/me/applications/:id`。
+    *   为此补齐 `GET /api/v1/me/applications` 的 applicant-safe 列表 contract：`backend/src/serializers/applicationDashboard.ts` 现在序列化 `source_slug`，前端 `dashboardMappers` / `types` / fake provider 同步接入 `sourceSlug`，确保列表页在 real-aligned 模式下也能生成稳定的编辑入口。
+    *   扩展 `MyApplications.test.tsx`，覆盖 conference draft 与 grant draft 两条 `continue_draft` 分支，避免后续再把 CTA 退回到只读 detail。
+*   **验证记录**:
+    *   执行通过 `cd frontend && npm run test:run -- src/pages/MyApplications.test.tsx src/features/dashboard/dashboardMappers.test.ts`：`2` 个 test files、`14` 个 tests 全部通过。
+    *   执行通过 `cd backend && npm test -- meApplications.test.ts`：`1` 个 test suite、`6` 个 tests 全部通过。
+    *   执行通过 `cd frontend && npm run test:run -- src/pages/MyApplications.test.tsx src/pages/MyApplicationDetail.test.tsx src/features/dashboard/dashboardMappers.test.ts`：`3` 个 test files、`16` 个 tests 全部通过。
+    *   执行通过 `cd frontend && npm run build`（`tsc -b && vite build`），无类型或构建错误。
+*   **边界与说明**:
+    *   本轮仅修正 `Continue draft` 的导航语义与所需最小 contract 字段，没有扩展新模块，也没有改 applicant detail 的只读设计。
+    *   本地未跟踪文件 `docs/planning/asiamath-demo-manual-test-checkpoints-d0.md` 继续按要求保持不提交。
+*   **下一步**: 继续手测 grant prerequisite / submit 分支，确认 demo rehearsal 其余点击链无断点
+
+### 2026-04-24 (Session 28)
+*   **Agent 角色**: Coding Agent (Demo rehearsal follow-up)
+*   **完成 Feature**: `DEMO-POLISH-002` 手测后修补
+*   **变更记录**:
+    *   修正 `frontend/src/pages/MyApplications.tsx` 的 presenter-safe walkthrough shortcut，不再固定指向 fake detail id `review-application-1`。
+    *   现在当 `My applications` 已有真实 applicant record 时，shortcut 会直接跳到当前列表里的第一条真实记录；当列表为空时，shortcut 会回落到稳定的 `/conferences` 入口，而不是给出会失败的 seeded detail 链接。
+    *   同步更新 `frontend/src/features/demo/demoWalkthrough.ts` 的 applications copy，去掉“seeded detail”假设，并补充 `MyApplications.test.tsx` 覆盖空列表 fallback 与“首条真实记录”两种分支。
+*   **验证记录**:
+    *   按 TDD 先补失败测试，再执行 `cd frontend && npm run test:run -- src/pages/MyApplications.test.tsx`，验证红灯后转绿。
+    *   执行通过 `cd frontend && npm run test:run -- src/pages/MyApplications.test.tsx src/pages/MyApplicationDetail.test.tsx`：`2` 个 test files、`12` 个 tests 全部通过。
+    *   执行通过 `cd frontend && npm run build`（`tsc -b && vite build`），无类型或构建错误。
+    *   复跑浏览器手测：`/me/applications` 顶部 shortcut 已改为 `Open latest walkthrough record`，并实际跳转到真实 draft detail `/me/applications/225b38b9-fa2f-4070-84a0-3879a962b620`。
+*   **边界与说明**:
+    *   本轮只修 walkthrough shortcut 的 real/fake 漂移，没有扩展新的 demo 模块，也没有改后端 schema 或 applicant detail 数据契约。
+    *   本地未跟踪文件 `docs/planning/asiamath-demo-manual-test-checkpoints-d0.md` 继续按要求保持不提交。
+*   **下一步**: 继续 `CP4 rehearsal cut`，优先复测 grant half 与 presenter narration
+
+### 2026-04-24 (Session 27)
+*   **Agent 角色**: Coding Agent (Demo polish)
+*   **完成 Feature**: `DEMO-POLISH-001`
+*   **变更记录**:
+    *   新增共享前端状态组件 `frontend/src/features/demo/DemoStatePanel.tsx` 与 `frontend/src/features/demo/DemoStatusNotice.tsx`，把 demo 页面的 loading / empty / not-found / error 与页内 success / warning / error 反馈统一到同一套 presenter-safe 视觉与文案结构。
+    *   `Conferences` / `ConferenceDetail`、`Grants` / `GrantDetail`、`Schools` / `SchoolDetail`、`Partners`、`Prizes` / `PrizeDetail`、`ScholarProfile` 全部改为在 shell 内渲染一致的状态 panel；conference list/detail 新增真实错误态，grant detail 错误态不再停留在 loading 文案。
+    *   `Dashboard` 的 `My applications` 卡片现在区分 empty / error / record-present 三种状态；空工作区与加载失败都改成统一 state panel，而不是零散说明文字。
+    *   `MyApplications` 改为在加载失败时显示 dedicated error state，不再一边报错一边渲染两个空 section；section 级 empty hint 也收敛到 compact state panel。
+    *   `MyApplicationDetail` 现在区分 `loading / not_found / error / ready`，避免把后端失败误报成“Application not found”；错误/缺失状态仍保留稳定返回链。
+    *   `ConferenceApply` 与 `GrantApply` 补了统一的页内 notice：保存成功、提交成功、blocked prerequisite、保存/提交失败都走同一 affordance；同时修正“页面 hydrate 到已有 draft 就显示 Draft saved”的语义错误，现改为明确的 “draft already on file / draft in progress”。
+    *   `MeProfile` 现在在 load failure 时使用统一 page state，并在成功保存后显示明确的 success notice，而不只是在 badge 上切到 `saved`。
+*   **验证记录**:
+    *   改动前执行通过 `cd frontend && npm run test:run -- src/pages/Conferences.test.tsx src/pages/Grants.test.tsx src/pages/Dashboard.test.tsx src/pages/MyApplications.test.tsx src/pages/MyApplicationDetail.test.tsx src/pages/ConferenceApply.test.tsx src/pages/GrantApply.test.tsx src/pages/MeProfile.test.tsx src/pages/Schools.test.tsx src/pages/Partners.test.tsx src/pages/Prizes.test.tsx src/pages/ScholarProfile.test.tsx`
+    *   按 TDD 先补失败测试，再执行同一组 page tests，`12` 个 test files、`55` 个 tests 全部通过。
+    *   执行通过 `cd frontend && npm run test:run`：`28` 个 test files、`102` 个 tests 全部通过。
+    *   执行通过 `cd frontend && npm run build`（`tsc -b && vite build`），无类型或构建错误。
+*   **边界与说明**:
+    *   本轮只处理 demo 页面的状态一致性、presenter-safe 成功/错误反馈与 applicant/public breadth 的状态收口，没有修改后端 schema、没有扩展新模块、没有把 organizer/reviewer 额外重构进来。
+    *   本地未跟踪文件 `docs/planning/asiamath-demo-manual-test-checkpoints-d0.md` 按要求保持不提交。
+*   **下一步**: `CP4 rehearsal cut` 手测 / walkthrough rehearsal
+
+### 2026-04-24 (Session 26)
+*   **Agent 角色**: Coding Agent (Demo polish)
+*   **完成 Feature**: `DEMO-POLISH-002`
+*   **变更记录**:
+    *   在前端新增共享 `demoWalkthrough` / `DemoShortcutPanel`，把 demo-only walkthrough 文案、稳定入口和 presenter-safe shortcut 数据集中到一个前端 helper 层，避免 portal、dashboard、applications、detail 各自漂移。
+    *   `Portal.tsx` 新增 “Presenter-safe demo flow” 区块，补了从 public conferences → sign-in → my applications 的稳定演示起点，并把 portal → my applications 的返回链显式化。
+    *   `Dashboard.tsx` 新增 “Presenter-safe walkthrough” 区块，并让 “Open my applications” 带上返回上下文，确保从 applicant workspace 进入列表页后仍能稳定回到 dashboard。
+    *   `MyApplications.tsx` 现在会读取调用方 `returnContext`，在页头显示可追溯返回入口，新增 seeded walkthrough record shortcut，并把 browse/detail 链路统一挂上返回状态，减少演示时的导航恢复成本。
+    *   `MyApplicationDetail.tsx` 现在支持调用方自定义返回文案，同时新增 “Presenter shortcuts” 侧栏，提供 dashboard / portal 快捷跳转，形成稳定的“开始、继续、重启”演示链。
+    *   补充并通过了 `Portal`、`Dashboard`、`MyApplications`、`MyApplicationDetail` 的测试，覆盖 walkthrough helper、shortcut CTA 与 return-context 文案。
+*   **验证记录**:
+    *   改动前执行通过 `cd frontend && npm run test:run -- src/pages/Portal.test.tsx src/pages/Dashboard.test.tsx src/pages/MyApplications.test.tsx src/pages/MyApplicationDetail.test.tsx`，确认相关页面起始状态干净。
+    *   按 TDD 先补失败测试，再执行同一组 targeted tests，`4` 个 test files、`15` 个 tests 全部通过。
+    *   执行通过 `cd frontend && npm run test:run`：`28` 个 test files、`97` 个 tests 全部通过。
+    *   执行通过 `cd frontend && npm run build`（`tsc -b && vite build`），无类型或构建错误。
+*   **边界与说明**:
+    *   本轮只处理 demo-only walkthrough data、click path、presenter-safe shortcuts 与返回链，不调整后端 schema、不扩展新模块、不顺手做 `DEMO-POLISH-001`。
+    *   本地未跟踪文件 `docs/planning/asiamath-demo-manual-test-checkpoints-d0.md` 按要求保持不提交。
+*   **下一步**: `DEMO-POLISH-001`
+
+### 2026-04-22 (Session 25)
+*   **Agent 角色**: Coding Agent (Frontend / Contract Realignment)
+*   **完成 Feature**: `FE-PORTAL-001` 与 `REVIEW` 后端新 contract 对齐（PR #11 follow-up）
+*   **上下文**:
+    *   PR #11 审阅期间，`REVIEW` Epic（PR #13，commits `aca02e7` / `a06f0ff` / `ec76b55`）合并进 main，改写了 `GET /api/v1/me/applications` 的响应为 applicant-safe 形状。
+    *   `feature/portal` fast-forward 合入最新 main 后，原 FE-PORTAL-001 仪表板类型/映射/UI/测试对应的是旧 payload（`status` / `conference_slug` / `grant_slug` / `decision`），与新 applicant-safe 契约不一致 —— 标题回退、status tone、released result 渲染与 CTA 都会在真实数据上漂移。
+    *   同事在 PR #11 评论中点出此问题并明确建议"不要回滚后端，在 `feature/portal` 上小改对齐"；本轮即为该对齐。
+*   **变更记录**:
+    *   `frontend/src/features/dashboard/types.ts` 改为 applicant-safe 域模型：`ViewerStatus`（`draft` / `under_review` / `result_released`）、`NextAction`（`continue_draft` / `view_submission` / `view_result` / `submit_post_visit_report`）、`ReleasedDecision`（`decisionKind` / `finalStatus` / `displayLabel` / `releasedAt`），`MyApplication` 不再包含 `status` / `conference_slug` / `grant_slug` / `decision`，而是 `sourceId` / `sourceTitle` / `linkedConferenceTitle` / `viewerStatus` / `releasedDecision` / `nextAction` / `postVisitReportStatus`。
+    *   `frontend/src/features/dashboard/dashboardMappers.ts` 重写 `TransportMyApplication` 与 `fromTransportMyApplication`，把新 snake_case 响应（含 nested `released_decision`）映射到新域模型。
+    *   `frontend/src/pages/MyApplications.tsx` 重写 row 渲染：badge tone 优先从 `releasedDecision.finalStatus` 推断（accepted → success / waitlisted → warning / rejected → danger），否则按 `viewerStatus` 推断；显示 `sourceTitle`（fallback "Untitled ..."）、grant 行追加 `linkedConferenceTitle`、所有行显示 `Next step: <nextAction>` 文案。
+    *   移除了所有 slug-based CTA（旧 `/conferences/:slug/apply`、`/grants/:slug/apply`、`/conferences/:slug`、`/grants/:slug`）。新 contract 仅暴露 `source_id`、`source_title`，无 slug，因此 dashboard 现在只把 `next_action` 呈现为明确的"下一步"提示，而不是错误的可点链接。"真正的 clickable 目标"需要一个消费 `GET /api/v1/me/applications/:id`（已存在）的专属仪表板详情页（未来独立 PR）。
+    *   `frontend/src/pages/MyApplications.css` 增补 `.my-applications__row-linked` 与 `.my-applications__row-next-action`，仅限页面级样式，未扩展 foundation 全局层。
+    *   新测试覆盖：`dashboardMappers.test.ts` 3 用例（submitted conference、released accepted conference 含 display_label、draft grant with linked_conference_title），`MyApplications.test.tsx` 6 用例（未登录跳转、双空 section、under-review 会议呈现 "Under review" + "Next step: View submission"、draft grant 呈现 Linked conference + "Next step: Continue draft"、released accepted decision 呈现 "Accepted" + "Next step: View result"、混合分组）。
+*   **验证记录**:
+    *   执行通过 `cd frontend && npx vitest run`：`13` 个 test files、`43` 个 tests 全部通过。
+    *   执行通过 `cd frontend && npm run build`（`tsc -b && vite build`），无类型或构建错误。
+    *   执行通过 `cd backend && npx prisma generate`（REVIEW Epic 新增 `Decision` / `UserRole` 等 Prisma 模型后本地 client 未自动再生，backend 套件会因 `Property 'decision' does not exist on PrismaClient` TS 报错而全部失败）。
+    *   执行通过 `cd backend && npm test`（prisma generate 后）：`9` 个 test suites、`39` 个 tests 全部通过；但由于 `feature/portal` 当前还没有 fix `#12`（jest `--runInBand`），并行 SQLite 竞争导致的 flake 依然存在于本分支（5 次抽样中 4 次失败），属于 PR #12 所修；本次改动零后端代码，不新增也不加剧该 flake。
+*   **边界与说明**:
+    *   本轮仅对齐 `frontend/src/features/dashboard/*` 与 `frontend/src/pages/MyApplications.*`。`Portal.tsx`、`Dashboard.tsx`、`App.tsx`、shell 组件与 foundation CSS 均未触碰。
+    *   后端文件零改动，`docs/specs/openapi.yaml` / `docs/planning/` / `backend/prisma/` 均保持只读。
+    *   `next_action` 目前只以文案形式呈现，不绑定 href。给到 clickable 去向需要先落地 `/me/applications/:id` 前端详情页（消费已有的后端 `GET /api/v1/me/applications/:id`）；这属于 `INT-PORTAL-001` 或其前置 FE 补页的范围，不在本轮。
+    *   `released_decision` 的 tone 映射假设前端可以依赖 `finalStatus` 判断 success / warning / danger；`displayLabel` 直接来自后端（例如 grant 的 "Awarded" / "Not awarded"），前端不做二次翻译。
+*   **下一步**: 等 PR #12（`jest --runInBand`）与本轮 PR #11 更新一起 merge，然后在 `feature/portal`（或独立 FE 分支）做两件事：(a) 新建 `/me/applications/:id` 详情页并把 dashboard 的 next step 变成真正的 Link；(b) 补一个 `scripts/me-applications-real-flow-check.mjs` 做真实联调，铺垫 `INT-PORTAL-001`。
+
+### 2026-04-22 (Session 24)
+*   **Agent 角色**: Coding Agent (Frontend)
+*   **完成 Feature**: `FE-PORTAL-001`
+*   **变更记录**:
+    *   新增 `frontend/src/features/dashboard/`：`types.ts`（`MyApplication` 域模型 + `DashboardProvider` 接口）、`dashboardMappers.ts`（snake_case ↔ camelCase）、`httpDashboardProvider.ts`（消费 `GET /me/applications`，复用 localStorage Bearer token）、`fakeDashboardProvider.ts`（提供 `setDashboardFakeState` / `resetDashboardFakeState` 供单测）、`dashboardProvider.ts`（按 `import.meta.env.VITEST` 在 fake/http 之间切换）。
+    *   新增 `frontend/src/api/me.ts` 单一职责 axios wrapper：`fetchMyApplications(token)` → `GET /api/v1/me/applications`。
+    *   新增 `/portal` 公共门户首页（`PortalShell`），列出 conferences / grants 浏览入口和登录/注册/My Applications CTA。
+    *   新增 `/me/applications` Applicant Dashboard 列表页（`WorkspaceShell`），按 conference / grant 双 section 展示当前用户的所有申请，复用 `StatusBadge` 把 `draft / submitted / under_review / decided / withdrawn` 映射到 `neutral / info / warning / success / danger`，并按状态生成 `Continue draft` 或 `View conference / View grant` CTA。
+    *   新增 `frontend/src/pages/MyApplications.css`，仅承载页面级 grid / 间距，所有卡片、徽章、按钮继续复用 foundation `components.css` 中的 `.surface-card`、`.dashboard-widget`、`.conference-primary-link`、`.conference-empty`、`.conference-inline-message`，未引入新的全局视觉层。
+*   **验证记录**:
+    *   新增 `frontend/src/features/dashboard/dashboardMappers.test.ts`（2 用例，覆盖 conference + grant 两种 transport payload 的字段映射），与 `frontend/src/pages/MyApplications.test.tsx`（5 用例：未登录跳转、双空 section、submitted 会议申请呈现 view-conference CTA、draft grant 申请呈现 continue-draft CTA、混合两类 application 时的分组渲染）。
+    *   执行通过 `cd frontend && npx vitest run`，结果为 `12` 个 test files、`35` 个 tests 全部通过。
+    *   执行通过 `cd frontend && npm run build`（`tsc -b && vite build`），无类型或构建错误。
+    *   仓库级 `npm run test:smoke` 在 3 次连续运行中 2 次通过；第 3 次失败为 `tests/grants.test.ts` 后端 flake（详见下方"已知问题"），与本轮前端改动无关（本轮零后端文件改动）。
+*   **边界与说明**:
+    *   未编辑 `frontend/src/App.tsx`（CLAUDE.md 禁止动中央路由），因此公共门户页路由是 `/portal` 而不是 `/`；`/` 仍维持原有 `Navigate to="/login"` 行为。如需把 `/` 改为公共门户入口，应作为独立后续任务由用户决定。
+    *   未触碰 `frontend/src/pages/Dashboard.tsx`：保留其 AUTH-era 占位面板，FE-PORTAL-001 通过新页 `/me/applications` 提供真正的申请列表，二者并存。
+    *   未触碰任何后端代码、数据库迁移、契约文件，本轮改动严格收敛在 `frontend/src/`。
+    *   未触碰 `docs/planning/` 下的 feature-list JSON；保持本仓库 "planning 只读" 约定。
+    *   `INT-PORTAL-001` 依然被阻塞在 `INT-REVIEW-001`：dashboard 上的 `decision` 字段在前后端两侧都按 `null` 处理，`released vs unreleased` 完整语义需要 REVIEW Epic 落地后回头补齐。
+*   **已知问题（pre-existing，与本轮无关）**:
+    *   `cd backend && npm test` 在多次连续运行中存在 ~50% 的 flake（10 次抽样中 5 次失败）：`tests/grants.test.ts` 中 `creates a grant draft only when a submitted linked conference application exists` 与 `updates and submits a grant draft while preserving linked conference rules` 偶发性返回 422 而非预期的 201。失败时根因都指向 `requireEligibleLinkedConferenceApplication` 拒绝 prereq lookup，疑似多 test file 之间通过共享 SQLite 的 cascade-delete 行为产生竞争。该测试在隔离运行（`--runInBand` 单文件）时 100% 通过；本轮前端改动未修改任何后端代码，flake 在 `main` 上即已存在，建议作为独立 BE 修复任务跟进。
+*   **下一步**: 当 `REVIEW` Epic 启动后再回到 `PORTAL`，把 `decision` 字段在 dashboard 上接通 release 语义，并在 `scripts/` 下补一个 `me-applications-real-flow-check.mjs` 真实联调脚本，作为 `INT-PORTAL-001` 的前置铺垫。
 
 ### 2026-04-22 (Session 23)
 *   **Agent 角色**: Coding Agent (Backend)

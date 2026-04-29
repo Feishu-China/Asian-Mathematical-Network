@@ -1,0 +1,519 @@
+import { useEffect, useState, type FormEvent } from 'react';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { WorkspaceShell } from '../components/layout/WorkspaceShell';
+import { PageModeBadge } from '../components/ui/PageModeBadge';
+import { RoleBadge } from '../components/ui/RoleBadge';
+import { StatusBadge } from '../components/ui/StatusBadge';
+import { DemoStatePanel } from '../features/demo/DemoStatePanel';
+import {
+  clearAuthSession,
+  readAuthToken,
+  readStoredAuthUser,
+} from '../features/auth/authSession';
+import { isUnauthorizedSessionError } from '../features/auth/sessionErrors';
+import {
+  DASHBOARD_RETURN_CONTEXT,
+  demoWalkthroughCopy,
+} from '../features/demo/demoWalkthrough';
+import { toReturnToState } from '../features/navigation/authReturn';
+import { readReturnContext } from '../features/navigation/returnContext';
+import { WorkspaceSwitcher } from '../features/navigation/WorkspaceSwitcher';
+import { buildWorkspaceAccountMenu } from '../features/navigation/workspaceAccountMenu';
+import {
+  getApplicantReviewerWorkspaces,
+  writeStoredWorkspace,
+} from '../features/navigation/workspaces';
+import { reviewProvider } from '../features/review/reviewProvider';
+import type {
+  ApplicantApplicationDetail,
+  DecisionFinalStatus,
+  ViewerStatus,
+} from '../features/review/types';
+import './MyApplicationDetail.css';
+import './Review.css';
+
+export const routePath = '/me/applications/:id';
+
+const VIEWER_STATUS_LABELS: Record<ViewerStatus, string> = {
+  draft: 'Draft',
+  under_review: 'Under review',
+  result_released: 'Result released',
+};
+
+const VIEWER_STATUS_TONES: Record<ViewerStatus, 'neutral' | 'warning' | 'info'> = {
+  draft: 'neutral',
+  under_review: 'warning',
+  result_released: 'info',
+};
+
+const FINAL_STATUS_TONES: Record<DecisionFinalStatus, 'success' | 'warning' | 'danger'> = {
+  accepted: 'success',
+  waitlisted: 'warning',
+  rejected: 'danger',
+};
+
+const APPLICATION_TYPE_LABELS: Record<
+  ApplicantApplicationDetail['applicationType'],
+  string
+> = {
+  conference_application: 'Conference application',
+  grant_application: 'Travel grant application',
+};
+
+const readSourceTitle = (application: ApplicantApplicationDetail) => {
+  if (application.applicationType === 'grant_application') {
+    return application.grantTitle ?? application.conferenceTitle ?? 'Untitled grant';
+  }
+
+  return application.conferenceTitle ?? application.grantTitle ?? 'Untitled conference';
+};
+
+const canSubmitPostVisitReport = (application: ApplicantApplicationDetail) =>
+  application.applicationType === 'grant_application' &&
+  application.releasedDecision?.finalStatus === 'accepted';
+
+export default function MyApplicationDetail() {
+  const { id = '' } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [application, setApplication] = useState<ApplicantApplicationDetail | null>(null);
+  const [loadState, setLoadState] = useState<'loading' | 'ready' | 'not_found' | 'error'>(
+    'loading'
+  );
+  const [reportNarrative, setReportNarrative] = useState('');
+  const [attendanceConfirmed, setAttendanceConfirmed] = useState(true);
+  const [reportSubmitting, setReportSubmitting] = useState(false);
+  const [reportError, setReportError] = useState<string | null>(null);
+  const returnContext = readReturnContext(location.state);
+  const applicantReviewerWorkspaces = getApplicantReviewerWorkspaces(
+    readStoredAuthUser()?.available_workspaces
+  );
+  const accountMenu = buildWorkspaceAccountMenu(() => {
+    clearAuthSession();
+    navigate('/portal');
+  });
+  const backLink = returnContext ?? {
+    to: '/me/applications',
+    label: 'Back to my applications',
+  };
+
+  useEffect(() => {
+    let active = true;
+
+    if (!readAuthToken()) {
+      navigate('/login', { state: toReturnToState(location.pathname) });
+      return;
+    }
+
+    writeStoredWorkspace('applicant');
+
+    setApplication(null);
+    setLoadState('loading');
+    setReportNarrative('');
+    setAttendanceConfirmed(true);
+    setReportSubmitting(false);
+    setReportError(null);
+
+    reviewProvider
+      .getMyApplicationDetail(id)
+      .then((value) => {
+        if (active) {
+          setApplication(value);
+          setLoadState('ready');
+        }
+      })
+      .catch((error) => {
+        if (!active) {
+          return;
+        }
+
+        if (isUnauthorizedSessionError(error)) {
+          clearAuthSession();
+          navigate('/login', { state: toReturnToState(location.pathname) });
+          return;
+        }
+
+        setApplication(null);
+        setLoadState(isNotFoundError(error) ? 'not_found' : 'error');
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [id, location.pathname, navigate]);
+
+  const handlePostVisitReportSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!application) {
+      return;
+    }
+
+    const nextNarrative = reportNarrative.trim();
+    if (!nextNarrative) {
+      setReportError('Please describe the visit before submitting.');
+      return;
+    }
+
+    setReportSubmitting(true);
+    setReportError(null);
+
+    try {
+      const report = await reviewProvider.submitMyPostVisitReport(application.id, {
+        reportNarrative: nextNarrative,
+        attendanceConfirmed,
+      });
+
+      setApplication((current) =>
+        current
+          ? {
+              ...current,
+              postVisitReport: report,
+              postVisitReportStatus: report.status,
+            }
+          : current
+      );
+      setReportNarrative('');
+    } catch (error) {
+      if (isUnauthorizedSessionError(error)) {
+        clearAuthSession();
+        navigate('/login', { state: toReturnToState(location.pathname) });
+        return;
+      }
+
+      setReportError(
+        error instanceof Error
+          ? error.message
+          : 'We could not submit the post-visit report. Please try again.'
+      );
+    } finally {
+      setReportSubmitting(false);
+    }
+  };
+
+  return (
+    <WorkspaceShell
+      eyebrow="Applicant workspace"
+      title={application ? readSourceTitle(application) : 'Application detail'}
+      description={
+        application
+          ? 'Review your submitted materials and any released result without exposing organizer-only workflow state.'
+          : 'Open one applicant-safe application record, result summary, and return path without exposing organizer-only workflow state.'
+      }
+      badges={
+        <>
+          <RoleBadge role="applicant" />
+          <PageModeBadge mode="hybrid" />
+          {application ? (
+            <StatusBadge tone={VIEWER_STATUS_TONES[application.viewerStatus]}>
+              {VIEWER_STATUS_LABELS[application.viewerStatus]}
+            </StatusBadge>
+          ) : (
+            <StatusBadge tone={loadState === 'error' ? 'danger' : 'info'}>
+              {loadState === 'not_found' ? 'Unavailable' : loadState === 'error' ? 'Load failed' : 'Loading detail'}
+            </StatusBadge>
+          )}
+          {application?.releasedDecision ? (
+            <StatusBadge tone={FINAL_STATUS_TONES[application.releasedDecision.finalStatus]}>
+              {application.releasedDecision.displayLabel}
+            </StatusBadge>
+          ) : null}
+        </>
+      }
+      actions={
+        <Link to={backLink.to} state={backLink.state} className="application-detail__back-link">
+          {backLink.label}
+        </Link>
+      }
+      workspaceSwitcher={
+        applicantReviewerWorkspaces.length > 1 ? (
+          <WorkspaceSwitcher
+            currentWorkspace="applicant"
+            availableWorkspaces={applicantReviewerWorkspaces}
+          />
+        ) : undefined
+      }
+      accountMenu={accountMenu}
+      aside={
+        application ? (
+          <div className="application-detail__aside-stack">
+            <div className="surface-card review-sidebar application-detail__aside">
+              <h3>Application snapshot</h3>
+              <div className="review-stack">
+                <p>
+                  <strong>Type:</strong> {APPLICATION_TYPE_LABELS[application.applicationType]}
+                </p>
+                <p>
+                  <strong>Module:</strong> {application.sourceModule}
+                </p>
+                <p>
+                  <strong>Submitted:</strong>{' '}
+                  {application.submittedAt
+                    ? new Date(application.submittedAt).toLocaleString()
+                    : 'Not submitted'}
+                </p>
+                {application.linkedConferenceTitle ? (
+                  <p>
+                    <strong>Linked conference:</strong> {application.linkedConferenceTitle}
+                  </p>
+                ) : null}
+                {application.applicantProfileSnapshot.fullName ? (
+                  <p>
+                    <strong>Profile snapshot:</strong> {application.applicantProfileSnapshot.fullName}
+                  </p>
+                ) : null}
+                {application.applicantProfileSnapshot.institutionNameRaw ? (
+                  <p>
+                    <strong>Institution:</strong>{' '}
+                    {application.applicantProfileSnapshot.institutionNameRaw}
+                  </p>
+                ) : null}
+              </div>
+            </div>
+
+            <section className="surface-card review-sidebar application-detail__aside application-detail__shortcut-panel">
+              <h3>{demoWalkthroughCopy.detail.title}</h3>
+              <p className="application-detail__shortcut-intro">{demoWalkthroughCopy.detail.intro}</p>
+              <div className="application-detail__shortcut-list">
+                <Link
+                  to={DASHBOARD_RETURN_CONTEXT.to}
+                  className="application-detail__shortcut-card"
+                  aria-label={DASHBOARD_RETURN_CONTEXT.label}
+                >
+                  <span className="application-detail__shortcut-card-title">
+                    {DASHBOARD_RETURN_CONTEXT.label}
+                  </span>
+                  <span className="application-detail__shortcut-card-description">
+                    Return to the authenticated workspace summary after narrating this application detail.
+                  </span>
+                </Link>
+              </div>
+            </section>
+          </div>
+        ) : null
+      }
+    >
+      <div className="review-page">
+        {loadState === 'loading' ? (
+          <DemoStatePanel
+            badgeLabel="Loading"
+            title="Loading application detail"
+            description="Preparing the applicant-safe detail record used in the demo walkthrough."
+            tone="info"
+          />
+        ) : loadState === 'error' ? (
+          <DemoStatePanel
+            badgeLabel="Error"
+            title="Application detail unavailable"
+            description="We could not load this application detail right now."
+            tone="danger"
+          />
+        ) : loadState === 'not_found' || !application ? (
+          <DemoStatePanel
+            badgeLabel="Unavailable"
+            title="Application not found"
+            description="This applicant-facing record is unavailable in the current demo dataset."
+            tone="neutral"
+          />
+        ) : null}
+
+        {application?.releasedDecision ? (
+          <section className="surface-card review-panel">
+            <header className="review-panel__header">
+              <div>
+                <h2>Released result</h2>
+                <p className="conference-muted-note">
+                  This is the applicant-visible decision summary for the current application.
+                </p>
+              </div>
+              <StatusBadge tone={FINAL_STATUS_TONES[application.releasedDecision.finalStatus]}>
+                Decision: {application.releasedDecision.displayLabel}
+              </StatusBadge>
+            </header>
+
+            <div className="review-stack">
+              {application.releasedDecision.noteExternal ? (
+                <p className="application-detail__result-note">
+                  {application.releasedDecision.noteExternal}
+                </p>
+              ) : (
+                <p className="review-note">
+                  No external note has been published with this result.
+                </p>
+              )}
+              {application.releasedDecision.releasedAt ? (
+                <p className="review-note">
+                  Released {new Date(application.releasedDecision.releasedAt).toLocaleString()}
+                </p>
+              ) : null}
+            </div>
+          </section>
+        ) : null}
+
+        {application ? <div className="review-grid review-grid--single">
+          <section className="surface-card review-card">
+            <header className="review-card__header">
+              <div>
+                <p className="conference-eyebrow">
+                  {APPLICATION_TYPE_LABELS[application.applicationType]}
+                </p>
+                <h2>Application summary</h2>
+              </div>
+            </header>
+
+            <div className="review-card__meta">
+              {application.statement ? (
+                <p>
+                  <strong>Statement:</strong> {application.statement}
+                </p>
+              ) : null}
+              {application.participationType ? (
+                <p>
+                  <strong>Participation type:</strong> {application.participationType}
+                </p>
+              ) : null}
+              {application.abstractTitle ? (
+                <p>
+                  <strong>Abstract title:</strong> {application.abstractTitle}
+                </p>
+              ) : null}
+              {application.abstractText ? (
+                <p>
+                  <strong>Abstract text:</strong> {application.abstractText}
+                </p>
+              ) : null}
+              {application.applicationType === 'conference_application' ? (
+                <p>
+                  <strong>Travel support:</strong>{' '}
+                  {application.interestedInTravelSupport ? 'Requested' : 'Not requested'}
+                </p>
+              ) : null}
+              {application.travelPlanSummary ? (
+                <p>
+                  <strong>Travel plan:</strong> {application.travelPlanSummary}
+                </p>
+              ) : null}
+              {application.fundingNeedSummary ? (
+                <p>
+                  <strong>Funding need:</strong> {application.fundingNeedSummary}
+                </p>
+              ) : null}
+              {Object.keys(application.extraAnswers).length > 0 ? (
+                <p>
+                  <strong>Additional answers:</strong> {Object.keys(application.extraAnswers).length}{' '}
+                  item(s) recorded
+                </p>
+              ) : null}
+              {application.files.length > 0 ? (
+                <p>
+                  <strong>Files:</strong> {application.files.length} attachment(s)
+                </p>
+              ) : null}
+              {!application.statement &&
+              !application.participationType &&
+              !application.abstractTitle &&
+              !application.abstractText &&
+              !application.travelPlanSummary &&
+              !application.fundingNeedSummary &&
+              Object.keys(application.extraAnswers).length === 0 &&
+              application.files.length === 0 ? (
+                <p className="review-note">
+                  No additional applicant-facing summary fields are available for this application
+                  yet.
+                </p>
+              ) : null}
+            </div>
+          </section>
+
+          {canSubmitPostVisitReport(application) ? (
+            application.postVisitReport ? (
+              <section className="surface-card review-card">
+                <header className="review-card__header">
+                  <div>
+                    <p className="conference-eyebrow">Grant follow-up</p>
+                    <h2>Post-visit report</h2>
+                  </div>
+                </header>
+
+                <div className="review-card__meta">
+                  <p className="application-detail__report-meta">
+                    <strong>Status:</strong> {application.postVisitReport.status}
+                    {application.postVisitReport.submittedAt ? (
+                      <>
+                        {' '}
+                        · submitted{' '}
+                        {new Date(application.postVisitReport.submittedAt).toLocaleString()}
+                      </>
+                    ) : null}
+                  </p>
+                  <p className="application-detail__report-meta">
+                    <strong>Attendance:</strong>{' '}
+                    {application.postVisitReport.attendanceConfirmed
+                      ? 'Confirmed'
+                      : 'Not confirmed'}
+                  </p>
+                  <p className="application-detail__result-note">
+                    {application.postVisitReport.reportNarrative}
+                  </p>
+                </div>
+              </section>
+            ) : (
+              <section className="surface-card review-card">
+                <header className="review-card__header">
+                  <div>
+                    <p className="conference-eyebrow">Grant follow-up</p>
+                    <h2>Submit post-visit report</h2>
+                  </div>
+                </header>
+
+                <form
+                  className="application-detail__report-form"
+                  onSubmit={handlePostVisitReportSubmit}
+                >
+                  <p className="review-note">
+                    Submit one applicant-visible follow-up report for this awarded travel grant.
+                  </p>
+                  <label className="application-detail__report-label">
+                    <span>Report narrative</span>
+                    <textarea
+                      className="application-detail__report-textarea"
+                      value={reportNarrative}
+                      onChange={(event) => setReportNarrative(event.target.value)}
+                      rows={6}
+                      maxLength={4000}
+                      required
+                    />
+                  </label>
+                  <label className="application-detail__report-checkbox">
+                    <input
+                      type="checkbox"
+                      checked={attendanceConfirmed}
+                      onChange={(event) => setAttendanceConfirmed(event.target.checked)}
+                    />
+                    <span>I confirm I attended the supported event.</span>
+                  </label>
+                  {reportError ? (
+                    <p className="application-detail__report-error">{reportError}</p>
+                  ) : null}
+                  <div>
+                    <button type="submit" disabled={reportSubmitting}>
+                      {reportSubmitting ? 'Submitting...' : 'Submit report'}
+                    </button>
+                  </div>
+                </form>
+              </section>
+            )
+          ) : null}
+        </div> : null}
+      </div>
+    </WorkspaceShell>
+  );
+}
+
+const isNotFoundError = (error: unknown) => {
+  if (error && typeof error === 'object' && 'code' in error && error.code === 'NOT_FOUND') {
+    return true;
+  }
+
+  return error instanceof Error && /not found/i.test(error.message);
+};

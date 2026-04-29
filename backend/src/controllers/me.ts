@@ -47,6 +47,7 @@ export const listMyApplications = async (req: Request, res: Response) => {
             releasedAt: true,
           },
         },
+        postVisitReport: { select: { status: true } },
       },
       orderBy: [{ updatedAt: 'desc' }],
     });
@@ -65,6 +66,116 @@ export const listMyApplications = async (req: Request, res: Response) => {
       return;
     }
     res.status(500).json({ message: 'Failed to load applications' });
+  }
+};
+
+const parsePostVisitReportInput = (body: Record<string, unknown>) => {
+  const reportNarrative =
+    typeof body.report_narrative === 'string' ? body.report_narrative.trim() : '';
+  if (!reportNarrative) {
+    throw new Error('REPORT_NARRATIVE_REQUIRED');
+  }
+  if (reportNarrative.length > 4000) {
+    throw new Error('REPORT_NARRATIVE_TOO_LONG');
+  }
+
+  const attendanceConfirmed =
+    typeof body.attendance_confirmed === 'boolean' ? body.attendance_confirmed : true;
+
+  return { reportNarrative, attendanceConfirmed };
+};
+
+const serializePostVisitReport = (report: {
+  id: string;
+  status: string;
+  reportNarrative: string;
+  attendanceConfirmed: boolean;
+  submittedAt: Date | null;
+}) => ({
+  id: report.id,
+  status: report.status,
+  report_narrative: report.reportNarrative,
+  attendance_confirmed: report.attendanceConfirmed,
+  submitted_at: report.submittedAt?.toISOString() ?? null,
+});
+
+export const submitMyPostVisitReport = async (req: Request, res: Response) => {
+  try {
+    const userId = requireAuthenticatedUserId(req);
+    const applicationId = readApplicationId(req);
+
+    const application = await prisma.application.findFirst({
+      where: { id: applicationId, applicantUserId: userId },
+      include: {
+        grant: { select: { reportRequired: true } },
+        decision: { select: { finalStatus: true, releaseStatus: true } },
+        postVisitReport: true,
+      },
+    });
+
+    if (!application) {
+      res.status(404).json({ message: 'Application not found' });
+      return;
+    }
+
+    if (application.applicationType !== 'grant_application') {
+      res
+        .status(422)
+        .json({ message: 'Post-visit reports are only accepted for grant applications' });
+      return;
+    }
+
+    if (
+      !application.decision ||
+      application.decision.releaseStatus !== 'released' ||
+      application.decision.finalStatus !== 'accepted'
+    ) {
+      res
+        .status(422)
+        .json({ message: 'Post-visit reports require a released accepted decision' });
+      return;
+    }
+
+    if (!application.grant?.reportRequired) {
+      res.status(422).json({ message: 'This grant does not require a post-visit report' });
+      return;
+    }
+
+    if (application.postVisitReport) {
+      res.status(409).json({ message: 'A post-visit report has already been submitted' });
+      return;
+    }
+
+    const input = parsePostVisitReportInput(req.body as Record<string, unknown>);
+    const report = await prisma.postVisitReport.create({
+      data: {
+        applicationId: application.id,
+        status: 'submitted',
+        reportNarrative: input.reportNarrative,
+        attendanceConfirmed: input.attendanceConfirmed,
+      },
+    });
+
+    res.status(201).json({
+      data: {
+        post_visit_report: serializePostVisitReport(report),
+      },
+    });
+  } catch (error) {
+    const message = (error as Error).message;
+    if (message === 'UNAUTHORIZED') {
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
+    }
+    if (message === 'REPORT_NARRATIVE_REQUIRED') {
+      res.status(422).json({ message: 'report_narrative is required' });
+      return;
+    }
+    if (message === 'REPORT_NARRATIVE_TOO_LONG') {
+      res.status(422).json({ message: 'report_narrative is too long' });
+      return;
+    }
+    res.status(400).json({ message: 'Invalid post-visit report payload' });
   }
 };
 

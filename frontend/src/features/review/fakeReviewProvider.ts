@@ -10,6 +10,7 @@ import {
   fromTransportReviewerQueueItem,
 } from './reviewMappers';
 import type {
+  PostVisitReport,
   ReviewConflictState,
   ReviewProvider,
 } from './types';
@@ -466,9 +467,43 @@ export const fakeReviewProvider: ReviewProvider = {
       source_module: application.source_module,
       conference_id: application.conference_id,
       conference_title: application.conference_title,
+      grant_id: null,
+      grant_title: null,
+      linked_conference_id: null,
+      linked_conference_title: null,
+      linked_conference_application_id: null,
       viewer_status: readViewerStatus(application),
+      participation_type: application.participation_type,
+      statement: application.statement,
+      abstract_title: application.abstract_title,
+      abstract_text: application.abstract_text,
+      interested_in_travel_support: application.interested_in_travel_support,
+      travel_plan_summary: null,
+      funding_need_summary: null,
+      extra_answers: application.extra_answers,
+      applicant_profile_snapshot: application.applicant_profile_snapshot,
+      files: application.files,
+      submitted_at: application.submitted_at,
       released_decision: toReleasedDecision(application.decision),
+      post_visit_report: null,
+      post_visit_report_status: null,
     });
+  },
+
+  async submitMyPostVisitReport(applicationId, values) {
+    requireToken();
+    await delay();
+    findApplication(applicationId);
+
+    const report: PostVisitReport = {
+      id: `post-visit-report-${applicationId}`,
+      status: 'submitted',
+      reportNarrative: values.reportNarrative.trim(),
+      attendanceConfirmed: values.attendanceConfirmed,
+      submittedAt: now(),
+    };
+
+    return report;
   },
 };
 
