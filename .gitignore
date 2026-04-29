@@ -3,10 +3,15 @@
 .next/
 node_modules/
 .superpowers/
+.worktrees/
 
 backend/dist/
 backend/dev.db
 backend/prisma/dev.db
+packages/shared/dist/
+packages/shared/src/*.js
+packages/shared/src/*.d.ts
 
 *.pyc
 __pycache__/
+.vercel

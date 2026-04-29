@@ -1,11 +1,23 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { WorkspaceShell } from '../components/layout/WorkspaceShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
+import { DemoStatePanel } from '../features/demo/DemoStatePanel';
+import { DemoStatusNotice } from '../features/demo/DemoStatusNotice';
 import { ProfileForm } from '../features/profile/ProfileForm';
 import {
+  clearAuthSession,
+  readAuthToken,
+  readStoredAuthUser,
+} from '../features/auth/authSession';
+import { isUnauthorizedSessionError } from '../features/auth/sessionErrors';
+import { DASHBOARD_RETURN_CONTEXT } from '../features/demo/demoWalkthrough';
+import { readReturnContext } from '../features/navigation/returnContext';
+import { WorkspaceSwitcher } from '../features/navigation/WorkspaceSwitcher';
+import {
+  buildScholarRoute,
   formatDateTime,
   formatVerificationStatus,
   PRIVATE_ONLY_FIELD_LABELS,
@@ -13,19 +25,43 @@ import {
   PUBLIC_PROFILE_FIELD_LABELS,
 } from '../features/profile/profilePresentation';
 import { profileProvider } from '../features/profile/profileProvider';
+import { toReturnToState } from '../features/navigation/authReturn';
+import { buildWorkspaceAccountMenu } from '../features/navigation/workspaceAccountMenu';
+import {
+  getApplicantReviewerWorkspaces,
+  writeStoredWorkspace,
+} from '../features/navigation/workspaces';
 import type { EditableProfile, ProfileFormValues } from '../features/profile/types';
 import './Profile.css';
 
 export const routePath = '/me/profile';
 
 export default function MeProfile() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [profile, setProfile] = useState<EditableProfile | null>(null);
+  const [loadState, setLoadState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [status, setStatus] = useState<'loading' | 'idle' | 'saving' | 'saved' | 'error'>(
     'loading'
   );
+  const returnContext = readReturnContext(location.state);
+  const applicantReviewerWorkspaces = getApplicantReviewerWorkspaces(
+    readStoredAuthUser()?.available_workspaces
+  );
+  const accountMenu = buildWorkspaceAccountMenu(() => {
+    clearAuthSession();
+    navigate('/portal');
+  });
 
   useEffect(() => {
     let cancelled = false;
+
+    if (!readAuthToken()) {
+      navigate('/login', { state: toReturnToState('/me/profile') });
+      return;
+    }
+
+    writeStoredWorkspace('applicant');
 
     profileProvider
       .getMyProfile()
@@ -35,20 +71,28 @@ export default function MeProfile() {
         }
 
         setProfile(value);
+        setLoadState('ready');
         setStatus('idle');
       })
-      .catch(() => {
+      .catch((error) => {
         if (cancelled) {
           return;
         }
 
+        if (isUnauthorizedSessionError(error)) {
+          clearAuthSession();
+          navigate('/login', { state: toReturnToState('/me/profile') });
+          return;
+        }
+
+        setLoadState('error');
         setStatus('error');
       });
 
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [navigate]);
 
   const handleSave = async (values: ProfileFormValues) => {
     setStatus('saving');
@@ -57,25 +101,95 @@ export default function MeProfile() {
       const nextProfile = await profileProvider.updateMyProfile(values);
       setProfile(nextProfile);
       setStatus('saved');
-    } catch {
+    } catch (error) {
+      if (isUnauthorizedSessionError(error)) {
+        clearAuthSession();
+        navigate('/login', { state: toReturnToState('/me/profile') });
+        return;
+      }
+
       setStatus('error');
     }
   };
 
+  const badgeTone =
+    loadState === 'error'
+      ? 'danger'
+      : status === 'saved'
+        ? 'success'
+        : status === 'saving'
+          ? 'warning'
+          : status === 'error'
+            ? 'danger'
+            : 'info';
+  const badgeLabel =
+    loadState === 'error'
+      ? 'Profile unavailable'
+      : status === 'saved'
+        ? 'Saved'
+        : status === 'saving'
+          ? 'Saving'
+          : status === 'error'
+            ? 'Save failed'
+            : loadState === 'loading'
+              ? 'Loading'
+              : 'Ready';
+
   if (!profile) {
     return (
-      <div className="profile-page">
-        {status === 'error' ? 'Unable to load the profile editor.' : 'Loading profile...'}
-      </div>
+      <WorkspaceShell
+        eyebrow="Academic directory"
+        title="Profile"
+        description="Edit the authenticated scholar record here, explain the public/private boundary clearly, and hand off to the public scholar view without changing the underlying PROFILE contract."
+        badges={
+          <>
+            <RoleBadge role="applicant" />
+            <PageModeBadge mode="real-aligned" />
+            <StatusBadge tone={badgeTone}>{badgeLabel}</StatusBadge>
+          </>
+        }
+        actions={
+          <Link
+            to={returnContext?.to ?? DASHBOARD_RETURN_CONTEXT.to}
+            state={returnContext?.state}
+            className="my-applications__section-link"
+          >
+            {returnContext?.label ?? DASHBOARD_RETURN_CONTEXT.label}
+          </Link>
+        }
+        accountMenu={accountMenu}
+        workspaceSwitcher={
+          applicantReviewerWorkspaces.length > 1 ? (
+            <WorkspaceSwitcher
+              currentWorkspace="applicant"
+              availableWorkspaces={applicantReviewerWorkspaces}
+            />
+          ) : undefined
+        }
+      >
+        <div className="profile-page">
+          <DemoStatePanel
+            badgeLabel={loadState === 'error' ? 'Error' : 'Loading'}
+            title={loadState === 'error' ? 'Profile editor unavailable' : 'Loading profile editor'}
+            description={
+              loadState === 'error'
+                ? 'Unable to load the profile editor.'
+                : 'Preparing the authenticated scholar profile used across the demo.'
+            }
+            tone={loadState === 'error' ? 'danger' : 'info'}
+          />
+        </div>
+      </WorkspaceShell>
     );
   }
 
-  const badgeTone =
-    status === 'saved' ? 'success' : status === 'saving' ? 'warning' : status === 'error' ? 'danger' : 'info';
   const publicScholarHref = `/scholars/${profile.slug}`;
   const visibilityLabel = profile.isProfilePublic
     ? 'Public scholar page is enabled'
     : 'Hidden from visitor route';
+  const publicPreviewLine = [profile.title, profile.institutionNameRaw, profile.countryCode]
+    .filter(Boolean)
+    .join(' · ');
 
   return (
     <WorkspaceShell
@@ -86,11 +200,47 @@ export default function MeProfile() {
         <>
           <RoleBadge role="applicant" />
           <PageModeBadge mode="real-aligned" />
-          <StatusBadge tone={badgeTone}>{status}</StatusBadge>
+          <StatusBadge tone={badgeTone}>{badgeLabel}</StatusBadge>
         </>
       }
+      actions={
+        <Link
+          to={returnContext?.to ?? DASHBOARD_RETURN_CONTEXT.to}
+          state={returnContext?.state}
+          className="my-applications__section-link"
+        >
+          {returnContext?.label ?? DASHBOARD_RETURN_CONTEXT.label}
+        </Link>
+      }
+      workspaceSwitcher={
+        applicantReviewerWorkspaces.length > 1 ? (
+          <WorkspaceSwitcher
+            currentWorkspace="applicant"
+            availableWorkspaces={applicantReviewerWorkspaces}
+          />
+        ) : undefined
+      }
+      accountMenu={accountMenu}
     >
       <div className="profile-page">
+        {status === 'saved' ? (
+          <DemoStatusNotice
+            tone="success"
+            badgeLabel="Saved"
+            title="Profile changes saved"
+            description="The private editor and public scholar preview now reflect the latest profile fields."
+          />
+        ) : null}
+
+        {status === 'error' ? (
+          <DemoStatusNotice
+            tone="danger"
+            badgeLabel="Error"
+            title="Profile update failed"
+            description="We could not save your latest profile changes right now."
+          />
+        ) : null}
+
         <section className="profile-context-grid">
           <article className="surface-card profile-context-card">
             <p className="profile-section-kicker">Current demo state</p>
@@ -138,6 +288,29 @@ export default function MeProfile() {
               </p>
             )}
           </article>
+
+          {profile.isProfilePublic ? (
+            <article className="surface-card profile-context-card">
+              <p className="profile-section-kicker">Public scholar preview</p>
+              <h2>Public scholar preview</h2>
+              <p className="profile-inline-note">{profile.fullName}</p>
+              <p>{publicPreviewLine || 'Public-facing scholar summary.'}</p>
+              <dl className="profile-definition-list">
+                <div>
+                  <dt>Visitor route</dt>
+                  <dd>{buildScholarRoute(profile.slug)}</dd>
+                </div>
+                <div>
+                  <dt>Public scope</dt>
+                  <dd>Visitors see only the public scholar subset from this same profile record.</dd>
+                </div>
+              </dl>
+              <p className="profile-inline-note">
+                This preview mirrors the visitor-facing route without exposing COI declaration or
+                verification state.
+              </p>
+            </article>
+          ) : null}
 
           <article className="surface-card profile-context-card profile-context-card--wide">
             <p className="profile-section-kicker">Visibility boundary</p>

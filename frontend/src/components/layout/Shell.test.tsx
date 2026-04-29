@@ -1,5 +1,9 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
+import { MemoryRouter } from 'react-router-dom';
 import { PageModeBadge } from '../ui/PageModeBadge';
 import { RoleBadge } from '../ui/RoleBadge';
 import { StatusBadge } from '../ui/StatusBadge';
@@ -7,6 +11,31 @@ import { PortalShell } from './PortalShell';
 import { WorkspaceShell } from './WorkspaceShell';
 
 describe('foundation shells', () => {
+  it('renders a portal shell masthead before the standard page header', () => {
+    render(
+      <PortalShell
+        masthead={<nav aria-label="Public portal">Portal navigation</nav>}
+        eyebrow="Public portal"
+        title="Portal"
+        description="Public homepage shell."
+      >
+        <div>Portal body</div>
+      </PortalShell>
+    );
+
+    expect(screen.getByRole('navigation', { name: 'Public portal' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Portal' })).toBeInTheDocument();
+    expect(screen.getByText('Portal body')).toBeInTheDocument();
+  });
+
+  it('defines the portal shell masthead as the sticky layer for public navigation', () => {
+    const css = readFileSync(resolve(process.cwd(), 'src/styles/layout.css'), 'utf8');
+
+    expect(css).toMatch(/\.page-shell__masthead\s*\{/);
+    expect(css).toMatch(/\.page-shell__masthead\s*\{[^}]*position:\s*sticky;/s);
+    expect(css).toMatch(/\.page-shell__masthead\s*\{[^}]*top:\s*0;/s);
+  });
+
   it('renders portal shell header markers and content', () => {
     render(
       <PortalShell
@@ -57,5 +86,77 @@ describe('foundation shells', () => {
     expect(screen.getByRole('button', { name: 'Primary action' })).toBeInTheDocument();
     expect(screen.getByText('Sidebar card')).toBeInTheDocument();
     expect(screen.getByText('Workspace body')).toBeInTheDocument();
+  });
+
+  it('renders a shared account menu in the workspace shell header', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter>
+        <WorkspaceShell
+          eyebrow="Applicant workspace"
+          title="Dashboard"
+          description="Internal working surface for authenticated users."
+          accountMenu={{
+            label: 'Account',
+            items: [
+              { kind: 'link', to: '/me/applications', label: 'My Applications' },
+              { kind: 'link', to: '/me/profile', label: 'My Profile' },
+              { kind: 'action', label: 'Log out', onSelect: () => undefined },
+            ],
+          }}
+        >
+          <div>Workspace body</div>
+        </WorkspaceShell>
+      </MemoryRouter>
+    );
+
+    expect(screen.getByRole('button', { name: 'Account' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Account' })).toHaveAttribute('aria-haspopup', 'menu');
+    expect(screen.queryByRole('link', { name: 'My Applications' })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Account' }));
+
+    expect(screen.getByRole('menu')).toHaveAttribute(
+      'aria-labelledby',
+      screen.getByRole('button', { name: 'Account' }).id
+    );
+    expect(screen.getByRole('link', { name: 'My Applications' })).toHaveAttribute(
+      'href',
+      '/me/applications'
+    );
+    expect(screen.getByRole('link', { name: 'My Profile' })).toHaveAttribute('href', '/me/profile');
+    expect(screen.getByRole('button', { name: 'Log out' })).toBeInTheDocument();
+
+    await user.keyboard('{Escape}');
+
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+  });
+
+  it('renders a workspace switcher alongside account actions in the workspace shell header', () => {
+    render(
+      <MemoryRouter>
+        <WorkspaceShell
+          title="Dashboard"
+          workspaceSwitcher={<button type="button">Workspace</button>}
+          accountMenu={{
+            label: 'Account',
+            items: [{ kind: 'action', label: 'Log out', onSelect: () => undefined }],
+          }}
+        >
+          <div>Workspace body</div>
+        </WorkspaceShell>
+      </MemoryRouter>
+    );
+
+    expect(screen.getByRole('button', { name: 'Workspace' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Account' })).toBeInTheDocument();
+  });
+
+  it('defines switcher trigger styling in layout.css', () => {
+    const css = readFileSync(resolve(process.cwd(), 'src/styles/layout.css'), 'utf8');
+
+    expect(css).toMatch(/\.workspace-switcher__trigger\s*\{/);
+    expect(css).toMatch(/\.workspace-switcher__panel\s*\{/);
   });
 });

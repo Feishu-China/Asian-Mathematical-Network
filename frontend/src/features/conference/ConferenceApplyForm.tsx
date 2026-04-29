@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useId, useMemo, useState } from 'react';
 import { StatusBadge } from '../../components/ui/StatusBadge';
 import { participationTypeOptions } from './conferenceFields';
 import type {
@@ -24,17 +24,75 @@ const toValues = (application: ConferenceApplication | null): ConferenceApplicat
   extraAnswers: application?.extraAnswers ?? {},
 });
 
+const presentationTypes = new Set(['talk', 'poster']);
+
 export function ConferenceApplyForm({ schema, application, status, onSave, onSubmit }: Props) {
   const [values, setValues] = useState<ConferenceApplicationValues>(() => toValues(application));
+  const isLocked = application?.status === 'submitted' || status === 'submitted';
+  const participationTypeFieldId = useId();
+  const participationTypeHelpId = useId();
 
   const fieldKeys = useMemo(() => new Set(schema.fields.map((field) => field.key)), [schema]);
 
-  const requiresAbstract = fieldKeys.has('abstract_title') || fieldKeys.has('abstract_text');
+  const isPresentationSubmission = presentationTypes.has(values.participationType);
+  const requiresAbstractTitle = isPresentationSubmission && fieldKeys.has('abstract_title');
+  const requiresAbstractText = isPresentationSubmission && fieldKeys.has('abstract_text');
+  const showAbstractFields = isPresentationSubmission && (requiresAbstractTitle || requiresAbstractText);
   const canSubmit =
     Boolean(values.participationType && values.statement.trim()) &&
-    (values.participationType !== 'talk' ||
-      !requiresAbstract ||
-      Boolean(values.abstractTitle.trim() && values.abstractText.trim()));
+    (!requiresAbstractTitle || Boolean(values.abstractTitle.trim())) &&
+    (!requiresAbstractText || Boolean(values.abstractText.trim()));
+  const submitDisabled = !application || !canSubmit || status === 'submitting' || isLocked;
+
+  const participationGuidance = useMemo(() => {
+    if (values.participationType === 'participant') {
+      return 'You only need a short statement for participant registration.';
+    }
+
+    if (isPresentationSubmission) {
+      return 'An abstract title and abstract text are required for presentation submissions.';
+    }
+
+    return 'Select a participation type to see what materials are required.';
+  }, [isPresentationSubmission, values.participationType]);
+
+  const submitHint = useMemo(() => {
+    if (isLocked || status === 'submitting') {
+      return null;
+    }
+
+    if (!application) {
+      return 'Save this draft once before submitting.';
+    }
+
+    if (!values.participationType) {
+      return 'Participation type is required before submitting.';
+    }
+
+    if (!values.statement.trim()) {
+      return 'Statement is required before submitting.';
+    }
+
+    if (isPresentationSubmission) {
+      const missingAbstractTitle = !values.abstractTitle.trim();
+      const missingAbstractText = !values.abstractText.trim();
+      const submissionType = values.participationType;
+
+      if (requiresAbstractTitle && requiresAbstractText && missingAbstractTitle && missingAbstractText) {
+        return `Abstract title and abstract text are required for ${submissionType} submissions.`;
+      }
+
+      if (requiresAbstractTitle && missingAbstractTitle) {
+        return `Abstract title is required for ${submissionType} submissions.`;
+      }
+
+      if (requiresAbstractText && missingAbstractText) {
+        return `Abstract text is required for ${submissionType} submissions.`;
+      }
+    }
+
+    return null;
+  }, [application, isLocked, isPresentationSubmission, requiresAbstractText, requiresAbstractTitle, status, values]);
 
   const setField = <K extends keyof ConferenceApplicationValues>(
     key: K,
@@ -71,11 +129,16 @@ export function ConferenceApplyForm({ schema, application, status, onSave, onSub
         <StatusBadge tone={badgeTone}>Status: {application?.status ?? 'not started'}</StatusBadge>
       </header>
 
-      <label>
-        Participation type
+      <div className="conference-form-field">
+        <label className="conference-field-label" htmlFor={participationTypeFieldId}>
+          Participation type <span className="conference-required-indicator" aria-hidden="true">*</span>
+        </label>
         <select
+          id={participationTypeFieldId}
           value={values.participationType}
           onChange={(event) => setField('participationType', event.target.value)}
+          disabled={isLocked}
+          aria-describedby={participationTypeHelpId}
           required
         >
           <option value="">Select one</option>
@@ -85,35 +148,47 @@ export function ConferenceApplyForm({ schema, application, status, onSave, onSub
             </option>
           ))}
         </select>
-      </label>
+        <span id={participationTypeHelpId} className="conference-field-help">
+          {participationGuidance}
+        </span>
+      </div>
 
       <label>
-        Statement
+        <span className="conference-field-label">
+          Statement <span className="conference-required-indicator" aria-hidden="true">*</span>
+        </span>
         <textarea
           rows={5}
           value={values.statement}
           onChange={(event) => setField('statement', event.target.value)}
+          disabled={isLocked}
           required
         />
       </label>
 
-      {fieldKeys.has('abstract_title') ? (
+      {showAbstractFields && fieldKeys.has('abstract_title') ? (
         <label>
-          Abstract title
+          <span className="conference-field-label">
+            Abstract title <span className="conference-required-indicator" aria-hidden="true">*</span>
+          </span>
           <input
             value={values.abstractTitle}
             onChange={(event) => setField('abstractTitle', event.target.value)}
+            disabled={isLocked}
           />
         </label>
       ) : null}
 
-      {fieldKeys.has('abstract_text') ? (
+      {showAbstractFields && fieldKeys.has('abstract_text') ? (
         <label>
-          Abstract text
+          <span className="conference-field-label">
+            Abstract text <span className="conference-required-indicator" aria-hidden="true">*</span>
+          </span>
           <textarea
             rows={5}
             value={values.abstractText}
             onChange={(event) => setField('abstractText', event.target.value)}
+            disabled={isLocked}
           />
         </label>
       ) : null}
@@ -124,23 +199,29 @@ export function ConferenceApplyForm({ schema, application, status, onSave, onSub
             type="checkbox"
             checked={values.interestedInTravelSupport}
             onChange={(event) => setField('interestedInTravelSupport', event.target.checked)}
+            disabled={isLocked}
           />
           Interested in travel support
         </label>
       ) : null}
 
       <div className="conference-form-actions">
-        <button type="submit" disabled={status === 'saving'}>
+        <button type="submit" disabled={status === 'saving' || isLocked}>
           {status === 'saving' ? 'Saving...' : 'Save draft'}
         </button>
         <button
           type="button"
           onClick={() => void onSubmit()}
-          disabled={!application || !canSubmit || status === 'submitting' || status === 'submitted'}
+          disabled={submitDisabled}
         >
           {status === 'submitting' ? 'Submitting...' : 'Submit application'}
         </button>
       </div>
+      {submitHint ? (
+        <p className="conference-submit-hint" aria-live="polite">
+          {submitHint}
+        </p>
+      ) : null}
     </form>
   );
 }

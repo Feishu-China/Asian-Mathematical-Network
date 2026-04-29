@@ -1,6 +1,7 @@
 import { fakeProfileProvider } from './fakeProfileProvider';
 import { httpProfileProvider } from './httpProfileProvider';
+import { shouldUseFakeProvider } from '../providerMode';
 
-const isTestEnv = import.meta.env.MODE === 'test' || import.meta.env.VITEST;
-
-export const profileProvider = isTestEnv ? fakeProfileProvider : httpProfileProvider;
+export const profileProvider = shouldUseFakeProvider(import.meta.env)
+  ? fakeProfileProvider
+  : httpProfileProvider;

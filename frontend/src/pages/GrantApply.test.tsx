@@ -2,6 +2,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as authApi from '../api/auth';
+import type { MeResponse } from '../api/auth';
+import { render } from '@testing-library/react';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { renderWithRouter } from '../test/renderWithRouter';
 import { conferenceProvider } from '../features/conference/conferenceProvider';
 import {
@@ -10,18 +13,61 @@ import {
 } from '../features/conference/fakeConferenceProvider';
 import { grantProvider } from '../features/grant/grantProvider';
 import { fakeGrantProvider, resetGrantFakeState } from '../features/grant/fakeGrantProvider';
+import Grants from './Grants';
+import GrantDetail from './GrantDetail';
 import GrantApply from './GrantApply';
+
+const buildMeResponse = (
+  email: string,
+  userOverrides: Partial<MeResponse['user']> = {}
+): MeResponse => ({
+  user: {
+    id: 'grant-user',
+    email,
+    status: 'active' as const,
+    role: 'applicant' as const,
+    roles: ['applicant'],
+    available_workspaces: ['applicant'],
+    primary_role: 'applicant' as const,
+    createdAt: '2026-04-29T00:00:00.000Z',
+    updatedAt: '2026-04-29T00:00:00.000Z',
+    ...userOverrides,
+  },
+  profile: {
+    userId: 'grant-user',
+    slug: 'grant-user',
+    fullName: 'Grant User',
+    title: null,
+    institutionId: null,
+    institutionNameRaw: null,
+    countryCode: null,
+    careerStage: null,
+    bio: null,
+    personalWebsite: null,
+    researchKeywords: [],
+    mscCodes: [],
+    orcidId: null,
+    coiDeclarationText: '',
+    isProfilePublic: false,
+    verificationStatus: 'unverified' as const,
+    verifiedAt: null,
+    createdAt: '2026-04-29T00:00:00.000Z',
+    updatedAt: '2026-04-29T00:00:00.000Z',
+  },
+});
+
+function LoginStateProbe() {
+  const location = useLocation();
+
+  return <div>{JSON.stringify(location.state)}</div>;
+}
 
 vi.mock('../api/auth', async () => {
   const actual = await vi.importActual<typeof import('../api/auth')>('../api/auth');
 
   return {
     ...actual,
-    getMe: vi.fn(async (token: string) => ({
-      user: {
-        email: `${token}@example.com`,
-      },
-    })),
+    getMe: vi.fn(async (token: string) => buildMeResponse(`${token}@example.com`)),
   };
 });
 
@@ -47,11 +93,7 @@ describe('grant apply page', () => {
     localStorage.clear();
     resetConferenceFakeState();
     resetGrantFakeState();
-    mockedGetMe.mockImplementation(async (token: string) => ({
-      user: {
-        email: `${token}@example.com`,
-      },
-    }));
+    mockedGetMe.mockImplementation(async (token: string) => buildMeResponse(`${token}@example.com`));
   });
 
   afterEach(() => {
@@ -59,14 +101,25 @@ describe('grant apply page', () => {
   });
 
   it('shows an authentication prompt when no token is present', async () => {
-    renderWithRouter(
-      <GrantApply />,
-      '/grants/asiamath-2026-travel-grant/apply',
-      '/grants/:slug/apply'
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter initialEntries={['/grants/asiamath-2026-travel-grant/apply']}>
+        <Routes>
+          <Route path="/grants/:slug/apply" element={<GrantApply />} />
+          <Route path="/login" element={<LoginStateProbe />} />
+        </Routes>
+      </MemoryRouter>
     );
 
     expect(await screen.findByText('Role: Visitor')).toBeInTheDocument();
     expect(await screen.findByText(/sign in to start a grant application/i)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('link', { name: /go to login/i }));
+
+    expect(
+      screen.getByText('{"returnTo":"/grants/asiamath-2026-travel-grant/apply"}')
+    ).toBeInTheDocument();
   });
 
   it('shows a prerequisite warning when no submitted conference application exists', async () => {
@@ -111,6 +164,31 @@ describe('grant apply page', () => {
     expect(screen.getByRole('button', { name: /save draft/i })).toBeEnabled();
   });
 
+  it('shows school-linked prerequisite copy and a ready school participation state', async () => {
+    localStorage.setItem('token', 'grant-applicant-school');
+
+    renderWithRouter(
+      <GrantApply />,
+      '/grants/asia-pacific-research-school-mobility-grant-2026/apply',
+      '/grants/:slug/apply'
+    );
+
+    expect(
+      await screen.findByText(
+        /request mobility support through a dedicated grant application after your linked school participation is already in place/i
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /grant applications stay separate from school participation records, even when school participation is required first/i
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByText(/linked school participation:/i)).toBeInTheDocument();
+    expect(screen.getByText(/no grant application yet/i)).toBeInTheDocument();
+    expect(screen.queryByText(/submit your conference application before requesting travel support/i)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /save draft/i })).toBeEnabled();
+  });
+
   it('creates a draft and submits it for an eligible applicant', async () => {
     await seedSubmittedConferenceApplication('grant-applicant-eligible');
     const user = userEvent.setup();
@@ -147,13 +225,26 @@ describe('grant apply page', () => {
     expect(screen.queryByText(/^Released outcome$/)).not.toBeInTheDocument();
   });
 
+  it('renders the shared applicant account menu for signed-in applicants', async () => {
+    localStorage.setItem('token', 'grant-applicant-eligible');
+
+    renderWithRouter(
+      <GrantApply />,
+      '/grants/asiamath-2026-travel-grant/apply',
+      '/grants/:slug/apply'
+    );
+
+    await screen.findByRole('heading', { name: /travel grant application/i });
+    expect(screen.getByRole('button', { name: 'Account' })).toBeInTheDocument();
+  });
+
   it('hydrates an existing grant draft when the page reloads', async () => {
-    const linkedConferenceApplicationId = await seedSubmittedConferenceApplication(
+    const linkedOpportunityApplicationId = await seedSubmittedConferenceApplication(
       'grant-applicant-existing'
     );
 
     await fakeGrantProvider.createGrantApplication('grant-published-001', {
-      linkedConferenceApplicationId,
+      linkedOpportunityApplicationId,
       statement: 'Saved funding request',
       travelPlanSummary: 'Saved travel plan',
       fundingNeedSummary: 'Saved funding need',
@@ -166,7 +257,10 @@ describe('grant apply page', () => {
       '/grants/:slug/apply'
     );
 
-    expect(await screen.findByText(/draft saved/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/this grant application draft is already on file/i)
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/^Draft saved$/i)).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /draft in progress/i })).toBeInTheDocument();
     expect(screen.getByDisplayValue('Saved funding request')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Saved travel plan')).toBeInTheDocument();
@@ -174,17 +268,13 @@ describe('grant apply page', () => {
   });
 
   it('shows a viewer-safe released result sample for a runtime viewer email mapped to the demo account', async () => {
-    const linkedConferenceApplicationId = await seedSubmittedConferenceApplication(
+    const linkedOpportunityApplicationId = await seedSubmittedConferenceApplication(
       'grant-runtime-release-token'
     );
-    mockedGetMe.mockResolvedValueOnce({
-      user: {
-        email: 'grant.submit@example.com',
-      },
-    });
+    mockedGetMe.mockResolvedValueOnce(buildMeResponse('grant.submit@example.com'));
 
     const draft = await fakeGrantProvider.createGrantApplication('grant-published-001', {
-      linkedConferenceApplicationId,
+      linkedOpportunityApplicationId,
       statement: 'Submitted request for released result sample',
       travelPlanSummary: 'Sample travel plan',
       fundingNeedSummary: 'Sample funding need',
@@ -210,18 +300,16 @@ describe('grant apply page', () => {
 
   it('shows the released result sample for the seeded backend demo grant even when the real grant id is a UUID', async () => {
     localStorage.setItem('token', 'grant-runtime-real-backend');
-    mockedGetMe.mockResolvedValueOnce({
-      user: {
-        email: 'grant.submit@example.com',
-      },
-    });
+    mockedGetMe.mockResolvedValueOnce(buildMeResponse('grant.submit@example.com'));
 
     vi.spyOn(grantProvider, 'getGrantBySlug').mockResolvedValueOnce({
       id: '4cb012a0-ca16-428b-9a22-913ad4c018a0',
       slug: 'integration-grant-2026-travel-support',
       title: 'Integration Grant 2026 Travel Support',
       grantType: 'conference_travel_grant',
-      linkedConferenceId: '64af0291-cd91-4420-a6ee-9a9d2ca2f9cc',
+      linkedOpportunityType: 'conference',
+      linkedOpportunityId: '64af0291-cd91-4420-a6ee-9a9d2ca2f9cc',
+      linkedOpportunityTitle: 'Integration Grant Conference 2026',
       description: 'Partial travel support for accepted participants.',
       eligibilitySummary: 'Open to eligible conference applicants.',
       coverageSummary: 'Partial airfare and accommodation support.',
@@ -245,8 +333,10 @@ describe('grant apply page', () => {
       sourceModule: 'M7',
       grantId: '4cb012a0-ca16-428b-9a22-913ad4c018a0',
       grantTitle: 'Integration Grant 2026 Travel Support',
-      linkedConferenceId: '64af0291-cd91-4420-a6ee-9a9d2ca2f9cc',
-      linkedConferenceApplicationId: '8cd9e4b3-e8e5-439c-ad14-82739ca9c56e',
+      linkedOpportunityType: 'conference',
+      linkedOpportunityId: '64af0291-cd91-4420-a6ee-9a9d2ca2f9cc',
+      linkedOpportunityTitle: 'Integration Grant Conference 2026',
+      linkedOpportunityApplicationId: '8cd9e4b3-e8e5-439c-ad14-82739ca9c56e',
       applicantUserId: 'bf9d7496-637e-4260-ac5b-e9c969903bb3',
       status: 'submitted',
       statement: 'Released-result smoke applicant requesting travel support.',
@@ -289,5 +379,63 @@ describe('grant apply page', () => {
     expect(await screen.findByText(/^Released outcome$/)).toBeInTheDocument();
     expect(screen.getByText(/travel grant awarded/i)).toBeInTheDocument();
     expect(screen.getByText('Applicant view: released outcome')).toBeInTheDocument();
+  });
+
+  it('preserves the school-origin return path through grant apply and back out to the list', async () => {
+    await seedSubmittedConferenceApplication('grant-applicant-roundtrip');
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter
+        initialEntries={[
+          {
+            pathname: '/grants',
+            state: {
+              returnContext: {
+                to: '/schools/algebraic-geometry-research-school-2026',
+                label: 'Back to school',
+              },
+            },
+          },
+        ]}
+      >
+        <Routes>
+          <Route path="/grants" element={<Grants />} />
+          <Route path="/grants/:slug" element={<GrantDetail />} />
+          <Route path="/grants/:slug/apply" element={<GrantApply />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByRole('link', { name: /back to school/i })).toHaveAttribute(
+      'href',
+      '/schools/algebraic-geometry-research-school-2026'
+    );
+
+    const schoolDetailLink = screen
+      .getAllByRole('link', { name: /view details/i })
+      .find(
+        (link) =>
+          link.getAttribute('href') === '/grants/asia-pacific-research-school-mobility-grant-2026'
+      );
+
+    expect(schoolDetailLink).toBeTruthy();
+    await user.click(schoolDetailLink!);
+    expect(await screen.findByRole('link', { name: /start grant application/i })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('link', { name: /start grant application/i }));
+    expect(await screen.findByRole('link', { name: /back to grant detail/i })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('link', { name: /back to grant detail/i }));
+    expect(await screen.findByRole('link', { name: /back to grants/i })).toHaveAttribute(
+      'href',
+      '/grants'
+    );
+
+    await user.click(screen.getByRole('link', { name: /back to grants/i }));
+    expect(await screen.findByRole('link', { name: /back to school/i })).toHaveAttribute(
+      'href',
+      '/schools/algebraic-geometry-research-school-2026'
+    );
   });
 });

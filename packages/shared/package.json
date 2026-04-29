@@ -1,0 +1,21 @@
+{
+  "name": "@asiamath/shared",
+  "private": true,
+  "version": "1.0.0",
+  "main": "./dist/models.js",
+  "types": "./dist/models.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "exports": {
+    "./models": {
+      "types": "./dist/models.d.ts",
+      "import": "./dist/models.js",
+      "require": "./dist/models.js",
+      "default": "./dist/models.js"
+    }
+  }
+}

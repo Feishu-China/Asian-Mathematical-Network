@@ -1,9 +1,23 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { WorkspaceShell } from '../components/layout/WorkspaceShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
+import {
+  clearAuthSession,
+  readStoredAuthUser,
+} from '../features/auth/authSession';
+import { WorkspaceSwitcher } from '../features/navigation/WorkspaceSwitcher';
+import { buildWorkspaceAccountMenu } from '../features/navigation/workspaceAccountMenu';
+import {
+  resolveWorkspaceReturnContext,
+  REVIEWER_QUEUE_RETURN_CONTEXT,
+} from '../features/navigation/workspaceNavigation';
+import {
+  getApplicantReviewerWorkspaces,
+  writeStoredWorkspace,
+} from '../features/navigation/workspaces';
 import { ReviewSubmissionForm } from '../features/review/ReviewSubmissionForm';
 import { reviewProvider } from '../features/review/reviewProvider';
 import type { ReviewerAssignmentDetail } from '../features/review/types';
@@ -13,9 +27,26 @@ export const routePath = '/reviewer/assignments/:id';
 
 export default function ReviewerAssignmentDetailPage() {
   const { id = '' } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [assignment, setAssignment] = useState<ReviewerAssignmentDetail | null | undefined>(undefined);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [status, setStatus] = useState<'idle' | 'submitting' | 'submitted' | 'error'>('idle');
+  const returnContext = resolveWorkspaceReturnContext(
+    location.state,
+    location.pathname,
+    REVIEWER_QUEUE_RETURN_CONTEXT
+  );
+  const applicantReviewerWorkspaces = getApplicantReviewerWorkspaces(
+    readStoredAuthUser()?.available_workspaces
+  );
+  const accountMenu = buildWorkspaceAccountMenu({
+    role: 'reviewer',
+    onLogout: () => {
+      clearAuthSession();
+      navigate('/portal');
+    },
+  });
 
   const load = async () => {
     setErrorMessage(null);
@@ -24,6 +55,7 @@ export default function ReviewerAssignmentDetailPage() {
   };
 
   useEffect(() => {
+    writeStoredWorkspace('reviewer');
     load().catch((error) => {
       setAssignment(null);
       setErrorMessage(error instanceof Error ? error.message : 'Assignment not found.');
@@ -60,12 +92,34 @@ export default function ReviewerAssignmentDetailPage() {
           </StatusBadge>
         </>
       }
+      actions={
+        <>
+          <Link
+            to={returnContext.to}
+            state={returnContext.state}
+            className="my-applications__section-link"
+          >
+            {returnContext.label}
+          </Link>
+          <Link to="/portal" className="my-applications__section-link">
+            Back to portal
+          </Link>
+        </>
+      }
+      workspaceSwitcher={
+        applicantReviewerWorkspaces.length > 1 ? (
+          <WorkspaceSwitcher
+            currentWorkspace="reviewer"
+            availableWorkspaces={applicantReviewerWorkspaces}
+          />
+        ) : undefined
+      }
+      accountMenu={accountMenu}
       aside={
         <div className="surface-card review-sidebar">
           <h3>Assignment summary</h3>
           <p>Due at: {assignment.dueAt ?? 'not set'}</p>
           <p>Conflict state: {assignment.conflictState}</p>
-          <Link to="/reviewer">Back to reviewer queue</Link>
         </div>
       }
     >

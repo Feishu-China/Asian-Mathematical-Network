@@ -8,6 +8,7 @@ describe('fromTransportMyApplication', () => {
       application_type: 'conference_application',
       source_module: 'M2',
       source_id: 'conf-1',
+      source_slug: 'asiamath-2026',
       source_title: 'Asiamath 2026',
       linked_conference_title: null,
       viewer_status: 'under_review',
@@ -22,6 +23,7 @@ describe('fromTransportMyApplication', () => {
       applicationType: 'conference_application',
       sourceModule: 'M2',
       sourceId: 'conf-1',
+      sourceSlug: 'asiamath-2026',
       sourceTitle: 'Asiamath 2026',
       linkedConferenceTitle: null,
       viewerStatus: 'under_review',
@@ -38,6 +40,7 @@ describe('fromTransportMyApplication', () => {
       application_type: 'conference_application',
       source_module: 'M2',
       source_id: 'conf-1',
+      source_slug: 'asiamath-2026',
       source_title: 'Asiamath 2026',
       linked_conference_title: null,
       viewer_status: 'result_released',
@@ -68,6 +71,7 @@ describe('fromTransportMyApplication', () => {
       application_type: 'grant_application',
       source_module: 'M7',
       source_id: 'grant-1',
+      source_slug: 'asiamath-2026-travel-grant',
       source_title: 'Asiamath 2026 Travel Grant',
       linked_conference_title: 'Asiamath 2026',
       viewer_status: 'draft',
@@ -79,6 +83,7 @@ describe('fromTransportMyApplication', () => {
 
     expect(result.applicationType).toBe('grant_application');
     expect(result.sourceTitle).toBe('Asiamath 2026 Travel Grant');
+    expect(result.sourceSlug).toBe('asiamath-2026-travel-grant');
     expect(result.linkedConferenceTitle).toBe('Asiamath 2026');
     expect(result.viewerStatus).toBe('draft');
     expect(result.submittedAt).toBeNull();

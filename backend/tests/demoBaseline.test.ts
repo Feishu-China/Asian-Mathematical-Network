@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import {
+  buildDemoBaselineSummary,
   cleanupDemoBaseline,
   DEMO_BASELINE_FIXTURE,
   ensureDemoBaseline,
@@ -38,6 +39,121 @@ describe('demo baseline fixture', () => {
     expect(publishedGrant?.status).toBe('published');
   });
 
+  it('creates a medium opportunity set with three published conferences, one closed conference, and two published grants', async () => {
+    const fixture = await ensureDemoBaseline(prisma);
+
+    expect(fixture.conferences).toHaveLength(4);
+    expect(fixture.grants).toHaveLength(2);
+
+    expect(fixture.conferences.map((item) => item.slug)).toEqual(
+      expect.arrayContaining([
+        'integration-grant-conf-2026',
+        'regional-topology-symposium-2026',
+        'number-theory-collaboration-workshop-2026',
+        'applied-pde-exchange-2025',
+      ])
+    );
+
+    expect(fixture.conferences.filter((item) => item.status === 'published')).toHaveLength(3);
+    expect(fixture.conferences.filter((item) => item.status === 'closed')).toHaveLength(1);
+
+    expect(fixture.grants.map((item) => item.slug)).toEqual(
+      expect.arrayContaining([
+        'integration-grant-2026-travel-support',
+        'number-theory-collaboration-travel-support-2026',
+      ])
+    );
+
+    expect(fixture.grants.every((item) => item.status === 'published')).toBe(true);
+  });
+
+  it('keeps the clean applicant empty, seeds one reviewer applicant record, and preserves the showcase workflow set', async () => {
+    const fixture = await ensureDemoBaseline(prisma);
+    const cleanApplicant = fixture.demoAccounts.find((account) => account.key === 'applicant');
+    const reviewer = fixture.demoAccounts.find((account) => account.key === 'reviewer');
+    const showcaseApplicant = fixture.demoAccounts.find(
+      (account) => account.key === 'showcaseApplicant'
+    );
+
+    expect(cleanApplicant).toBeDefined();
+    expect(reviewer).toBeDefined();
+    expect(showcaseApplicant).toBeDefined();
+
+    const cleanApplicantApplications = await prisma.application.findMany({
+      where: { applicantUserId: cleanApplicant!.user.id },
+    });
+
+    expect(cleanApplicantApplications).toHaveLength(0);
+
+    const reviewerApplications = await prisma.application.findMany({
+      where: { applicantUserId: reviewer!.user.id },
+      include: {
+        conference: true,
+        decision: true,
+      },
+      orderBy: [{ createdAt: 'asc' }],
+    });
+
+    expect(reviewerApplications).toEqual([
+      expect.objectContaining({
+        applicationType: 'conference_application',
+        status: 'under_review',
+        conference: expect.objectContaining({ slug: 'regional-topology-symposium-2026' }),
+        decision: null,
+      }),
+    ]);
+
+    const showcaseApplications = await prisma.application.findMany({
+      where: { applicantUserId: showcaseApplicant!.user.id },
+      include: {
+        conference: true,
+        grant: true,
+        decision: true,
+        postVisitReport: true,
+      },
+      orderBy: [{ createdAt: 'asc' }],
+    });
+
+    expect(showcaseApplications).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          applicationType: 'conference_application',
+          status: 'under_review',
+          conference: expect.objectContaining({ slug: 'regional-topology-symposium-2026' }),
+          decision: null,
+        }),
+        expect.objectContaining({
+          applicationType: 'conference_application',
+          status: 'decided',
+          conference: expect.objectContaining({ slug: 'number-theory-collaboration-workshop-2026' }),
+          decision: expect.objectContaining({
+            finalStatus: 'accepted',
+            releaseStatus: 'released',
+          }),
+        }),
+        expect.objectContaining({
+          applicationType: 'conference_application',
+          status: 'decided',
+          conference: expect.objectContaining({ slug: 'applied-pde-exchange-2025' }),
+          decision: expect.objectContaining({
+            finalStatus: 'rejected',
+            releaseStatus: 'released',
+          }),
+        }),
+        expect.objectContaining({
+          applicationType: 'grant_application',
+          status: 'decided',
+          grant: expect.objectContaining({ slug: 'number-theory-collaboration-travel-support-2026' }),
+          decision: expect.objectContaining({
+            finalStatus: 'accepted',
+            releaseStatus: 'released',
+          }),
+          postVisitReport: expect.objectContaining({ status: 'submitted' }),
+        }),
+      ])
+    );
+  });
+
   it('creates stable demo accounts, public/private scholar-profile baselines, and role-capable organizer/reviewer accounts', async () => {
     const fixture = await ensureDemoBaseline(prisma);
 
@@ -45,6 +161,7 @@ describe('demo baseline fixture', () => {
       'organizer',
       'reviewer',
       'applicant',
+      'showcaseApplicant',
     ]);
 
     expect(fixture.demoAccounts).toEqual(
@@ -70,6 +187,14 @@ describe('demo baseline fixture', () => {
           email: DEMO_BASELINE_FIXTURE.demoAccounts.applicant.email,
           profile: expect.objectContaining({
             slug: DEMO_BASELINE_FIXTURE.demoAccounts.applicant.slug,
+            isProfilePublic: true,
+          }),
+        }),
+        expect.objectContaining({
+          key: 'showcaseApplicant',
+          email: DEMO_BASELINE_FIXTURE.demoAccounts.showcaseApplicant.email,
+          profile: expect.objectContaining({
+            slug: DEMO_BASELINE_FIXTURE.demoAccounts.showcaseApplicant.slug,
             isProfilePublic: true,
           }),
         }),
@@ -135,5 +260,63 @@ describe('demo baseline fixture', () => {
 
     expect(passwordMatches).toBe(true);
     expect(applicant?.email).toBe(DEMO_BASELINE_FIXTURE.demoAccounts.applicant.email);
+
+    const summary = buildDemoBaselineSummary(fixture);
+    expect(summary.accounts.applicant).toEqual(
+      expect.objectContaining({
+        email: DEMO_BASELINE_FIXTURE.applicantEmail,
+        password: DEMO_BASELINE_FIXTURE.applicantPassword,
+        role: 'applicant',
+      })
+    );
+    expect(summary.accounts.showcaseApplicant).toEqual(
+      expect.objectContaining({
+        email: DEMO_BASELINE_FIXTURE.showcaseApplicantEmail,
+        password: DEMO_BASELINE_FIXTURE.showcaseApplicantPassword,
+        role: 'applicant',
+      })
+    );
+    expect(summary.counts).toEqual({
+      conferences: 4,
+      publishedConferences: 3,
+      closedConferences: 1,
+      grants: 2,
+    });
+    expect(summary.routes).toEqual(
+      expect.objectContaining({
+        applicantPrivateProfile: '/me/profile',
+        applicantPublicScholar: '/scholars/aisha-rahman',
+        reviewerPublicScholar: '/scholars/ravi-iyer',
+        organizerPrivateProfile: '/me/profile',
+        organizerPublicScholar: null,
+      })
+    );
+    expect(summary.quickStart).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          step: 1,
+          account: 'applicant',
+          open: '/me/profile',
+          loginRequired: true,
+        }),
+        expect.objectContaining({
+          step: 3,
+          account: 'reviewer',
+          open: '/dashboard',
+          loginRequired: true,
+        }),
+      ])
+    );
+    expect(summary.demoAccounts).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          key: 'reviewer',
+          start_here: '/dashboard',
+        }),
+      ])
+    );
+    expect(summary.walkthrough).toEqual(
+      expect.arrayContaining([expect.stringContaining('workspace switcher')])
+    );
   });
 });

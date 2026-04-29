@@ -1,5 +1,5 @@
 import { Prisma } from '@prisma/client';
-import type { Profile } from '../../../src/types/models';
+import type { Profile } from '@asiamath/shared/models';
 
 type ProfileRecord = Prisma.ProfileGetPayload<{
   include: { mscCodes: true };

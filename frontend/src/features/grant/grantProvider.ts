@@ -1,6 +1,7 @@
 import { fakeGrantProvider } from './fakeGrantProvider';
 import { httpGrantProvider } from './httpGrantProvider';
+import { shouldUseFakeProvider } from '../providerMode';
 
-const isTestEnv = import.meta.env.MODE === 'test' || import.meta.env.VITEST;
-
-export const grantProvider = isTestEnv ? fakeGrantProvider : httpGrantProvider;
+export const grantProvider = shouldUseFakeProvider(import.meta.env)
+  ? fakeGrantProvider
+  : httpGrantProvider;

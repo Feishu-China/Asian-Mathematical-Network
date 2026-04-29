@@ -88,7 +88,9 @@ describe('httpGrantProvider', () => {
         slug: 'asiamath-2026-travel-grant',
         title: 'Asiamath 2026 Travel Grant',
         grantType: 'conference_travel_grant',
-        linkedConferenceId: 'conf-1',
+        linkedOpportunityType: 'conference',
+        linkedOpportunityId: 'conf-1',
+        linkedOpportunityTitle: null,
         applicationDeadline: '2026-06-05T23:59:59.000Z',
         status: 'published',
         reportRequired: true,
@@ -101,7 +103,9 @@ describe('httpGrantProvider', () => {
       slug: 'asiamath-2026-travel-grant',
       title: 'Asiamath 2026 Travel Grant',
       grantType: 'conference_travel_grant',
-      linkedConferenceId: 'conf-1',
+      linkedOpportunityType: 'conference',
+      linkedOpportunityId: 'conf-1',
+      linkedOpportunityTitle: null,
       description: 'Partial travel support for accepted participants.',
       eligibilitySummary: 'Open to eligible conference applicants.',
       coverageSummary: 'Partial airfare and accommodation support.',
@@ -114,7 +118,7 @@ describe('httpGrantProvider', () => {
 
     await expect(httpGrantProvider.getGrantApplicationForm('grant-1')).resolves.toEqual({
       fields: [
-        { key: 'linked_conference_application_id', type: 'select', required: true },
+        { key: 'linked_opportunity_application_id', type: 'select', required: true },
         { key: 'statement', type: 'textarea', required: true },
         { key: 'travel_plan_summary', type: 'textarea', required: true },
         { key: 'funding_need_summary', type: 'textarea', required: true },
@@ -151,7 +155,9 @@ describe('httpGrantProvider', () => {
     await expect(httpGrantProvider.getMyGrantApplication('grant-1')).resolves.toMatchObject({
       id: 'application-1',
       grantId: 'grant-1',
-      linkedConferenceApplicationId: 'conf-app-1',
+      linkedOpportunityType: 'conference',
+      linkedOpportunityId: 'conf-1',
+      linkedOpportunityApplicationId: 'conf-app-1',
       status: 'draft',
       statement: 'Saved funding request',
     });
@@ -185,7 +191,7 @@ describe('httpGrantProvider', () => {
 
     await expect(
       httpGrantProvider.createGrantApplication('grant-1', {
-        linkedConferenceApplicationId: 'conf-app-1',
+        linkedOpportunityApplicationId: 'conf-app-1',
         statement: 'Duplicate draft',
         travelPlanSummary: 'Duplicate plan',
         fundingNeedSummary: 'Duplicate funding',
@@ -210,7 +216,7 @@ describe('httpGrantProvider', () => {
 
     await expect(
       httpGrantProvider.createGrantApplication('grant-1', {
-        linkedConferenceApplicationId: 'conf-app-1',
+        linkedOpportunityApplicationId: 'conf-app-1',
         statement: 'Needs prerequisite',
         travelPlanSummary: 'Plan',
         fundingNeedSummary: 'Funding',
@@ -300,7 +306,7 @@ describe('httpGrantProvider', () => {
 
     await expect(
       httpGrantProvider.createGrantApplication('grant-1', {
-        linkedConferenceApplicationId: 'conf-app-1',
+        linkedOpportunityApplicationId: 'conf-app-1',
         statement: 'New funding request',
         travelPlanSummary: 'Travel plan',
         fundingNeedSummary: 'Funding need',
@@ -314,7 +320,7 @@ describe('httpGrantProvider', () => {
 
     await expect(
       httpGrantProvider.updateGrantApplication('application-1', {
-        linkedConferenceApplicationId: 'conf-app-1',
+        linkedOpportunityApplicationId: 'conf-app-1',
         statement: 'Updated funding request',
         travelPlanSummary: 'Updated travel plan',
         fundingNeedSummary: 'Updated funding need',

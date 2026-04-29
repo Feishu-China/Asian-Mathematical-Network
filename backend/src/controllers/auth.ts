@@ -3,7 +3,12 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../lib/prisma';
 import { buildStarterProfile, getStarterFullName, mapProfileRecord } from '../lib/profile';
-import { ensureUserRole, listUserRoles, readPrimaryRole } from '../lib/userRoles';
+import {
+  ensureUserRole,
+  listAvailableWorkspaces,
+  listUserRoles,
+  readPrimaryRole,
+} from '../lib/userRoles';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_key_for_development';
 
@@ -44,6 +49,7 @@ export const register = async (req: Request, res: Response) => {
 
     const token = jwt.sign({ userId: newUser.id }, JWT_SECRET, { expiresIn: '1d' });
     const roles = await listUserRoles(newUser.id);
+    const availableWorkspaces = await listAvailableWorkspaces(newUser.id);
     const primaryRole = await readPrimaryRole(newUser.id);
 
     res.status(201).json({
@@ -54,6 +60,7 @@ export const register = async (req: Request, res: Response) => {
         status: newUser.status,
         role: primaryRole,
         roles,
+        available_workspaces: availableWorkspaces,
         primary_role: primaryRole,
         createdAt: newUser.createdAt,
         updatedAt: newUser.updatedAt
@@ -92,6 +99,7 @@ export const login = async (req: Request, res: Response) => {
 
     const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '1d' });
     const roles = await listUserRoles(user.id);
+    const availableWorkspaces = await listAvailableWorkspaces(user.id);
     const primaryRole = await readPrimaryRole(user.id);
 
     res.status(200).json({
@@ -102,6 +110,7 @@ export const login = async (req: Request, res: Response) => {
         status: user.status,
         role: primaryRole,
         roles,
+        available_workspaces: availableWorkspaces,
         primary_role: primaryRole,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt
@@ -137,6 +146,7 @@ export const getMe = async (req: Request, res: Response) => {
     });
 
     const roles = await listUserRoles(user.id);
+    const availableWorkspaces = await listAvailableWorkspaces(user.id);
     const primaryRole = await readPrimaryRole(user.id);
     const conferenceStaffMemberships = await prisma.conferenceStaff.findMany({
       where: { userId: user.id },
@@ -153,6 +163,7 @@ export const getMe = async (req: Request, res: Response) => {
         status: user.status,
         role: primaryRole,
         roles,
+        available_workspaces: availableWorkspaces,
         primary_role: primaryRole,
         conference_staff_memberships: conferenceStaffMemberships.map((membership) => ({
           conference_id: membership.conferenceId,

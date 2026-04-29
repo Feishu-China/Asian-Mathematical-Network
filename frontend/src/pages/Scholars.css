@@ -1,0 +1,30 @@
+.scholar-directory-page,
+.scholar-directory-page__clusters,
+.scholar-directory-page__list,
+.scholar-directory-page__section-copy {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.scholar-summary-card__eyebrow {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-navy-700);
+}
+
+.scholar-summary-card__title {
+  font-family: var(--font-heading);
+  font-size: 1.35rem;
+  color: var(--color-navy-900);
+  text-decoration: none;
+}
+
+.scholar-cluster-card h3 {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 1.2rem;
+  color: var(--color-navy-900);
+}

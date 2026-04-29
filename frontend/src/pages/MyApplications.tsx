@@ -1,16 +1,42 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { WorkspaceShell } from '../components/layout/WorkspaceShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
 import { dashboardProvider } from '../features/dashboard/dashboardProvider';
+import { DemoStatePanel } from '../features/demo/DemoStatePanel';
+import {
+  clearAuthSession,
+  readAuthToken,
+  readStoredAuthUser,
+} from '../features/auth/authSession';
 import type {
   MyApplication,
   NextAction,
   ReleasedDecisionFinalStatus,
   ViewerStatus,
 } from '../features/dashboard/types';
+import { isUnauthorizedSessionError } from '../features/auth/sessionErrors';
+import { DemoShortcutPanel } from '../features/demo/DemoShortcutPanel';
+import {
+  buildChainedReturnState,
+  DASHBOARD_RETURN_CONTEXT,
+  demoWalkthroughCopy,
+  DEMO_PRIMARY_CONFERENCE_LIST_PATH,
+  MY_APPLICATIONS_RETURN_CONTEXT,
+} from '../features/demo/demoWalkthrough';
+import { toReturnToState } from '../features/navigation/authReturn';
+import {
+  resolveReturnContext,
+  type ReturnContextState,
+} from '../features/navigation/returnContext';
+import { WorkspaceSwitcher } from '../features/navigation/WorkspaceSwitcher';
+import { buildWorkspaceAccountMenu } from '../features/navigation/workspaceAccountMenu';
+import {
+  getApplicantReviewerWorkspaces,
+  writeStoredWorkspace,
+} from '../features/navigation/workspaces';
 import './MyApplications.css';
 
 export const routePath = '/me/applications';
@@ -47,6 +73,16 @@ const NEXT_ACTION_LABELS: Record<NextAction, string> = {
   submit_post_visit_report: 'Submit post-visit report',
 };
 
+const buildApplicationNextStepTarget = (item: MyApplication) => {
+  if (item.nextAction === 'continue_draft' && item.sourceSlug) {
+    return item.applicationType === 'conference_application'
+      ? `/conferences/${item.sourceSlug}/apply`
+      : `/grants/${item.sourceSlug}/apply`;
+  }
+
+  return `/me/applications/${item.id}`;
+};
+
 const splitByKind = (items: MyApplication[]): Bucket =>
   items.reduce<Bucket>(
     (acc, item) => {
@@ -78,16 +114,44 @@ const renderStatusBadge = (item: MyApplication) => {
 
 export default function MyApplications() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [items, setItems] = useState<MyApplication[] | null>(null);
   const [hasError, setHasError] = useState(false);
+  const returnContext = resolveReturnContext(location.state, routePath, DASHBOARD_RETURN_CONTEXT);
+  const applicantReviewerWorkspaces = getApplicantReviewerWorkspaces(
+    readStoredAuthUser()?.available_workspaces
+  );
+  const accountMenu = buildWorkspaceAccountMenu(() => {
+    clearAuthSession();
+    navigate('/portal');
+  });
+  const sectionReturnState = buildChainedReturnState(MY_APPLICATIONS_RETURN_CONTEXT, returnContext);
+  const primaryWalkthroughShortcut =
+    items && items.length > 0
+      ? {
+          to: `/me/applications/${items[0].id}`,
+          state: sectionReturnState,
+          label: 'Open latest walkthrough record',
+          description:
+            'Jump directly into the most recent applicant record used for the demo rehearsal.',
+        }
+      : {
+          to: DEMO_PRIMARY_CONFERENCE_LIST_PATH,
+          state: sectionReturnState,
+          label: 'Start from published conferences',
+          description:
+            'Use the stable conference list to create a real applicant record before returning here.',
+        };
 
   useEffect(() => {
     let active = true;
 
-    if (!localStorage.getItem('token')) {
-      navigate('/login');
+    if (!readAuthToken()) {
+      navigate('/login', { state: toReturnToState(location.pathname) });
       return;
     }
+
+    writeStoredWorkspace('applicant');
 
     setHasError(false);
     setItems(null);
@@ -99,17 +163,25 @@ export default function MyApplications() {
           setItems(value);
         }
       })
-      .catch(() => {
-        if (active) {
-          setHasError(true);
-          setItems([]);
+      .catch((error) => {
+        if (!active) {
+          return;
         }
+
+        if (isUnauthorizedSessionError(error)) {
+          clearAuthSession();
+          navigate('/login', { state: toReturnToState(location.pathname) });
+          return;
+        }
+
+        setHasError(true);
+        setItems([]);
       });
 
     return () => {
       active = false;
     };
-  }, [navigate]);
+  }, [location.pathname, navigate]);
 
   const buckets = items ? splitByKind(items) : null;
 
@@ -125,31 +197,86 @@ export default function MyApplications() {
           <StatusBadge tone="info">My applications</StatusBadge>
         </>
       }
+      actions={
+        <Link
+          to={returnContext.to}
+          state={returnContext.state}
+          className="my-applications__section-link"
+        >
+          {returnContext.label}
+        </Link>
+      }
+      accountMenu={accountMenu}
+      workspaceSwitcher={
+        applicantReviewerWorkspaces.length > 1 ? (
+          <WorkspaceSwitcher
+            currentWorkspace="applicant"
+            availableWorkspaces={applicantReviewerWorkspaces}
+          />
+        ) : undefined
+      }
     >
       {items === null ? (
-        <div className="conference-empty">Loading your applications...</div>
+        <DemoStatePanel
+          className="dashboard-widget"
+          badgeLabel="Loading"
+          title="Loading your applications"
+          description="Preparing the applicant record list used as the main demo control point."
+          tone="info"
+        />
+      ) : hasError ? (
+        <DemoStatePanel
+          className="dashboard-widget"
+          badgeLabel="Error"
+          title="My applications unavailable"
+          description="We could not load your application records right now."
+          tone="danger"
+          actions={
+            <Link to="/portal" className="my-applications__section-link">
+              Restart from portal
+            </Link>
+          }
+        />
       ) : (
         <div className="my-applications">
-          {hasError ? (
-            <div className="conference-inline-message error">
-              We could not load your applications right now.
-            </div>
-          ) : null}
+          <DemoShortcutPanel
+            className="dashboard-widget"
+            title={demoWalkthroughCopy.applications.title}
+            intro={demoWalkthroughCopy.applications.intro}
+            shortcuts={[
+              primaryWalkthroughShortcut,
+              {
+                to: '/portal',
+                label: 'Restart from portal',
+                description: 'Return to the public entry if you need to re-run the demo from the beginning.',
+              },
+            ]}
+          />
 
           <ApplicationSection
             heading="Conference applications"
             items={buckets?.conference ?? []}
             emptyHint="You have no conference applications yet."
-            browseLink={{ to: '/conferences', label: 'Browse conferences' }}
+            browseLink={{
+              to: '/conferences',
+              label: 'Browse conferences',
+              state: sectionReturnState,
+            }}
             untitledFallback="Untitled conference"
+            detailState={sectionReturnState}
           />
 
           <ApplicationSection
             heading="Travel grant applications"
             items={buckets?.grant ?? []}
             emptyHint="You have no travel grant applications yet."
-            browseLink={{ to: '/grants', label: 'Browse grants' }}
+            browseLink={{
+              to: '/grants',
+              label: 'Browse grants',
+              state: sectionReturnState,
+            }}
             untitledFallback="Untitled grant"
+            detailState={sectionReturnState}
           />
         </div>
       )}
@@ -161,8 +288,9 @@ type ApplicationSectionProps = {
   heading: string;
   items: MyApplication[];
   emptyHint: string;
-  browseLink: { to: string; label: string };
+  browseLink: { to: string; label: string; state?: ReturnContextState };
   untitledFallback: string;
+  detailState?: ReturnContextState;
 };
 
 function ApplicationSection({
@@ -171,18 +299,25 @@ function ApplicationSection({
   emptyHint,
   browseLink,
   untitledFallback,
+  detailState,
 }: ApplicationSectionProps) {
   return (
     <section className="dashboard-widget" aria-labelledby={`section-${heading}`}>
       <header className="my-applications__section-header">
         <h2 id={`section-${heading}`}>{heading}</h2>
-        <Link to={browseLink.to} className="my-applications__section-link">
+        <Link to={browseLink.to} state={browseLink.state} className="my-applications__section-link">
           {browseLink.label}
         </Link>
       </header>
 
       {items.length === 0 ? (
-        <p className="conference-empty">{emptyHint}</p>
+        <DemoStatePanel
+          badgeLabel="Empty"
+          title={emptyHint}
+          description="Use the browse link in this section to start a new record."
+          tone="neutral"
+          compact
+        />
       ) : (
         <ul className="my-applications__list">
           {items.map((item) => (
@@ -202,7 +337,14 @@ function ApplicationSection({
                 </p>
               ) : null}
               <p className="my-applications__row-next-action" aria-label="Next step">
-                Next step: {NEXT_ACTION_LABELS[item.nextAction]}
+                <Link
+                  to={buildApplicationNextStepTarget(item)}
+                  state={detailState}
+                  className="my-applications__row-next-action-link"
+                  aria-label={NEXT_ACTION_LABELS[item.nextAction]}
+                >
+                  Next step: {NEXT_ACTION_LABELS[item.nextAction]}
+                </Link>
               </p>
             </li>
           ))}

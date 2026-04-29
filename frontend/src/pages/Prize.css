@@ -1,0 +1,17 @@
+.prize-hub,
+.prize-archive {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.prize-hub__copy {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.prize-signal-list {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: grid;
+  gap: 0.55rem;
+}

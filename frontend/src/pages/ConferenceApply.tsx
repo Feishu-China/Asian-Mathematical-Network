@@ -1,11 +1,16 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { WorkspaceShell } from '../components/layout/WorkspaceShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
 import { ConferenceApplyForm } from '../features/conference/ConferenceApplyForm';
 import { conferenceProvider } from '../features/conference/conferenceProvider';
+import { DemoStatePanel } from '../features/demo/DemoStatePanel';
+import { DemoStatusNotice } from '../features/demo/DemoStatusNotice';
+import { toReturnToState } from '../features/navigation/authReturn';
+import { readReturnContext, toReturnContextState } from '../features/navigation/returnContext';
+import { buildWorkspaceAccountMenu } from '../features/navigation/workspaceAccountMenu';
 import type {
   ConferenceApplication,
   ConferenceApplicationValues,
@@ -18,54 +23,180 @@ export const routePath = '/conferences/:slug/apply';
 
 export default function ConferenceApply() {
   const { slug = '' } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const returnContext = readReturnContext(location.state);
+  const isSignedIn = Boolean(localStorage.getItem('token'));
+  const accountMenu = isSignedIn
+    ? buildWorkspaceAccountMenu(() => {
+        localStorage.removeItem('token');
+        navigate('/portal');
+      })
+    : undefined;
   const [conference, setConference] = useState<ConferenceDetail | null | undefined>(undefined);
+  const [loadState, setLoadState] = useState<'loading' | 'ready' | 'not_found' | 'error'>(
+    'loading'
+  );
   const [schema, setSchema] = useState<ConferenceFormSchema>({ fields: [] });
   const [application, setApplication] = useState<ConferenceApplication | null>(null);
   const [status, setStatus] = useState<'idle' | 'saving' | 'submitting' | 'submitted' | 'conflict' | 'error'>(
     'idle'
   );
+  const [notice, setNotice] = useState<null | {
+    tone: 'info' | 'success' | 'warning' | 'danger';
+    badgeLabel: string;
+    title: string;
+    description: string;
+  }>(null);
 
   useEffect(() => {
     let active = true;
 
-    conferenceProvider.getConferenceBySlug(slug).then(async (value) => {
-      if (!active) {
-        return;
-      }
+    setConference(undefined);
+    setSchema({ fields: [] });
+    setApplication(null);
+    setStatus('idle');
+    setLoadState('loading');
+    setNotice(null);
 
-      setConference(value);
+    const load = async () => {
+      try {
+        const value = await conferenceProvider.getConferenceBySlug(slug);
 
-      if (!value) {
-        return;
-      }
+        if (!active) {
+          return;
+        }
 
-      const [nextSchema, nextApplication] = await Promise.all([
-        conferenceProvider.getConferenceApplicationForm(value.id),
-        localStorage.getItem('token')
-          ? conferenceProvider.getMyConferenceApplication(value.id)
-          : Promise.resolve(null),
-      ]);
+        setConference(value);
 
-      if (active) {
+        if (!value) {
+          setLoadState('not_found');
+          return;
+        }
+
+        const [nextSchema, nextApplication] = await Promise.all([
+          conferenceProvider.getConferenceApplicationForm(value.id),
+          localStorage.getItem('token')
+            ? conferenceProvider.getMyConferenceApplication(value.id)
+            : Promise.resolve(null),
+        ]);
+
+        if (!active) {
+          return;
+        }
+
         setSchema(nextSchema);
         setApplication(nextApplication);
+        setLoadState('ready');
+
+        if (nextApplication?.status === 'submitted') {
+          setStatus('submitted');
+          setNotice({
+            tone: 'success',
+            badgeLabel: 'Submitted',
+            title: 'Submitted and under review',
+            description:
+              'This conference application has already been submitted and is waiting for review.',
+          });
+        } else if (nextApplication) {
+          setNotice({
+            tone: 'warning',
+            badgeLabel: 'Draft in progress',
+            title: 'This conference application draft is already on file.',
+            description: 'Keep editing the saved draft before submitting it into review.',
+          });
+        }
+      } catch {
+        if (active) {
+          setConference(null);
+          setLoadState('error');
+        }
       }
-    });
+    };
+
+    void load();
 
     return () => {
       active = false;
     };
   }, [slug]);
 
-  if (conference === undefined) {
-    return <div className="conference-page">Loading conference application...</div>;
+  if (loadState !== 'ready' || !conference) {
+    return (
+      <WorkspaceShell
+        eyebrow="Conference application"
+        title={conference?.title ?? 'Conference application'}
+        description="Draft and submit your conference application without leaving the opportunity page."
+        badges={
+          <>
+            <RoleBadge role={isSignedIn ? 'applicant' : 'visitor'} />
+            <PageModeBadge mode="real-aligned" />
+            <StatusBadge tone={loadState === 'error' ? 'danger' : 'info'}>
+              {loadState === 'not_found'
+                ? 'Unavailable'
+                : loadState === 'error'
+                  ? 'Load failed'
+                  : 'Applicant flow'}
+            </StatusBadge>
+          </>
+        }
+        accountMenu={accountMenu}
+      >
+        <div className="conference-page">
+          {loadState === 'loading' ? (
+            <DemoStatePanel
+              badgeLabel="Loading"
+              title="Loading conference application"
+              description="Preparing this conference application surface for the demo."
+              tone="info"
+            />
+          ) : loadState === 'error' ? (
+            <DemoStatePanel
+              badgeLabel="Error"
+              title="Conference application unavailable"
+              description="We could not load this conference application right now."
+              tone="danger"
+              actions={
+                <Link className="my-applications__section-link" to="/conferences">
+                  Back to conferences
+                </Link>
+              }
+            />
+          ) : loadState === 'not_found' ? (
+            <DemoStatePanel
+              badgeLabel="Unavailable"
+              title="Conference not found"
+              description="This conference is not published or is unavailable in the current demo dataset."
+              tone="neutral"
+              actions={
+                <Link className="my-applications__section-link" to="/conferences">
+                  Back to conferences
+                </Link>
+              }
+            />
+          ) : (
+            <DemoStatePanel
+              badgeLabel="Sign in required"
+              title="Sign in to start a conference application"
+              description="You need an authenticated session before creating a draft."
+              tone="info"
+              actions={
+                <Link
+                  className="conference-primary-link"
+                  to="/login"
+                  state={toReturnToState(location.pathname)}
+                >
+                  Go to login
+                </Link>
+              }
+            />
+          )}
+        </div>
+      </WorkspaceShell>
+    );
   }
 
-  if (conference === null) {
-    return <div className="conference-page">Conference not found.</div>;
-  }
-
-  if (!localStorage.getItem('token')) {
+  if (!isSignedIn) {
     return (
       <WorkspaceShell
         eyebrow="Conference application"
@@ -77,21 +208,32 @@ export default function ConferenceApply() {
             <PageModeBadge mode="real-aligned" />
           </>
         }
+        accountMenu={accountMenu}
       >
         <div className="conference-page">
-          <div className="conference-detail-card">
-            <h2>Sign in to start a conference application</h2>
-            <p>You need an authenticated session before creating a draft.</p>
-            <Link className="conference-primary-link" to="/login">
-              Go to login
-            </Link>
-          </div>
+          <DemoStatePanel
+            badgeLabel="Sign in required"
+            title="Sign in to start a conference application"
+            description="You need an authenticated session before creating a draft."
+            tone="info"
+            actions={
+              <Link
+                className="conference-primary-link"
+                to="/login"
+                state={toReturnToState(location.pathname)}
+              >
+                Go to login
+              </Link>
+            }
+          />
         </div>
       </WorkspaceShell>
     );
   }
 
   const saveDraft = async (values: ConferenceApplicationValues) => {
+    setNotice(null);
+
     try {
       setStatus('saving');
 
@@ -101,13 +243,31 @@ export default function ConferenceApply() {
 
       setApplication(nextApplication);
       setStatus('idle');
+      setNotice({
+        tone: 'success',
+        badgeLabel: 'Saved',
+        title: 'Draft saved',
+        description: 'You can keep editing this conference application before submitting it into review.',
+      });
     } catch (error) {
       if ((error as { code?: string }).code === 'CONFLICT') {
         setStatus('conflict');
+        setNotice({
+          tone: 'danger',
+          badgeLabel: 'Conflict',
+          title: 'Draft already exists',
+          description: 'An application draft already exists for this conference.',
+        });
         return;
       }
 
       setStatus('error');
+      setNotice({
+        tone: 'danger',
+        badgeLabel: 'Error',
+        title: 'Conference application update failed',
+        description: 'We could not save your conference application right now.',
+      });
     }
   };
 
@@ -116,13 +276,27 @@ export default function ConferenceApply() {
       return;
     }
 
+    setNotice(null);
+
     try {
       setStatus('submitting');
       const submitted = await conferenceProvider.submitConferenceApplication(application.id);
       setApplication(submitted);
       setStatus('submitted');
+      setNotice({
+        tone: 'success',
+        badgeLabel: 'Submitted',
+        title: 'Application submitted',
+        description: 'The applicant view now reflects the submitted record and waits for review.',
+      });
     } catch {
       setStatus('error');
+      setNotice({
+        tone: 'danger',
+        badgeLabel: 'Error',
+        title: 'Conference application submission failed',
+        description: 'We could not submit this conference application right now.',
+      });
     }
   };
 
@@ -140,6 +314,7 @@ export default function ConferenceApply() {
           </StatusBadge>
         </>
       }
+      accountMenu={accountMenu}
       aside={
         <div className="conference-detail-card stack-sm">
           <h3>Event snapshot</h3>
@@ -148,23 +323,32 @@ export default function ConferenceApply() {
             {conference.startDate || 'Pending'} to {conference.endDate || 'Pending'}
           </p>
           <p>Deadline: {conference.applicationDeadline || 'Pending'}</p>
-          <Link to={`/conferences/${conference.slug}`}>Back to conference detail</Link>
+          <Link
+            to={`/conferences/${conference.slug}`}
+            state={toReturnContextState(returnContext)}
+          >
+            Back to conference detail
+          </Link>
         </div>
       }
     >
       <div className="conference-page conference-detail-page">
-        {status === 'conflict' ? (
-          <div className="conference-inline-message error">
-            An application draft already exists for this conference.
-          </div>
+        {notice ? (
+          <DemoStatusNotice
+            tone={notice.tone}
+            badgeLabel={notice.badgeLabel}
+            title={notice.title}
+            description={notice.description}
+          />
         ) : null}
 
-        {status === 'submitted' ? (
-          <div className="conference-inline-message success">Application submitted.</div>
-        ) : null}
-
-        {status === 'idle' && application ? (
-          <div className="conference-inline-message success">Draft saved.</div>
+        {!application && status === 'idle' ? (
+          <DemoStatePanel
+            badgeLabel="Empty"
+            title="No draft started yet"
+            description="Start a conference application draft here and keep it separate from any later grant request."
+            tone="neutral"
+          />
         ) : null}
 
         <ConferenceApplyForm

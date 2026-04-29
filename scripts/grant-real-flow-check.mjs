@@ -6,19 +6,23 @@ const require = createRequire(import.meta.url);
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const backendDir = path.resolve(scriptDir, '../backend');
+const backendRequire = createRequire(path.join(backendDir, 'package.json'));
 
 process.env.TS_NODE_PROJECT = path.join(backendDir, 'tsconfig.json');
 process.chdir(backendDir);
-process.env.DATABASE_URL ??= 'file:./dev.db';
 
-require('../backend/node_modules/ts-node/register/transpile-only');
+if (!process.env.DATABASE_URL) {
+  throw new Error('DATABASE_URL must be set before running grant-real-flow-check.mjs');
+}
 
-const { PrismaClient } = require('../backend/node_modules/@prisma/client');
+backendRequire('ts-node/register/transpile-only');
+
+const { PrismaClient } = backendRequire('@prisma/client');
 const {
   ensureDemoBaseline,
   DEMO_BASELINE_FIXTURE,
   cleanupDemoBaseline,
-} = require('../backend/src/lib/demoBaseline.ts');
+} = backendRequire('./src/lib/demoBaseline.ts');
 
 const prisma = new PrismaClient();
 

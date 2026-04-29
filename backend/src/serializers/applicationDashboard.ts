@@ -86,6 +86,7 @@ export const serializeMyApplicationItem = (application: DashboardApplicationReco
     application_type: application.applicationType,
     source_module: application.sourceModule,
     source_id: application.conferenceId ?? application.grantId,
+    source_slug: application.conference?.slug ?? application.grant?.slug ?? null,
     source_title: application.conference?.title ?? application.grant?.title ?? null,
     linked_conference_title: application.grant?.linkedConference?.title ?? null,
     viewer_status: viewerStatus,

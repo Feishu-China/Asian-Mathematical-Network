@@ -1,4 +1,4 @@
-import type { ConferenceStatus } from '../../../../src/types/models';
+import type { ConferenceStatus } from '@asiamath/shared/models';
 
 export type SupportedConferenceFieldKey =
   | 'participation_type'

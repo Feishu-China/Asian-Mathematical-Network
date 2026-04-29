@@ -1,0 +1,12 @@
+.partner-card__matching {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.partner-card__matching p {
+  margin: 0;
+}
+
+.partner-teaser-card {
+  align-content: start;
+}

@@ -1,8 +1,13 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { render } from '@testing-library/react';
 import { screen, waitFor } from '@testing-library/react';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
+import userEvent from '@testing-library/user-event';
+import { dashboardProvider } from '../features/dashboard/dashboardProvider';
 import { renderWithRouter } from '../test/renderWithRouter';
 import {
   resetDashboardFakeState,
+  seedDashboardDemoState,
   setDashboardFakeState,
 } from '../features/dashboard/fakeDashboardProvider';
 import type { MyApplication } from '../features/dashboard/types';
@@ -13,6 +18,7 @@ const submittedConferenceApp: MyApplication = {
   applicationType: 'conference_application',
   sourceModule: 'M2',
   sourceId: 'conf-1',
+  sourceSlug: 'asiamath-2026-workshop',
   sourceTitle: 'Asiamath 2026 Workshop',
   linkedConferenceTitle: null,
   viewerStatus: 'under_review',
@@ -22,11 +28,27 @@ const submittedConferenceApp: MyApplication = {
   postVisitReportStatus: null,
 };
 
+const draftConferenceApp: MyApplication = {
+  id: 'conf-app-draft-1',
+  applicationType: 'conference_application',
+  sourceModule: 'M2',
+  sourceId: 'conf-draft-1',
+  sourceSlug: 'integration-grant-conf-2026',
+  sourceTitle: 'Integration Grant Conference 2026',
+  linkedConferenceTitle: null,
+  viewerStatus: 'draft',
+  submittedAt: null,
+  releasedDecision: null,
+  nextAction: 'continue_draft',
+  postVisitReportStatus: null,
+};
+
 const draftGrantApp: MyApplication = {
   id: 'grant-app-1',
   applicationType: 'grant_application',
   sourceModule: 'M7',
   sourceId: 'grant-1',
+  sourceSlug: 'asiamath-2026-travel-grant',
   sourceTitle: 'Asiamath 2026 Travel Grant',
   linkedConferenceTitle: 'Asiamath 2026 Workshop',
   viewerStatus: 'draft',
@@ -41,6 +63,7 @@ const releasedAcceptedApp: MyApplication = {
   applicationType: 'conference_application',
   sourceModule: 'M2',
   sourceId: 'conf-2',
+  sourceSlug: 'asiamath-2025-conference',
   sourceTitle: 'Asiamath 2025 Conference',
   linkedConferenceTitle: null,
   viewerStatus: 'result_released',
@@ -55,18 +78,88 @@ const releasedAcceptedApp: MyApplication = {
   postVisitReportStatus: null,
 };
 
+function LoginStateProbe() {
+  const location = useLocation();
+
+  return <div>{JSON.stringify(location.state)}</div>;
+}
+
 describe('MyApplications page', () => {
   beforeEach(() => {
     localStorage.clear();
     resetDashboardFakeState();
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('redirects to /login when no token is present', async () => {
-    renderWithRouter(<MyApplications />, '/me/applications', '/me/applications');
+    render(
+      <MemoryRouter initialEntries={['/me/applications']}>
+        <Routes>
+          <Route path="/me/applications" element={<MyApplications />} />
+          <Route path="/login" element={<LoginStateProbe />} />
+        </Routes>
+      </MemoryRouter>
+    );
 
     await waitFor(() => {
-      expect(screen.queryByText(/Loading your applications/i)).not.toBeInTheDocument();
+      expect(screen.getByText('{"returnTo":"/me/applications"}')).toBeInTheDocument();
     });
+  });
+
+  it('renders the shared applicant account menu and logs out to the portal', async () => {
+    const user = userEvent.setup();
+    localStorage.setItem('token', 'test-token');
+
+    function PortalProbe() {
+      return <div>Portal destination</div>;
+    }
+
+    render(
+      <MemoryRouter initialEntries={['/me/applications']}>
+        <Routes>
+          <Route path="/me/applications" element={<MyApplications />} />
+          <Route path="/portal" element={<PortalProbe />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await user.click(await screen.findByRole('button', { name: 'Account' }));
+    expect(screen.getByRole('link', { name: 'My Applications' })).toHaveAttribute(
+      'href',
+      '/me/applications'
+    );
+    expect(screen.getByRole('link', { name: 'My Profile' })).toHaveAttribute('href', '/me/profile');
+
+    await user.click(screen.getByRole('button', { name: 'Log out' }));
+
+    expect(localStorage.getItem('token')).toBeNull();
+    expect(localStorage.getItem('asiamath.authUser')).toBeNull();
+    expect(screen.getByText('Portal destination')).toBeInTheDocument();
+  });
+
+  it('shows the workspace switcher for accounts that can move between applicant and reviewer workspaces', async () => {
+    localStorage.setItem('token', 'test-token');
+    localStorage.setItem(
+      'asiamath.authUser',
+      JSON.stringify({
+        id: 'user-1',
+        email: 'user@example.com',
+        status: 'active',
+        role: 'reviewer',
+        roles: ['applicant', 'reviewer'],
+        available_workspaces: ['applicant', 'reviewer'],
+        primary_role: 'reviewer',
+        createdAt: '2026-04-29T00:00:00.000Z',
+        updatedAt: '2026-04-29T00:00:00.000Z',
+      })
+    );
+
+    renderWithRouter(<MyApplications />, '/me/applications', '/me/applications');
+
+    expect(await screen.findByRole('button', { name: /workspace/i })).toBeInTheDocument();
   });
 
   it('shows empty hints in both sections when the user has no applications', async () => {
@@ -84,6 +177,148 @@ describe('MyApplications page', () => {
       'href',
       '/conferences'
     );
+    expect(
+      screen.getByRole('link', { name: /start from published conferences/i })
+    ).toHaveAttribute('href', '/conferences');
+  });
+
+  it('shows a dedicated error state when application records fail to load', async () => {
+    localStorage.setItem('token', 'test-token');
+    vi.spyOn(dashboardProvider, 'listMyApplications').mockRejectedValueOnce(
+      new Error('Backend unavailable')
+    );
+
+    renderWithRouter(<MyApplications />, '/me/applications', '/me/applications');
+
+    expect(await screen.findByText('My applications unavailable')).toBeInTheDocument();
+    expect(
+      screen.getByText(/we could not load your application records right now/i)
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/you have no conference applications yet/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/you have no travel grant applications yet/i)).not.toBeInTheDocument();
+  });
+
+  it('clears a stale session and redirects to /login when the applications request is unauthorized', async () => {
+    localStorage.setItem('token', 'applicant-1');
+    const unauthorizedError = Object.assign(new Error('Unauthorized'), { code: 'UNAUTHORIZED' });
+    vi.spyOn(dashboardProvider, 'listMyApplications').mockRejectedValueOnce(unauthorizedError);
+
+    render(
+      <MemoryRouter initialEntries={['/me/applications']}>
+        <Routes>
+          <Route path="/me/applications" element={<MyApplications />} />
+          <Route path="/login" element={<LoginStateProbe />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('{"returnTo":"/me/applications"}')).toBeInTheDocument();
+    });
+    expect(localStorage.getItem('token')).toBeNull();
+  });
+
+  it('renders the seeded demo application flow when demo state is loaded', async () => {
+    localStorage.setItem('token', 'test-token');
+    seedDashboardDemoState();
+
+    renderWithRouter(<MyApplications />, '/me/applications', '/me/applications');
+
+    expect(
+      await screen.findByRole('heading', { name: 'Review Demo Conference 2026' })
+    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /view submission/i })).toHaveAttribute(
+      'href',
+      '/me/applications/review-application-1'
+    );
+  });
+
+  it('shows presenter-safe walkthrough shortcuts and preserves a caller return link', async () => {
+    localStorage.setItem('token', 'test-token');
+    seedDashboardDemoState();
+
+    render(
+      <MemoryRouter
+        initialEntries={[
+          {
+            pathname: '/me/applications',
+            state: {
+              returnContext: {
+                to: '/dashboard',
+                label: 'Back to dashboard',
+              },
+            },
+          },
+        ]}
+      >
+        <Routes>
+          <Route path="/me/applications" element={<MyApplications />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByRole('heading', { name: /presenter-safe walkthrough/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /back to dashboard/i })).toHaveAttribute(
+      'href',
+      '/dashboard'
+    );
+    expect(screen.getByRole('link', { name: /open latest walkthrough record/i })).toHaveAttribute(
+      'href',
+      '/me/applications/review-application-1'
+    );
+  });
+
+  it('unwraps a self-referential return context back to the dashboard instead of linking to the current page', async () => {
+    localStorage.setItem('token', 'test-token');
+    seedDashboardDemoState();
+
+    render(
+      <MemoryRouter
+        initialEntries={[
+          {
+            pathname: '/me/applications',
+            state: {
+              returnContext: {
+                to: '/me/applications',
+                label: 'Back to my applications',
+                state: {
+                  returnContext: {
+                    to: '/dashboard',
+                    label: 'Back to dashboard',
+                  },
+                },
+              },
+            },
+          },
+        ]}
+      >
+        <Routes>
+          <Route path="/me/applications" element={<MyApplications />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByRole('heading', { name: /presenter-safe walkthrough/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /back to dashboard/i })).toHaveAttribute(
+      'href',
+      '/dashboard'
+    );
+    expect(screen.queryByRole('link', { name: /back to my applications/i })).not.toBeInTheDocument();
+  });
+
+  it('links the walkthrough shortcut to the first real application when records exist', async () => {
+    localStorage.setItem('token', 'test-token');
+    setDashboardFakeState([submittedConferenceApp, draftGrantApp]);
+
+    renderWithRouter(<MyApplications />, '/me/applications', '/me/applications');
+
+    expect(
+      await screen.findByRole('heading', { name: 'Asiamath 2026 Workshop' })
+    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /open latest walkthrough record/i })).toHaveAttribute(
+      'href',
+      '/me/applications/conf-app-1'
+    );
   });
 
   it('renders an under-review conference application with source title and next step', async () => {
@@ -96,7 +331,10 @@ describe('MyApplications page', () => {
       await screen.findByRole('heading', { name: 'Asiamath 2026 Workshop' })
     ).toBeInTheDocument();
     expect(screen.getByText('Under review')).toBeInTheDocument();
-    expect(screen.getByText(/Next step: View submission/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /view submission/i })).toHaveAttribute(
+      'href',
+      '/me/applications/conf-app-1'
+    );
   });
 
   it('renders a draft grant application with linked conference title and continue-draft next step', async () => {
@@ -110,7 +348,25 @@ describe('MyApplications page', () => {
     ).toBeInTheDocument();
     expect(screen.getByText('Draft')).toBeInTheDocument();
     expect(screen.getByText(/Linked conference: Asiamath 2026 Workshop/i)).toBeInTheDocument();
-    expect(screen.getByText(/Next step: Continue draft/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /continue draft/i })).toHaveAttribute(
+      'href',
+      '/grants/asiamath-2026-travel-grant/apply'
+    );
+  });
+
+  it('routes a draft conference application back to the editable conference apply page', async () => {
+    localStorage.setItem('token', 'test-token');
+    setDashboardFakeState([draftConferenceApp]);
+
+    renderWithRouter(<MyApplications />, '/me/applications', '/me/applications');
+
+    expect(
+      await screen.findByRole('heading', { name: 'Integration Grant Conference 2026' })
+    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /continue draft/i })).toHaveAttribute(
+      'href',
+      '/conferences/integration-grant-conf-2026/apply'
+    );
   });
 
   it('renders a released accepted conference decision with its display label and view-result next step', async () => {
@@ -123,7 +379,10 @@ describe('MyApplications page', () => {
       await screen.findByRole('heading', { name: 'Asiamath 2025 Conference' })
     ).toBeInTheDocument();
     expect(screen.getByText('Accepted')).toBeInTheDocument();
-    expect(screen.getByText(/Next step: View result/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /view result/i })).toHaveAttribute(
+      'href',
+      '/me/applications/conf-app-2'
+    );
   });
 
   it('splits records into conference and grant sections', async () => {

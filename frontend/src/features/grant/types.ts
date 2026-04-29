@@ -1,6 +1,9 @@
-import type { GrantOpportunityStatus, GrantType } from '../../../../src/types/models';
+import type { GrantOpportunityStatus, GrantType } from '@asiamath/shared/models';
+
+export type LinkedOpportunityType = 'conference' | 'school';
 
 export type SupportedGrantFieldKey =
+  | 'linked_opportunity_application_id'
   | 'linked_conference_application_id'
   | 'statement'
   | 'travel_plan_summary'
@@ -22,7 +25,9 @@ export type GrantListItem = {
   slug: string;
   title: string;
   grantType: GrantType;
-  linkedConferenceId: string;
+  linkedOpportunityType: LinkedOpportunityType;
+  linkedOpportunityId: string;
+  linkedOpportunityTitle: string | null;
   applicationDeadline: string | null;
   status: GrantOpportunityStatus;
   reportRequired: boolean;
@@ -42,8 +47,10 @@ export type GrantApplication = {
   sourceModule: string;
   grantId: string;
   grantTitle: string;
-  linkedConferenceId: string;
-  linkedConferenceApplicationId: string;
+  linkedOpportunityType: LinkedOpportunityType;
+  linkedOpportunityId: string;
+  linkedOpportunityTitle: string | null;
+  linkedOpportunityApplicationId: string;
   applicantUserId: string;
   status: 'draft' | 'submitted';
   statement: string | null;
@@ -58,7 +65,7 @@ export type GrantApplication = {
 };
 
 export type GrantApplicationValues = {
-  linkedConferenceApplicationId: string;
+  linkedOpportunityApplicationId: string;
   statement: string;
   travelPlanSummary: string;
   fundingNeedSummary: string;

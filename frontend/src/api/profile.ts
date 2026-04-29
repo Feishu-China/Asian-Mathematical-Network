@@ -1,8 +1,4 @@
-import axios from 'axios';
-
-const api = axios.create({
-  baseURL: '/api/v1',
-});
+import { api } from './client';
 
 const withAuth = (token: string) => ({
   headers: { Authorization: `Bearer ${token}` },
@@ -20,5 +16,10 @@ export const updateMyProfileRequest = async (token: string, payload: unknown) =>
 
 export const fetchScholarProfile = async (slug: string) => {
   const response = await api.get(`/scholars/${slug}`);
+  return response.data;
+};
+
+export const fetchScholarDirectory = async () => {
+  const response = await api.get('/scholars');
   return response.data;
 };

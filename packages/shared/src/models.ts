@@ -9,6 +9,7 @@
 
 export type UserStatus = 'active' | 'inactive' | 'suspended';
 export type UserRole = 'applicant' | 'reviewer' | 'organizer' | 'admin';
+export type WorkspaceKey = UserRole;
 export type InstitutionStatus = 'active' | 'inactive' | 'pending';
 export type ProfileVerificationStatus = 'unverified' | 'pending_review' | 'verified' | 'rejected';
 export type CareerStage = 'undergraduate' | 'masters' | 'phd' | 'postdoc' | 'faculty' | 'other';
@@ -126,12 +127,12 @@ export interface Application {
 }
 
 export interface Decision {
-  id: string; // UUID
+  id: string;
   applicationId: string;
   finalStatus: DecisionFinalStatus;
   releaseStatus: DecisionReleaseStatus;
   internalNotes: string | null;
-  externalNotes: string | null; // Only visible to applicant if released
+  externalNotes: string | null;
   issuedByUserId: string;
   issuedAt: string;
   releasedAt: string | null;

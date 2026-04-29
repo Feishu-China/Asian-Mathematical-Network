@@ -1,9 +1,17 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { WorkspaceShell } from '../components/layout/WorkspaceShell';
 import { PageModeBadge } from '../components/ui/PageModeBadge';
 import { RoleBadge } from '../components/ui/RoleBadge';
 import { StatusBadge } from '../components/ui/StatusBadge';
+import { clearAuthSession } from '../features/auth/authSession';
+import { DASHBOARD_RETURN_CONTEXT } from '../features/demo/demoWalkthrough';
+import { buildWorkspaceAccountMenu } from '../features/navigation/workspaceAccountMenu';
+import {
+  buildOrganizerQueueReturnContext,
+  buildWorkspaceChildState,
+  resolveWorkspaceReturnContext,
+} from '../features/navigation/workspaceNavigation';
 import { reviewProvider } from '../features/review/reviewProvider';
 import type { OrganizerApplicationListItem } from '../features/review/types';
 import './Review.css';
@@ -12,8 +20,27 @@ export const routePath = '/organizer/conferences/:id/applications';
 
 export default function OrganizerConferenceApplications() {
   const { id = '' } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [items, setItems] = useState<OrganizerApplicationListItem[] | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const returnContext = resolveWorkspaceReturnContext(
+    location.state,
+    location.pathname,
+    DASHBOARD_RETURN_CONTEXT
+  );
+  const detailState = buildWorkspaceChildState(
+    buildOrganizerQueueReturnContext(id),
+    returnContext
+  );
+  const accountMenu = buildWorkspaceAccountMenu({
+    role: 'organizer',
+    primaryConferenceId: id,
+    onLogout: () => {
+      clearAuthSession();
+      navigate('/portal');
+    },
+  });
 
   useEffect(() => {
     let active = true;
@@ -55,6 +82,21 @@ export default function OrganizerConferenceApplications() {
           <StatusBadge tone="info">Review queue</StatusBadge>
         </>
       }
+      actions={
+        <>
+          <Link
+            to={returnContext.to}
+            state={returnContext.state}
+            className="my-applications__section-link"
+          >
+            {returnContext.label}
+          </Link>
+          <Link to="/portal" className="my-applications__section-link">
+            Back to portal
+          </Link>
+        </>
+      }
+      accountMenu={accountMenu}
     >
       <div className="review-page">
         {items.length === 0 ? (
@@ -82,7 +124,11 @@ export default function OrganizerConferenceApplications() {
                 </div>
 
                 <div className="conference-form-actions">
-                  <Link className="conference-primary-link" to={`/organizer/applications/${item.id}`}>
+                  <Link
+                    className="conference-primary-link"
+                    to={`/organizer/applications/${item.id}`}
+                    state={detailState}
+                  >
                     Open application
                   </Link>
                 </div>

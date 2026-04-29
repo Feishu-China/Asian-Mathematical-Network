@@ -1,4 +1,5 @@
 import { Prisma, PrismaClient } from '@prisma/client';
+import type { UserRole, WorkspaceKey } from '@asiamath/shared/models';
 import { prisma } from './prisma';
 
 type PrismaLike = Prisma.TransactionClient | PrismaClient | typeof prisma;
@@ -9,6 +10,8 @@ const ROLE_PRIORITY: Record<string, number> = {
   reviewer: 200,
   applicant: 100,
 };
+
+const WORKSPACE_ROLE_ORDER: WorkspaceKey[] = ['applicant', 'reviewer', 'organizer', 'admin'];
 
 const sortRoles = <
   T extends {
@@ -37,20 +40,34 @@ export const listUserRoles = async (userId: string, client: PrismaLike = prisma)
     where: { userId },
   });
 
-  return sortRoles(roles).map((item) => item.role);
+  return sortRoles(roles).map((item) => item.role as UserRole);
 };
 
-export const readPrimaryRole = async (userId: string, client: PrismaLike = prisma) => {
+export const readPrimaryRole = async (
+  userId: string,
+  client: PrismaLike = prisma
+): Promise<UserRole | null> => {
   const roles = await client.userRole.findMany({
     where: { userId },
   });
 
-  return sortRoles(roles)[0]?.role ?? null;
+  const primaryRole = sortRoles(roles)[0]?.role;
+
+  return (primaryRole as UserRole | undefined) ?? null;
+};
+
+export const listAvailableWorkspaces = async (
+  userId: string,
+  client: PrismaLike = prisma
+): Promise<WorkspaceKey[]> => {
+  const roles = await listUserRoles(userId, client);
+
+  return WORKSPACE_ROLE_ORDER.filter((workspace) => roles.includes(workspace));
 };
 
 export const ensureUserRole = async (
   userId: string,
-  role: string,
+  role: UserRole,
   client: PrismaLike = prisma,
   isPrimary = false
 ) =>
@@ -71,7 +88,7 @@ export const ensureUserRole = async (
 
 export const hasAnyUserRole = async (
   userId: string,
-  roles: string[],
+  roles: UserRole[],
   client: PrismaLike = prisma
 ) => {
   const count = await client.userRole.count({

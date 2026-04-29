@@ -790,7 +790,12 @@ export const getMyApplicationDetail = async (req: Request, res: Response) => {
         application: serializeApplicantApplicationDetail(application),
       },
     });
-  } catch {
-    res.status(401).json({ message: 'Unauthorized' });
+  } catch (error) {
+    if ((error as Error).message === 'UNAUTHORIZED') {
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
+    }
+
+    res.status(500).json({ message: 'Failed to load application detail' });
   }
 };

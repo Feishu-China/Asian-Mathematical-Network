@@ -134,7 +134,23 @@ export type ApplicantApplicationDetail = {
   sourceModule: string;
   conferenceId: string | null;
   conferenceTitle: string | null;
+  grantId: string | null;
+  grantTitle: string | null;
+  linkedConferenceId: string | null;
+  linkedConferenceTitle: string | null;
+  linkedConferenceApplicationId: string | null;
   viewerStatus: ViewerStatus;
+  participationType: string | null;
+  statement: string | null;
+  abstractTitle: string | null;
+  abstractText: string | null;
+  interestedInTravelSupport: boolean;
+  travelPlanSummary: string | null;
+  fundingNeedSummary: string | null;
+  extraAnswers: Record<string, unknown>;
+  applicantProfileSnapshot: ProfileSnapshot;
+  files: Array<{ id: string; fileRole?: string; originalName?: string }>;
+  submittedAt: string | null;
   releasedDecision: {
     decisionKind: string;
     finalStatus: DecisionFinalStatus;
@@ -142,6 +158,8 @@ export type ApplicantApplicationDetail = {
     noteExternal: string | null;
     releasedAt: string | null;
   } | null;
+  postVisitReport: PostVisitReport | null;
+  postVisitReportStatus: string | null;
 };
 
 export type AssignReviewerValues = {
@@ -163,6 +181,19 @@ export type ReviewSubmissionValues = {
   comment: string;
 };
 
+export type PostVisitReport = {
+  id: string;
+  status: string;
+  reportNarrative: string;
+  attendanceConfirmed: boolean;
+  submittedAt: string | null;
+};
+
+export type PostVisitReportValues = {
+  reportNarrative: string;
+  attendanceConfirmed: boolean;
+};
+
 export type ReviewProvider = {
   listOrganizerConferenceApplications(conferenceId: string): Promise<OrganizerApplicationListItem[]>;
   getOrganizerApplicationDetail(applicationId: string): Promise<OrganizerApplicationDetail>;
@@ -180,4 +211,8 @@ export type ReviewProvider = {
   getReviewerAssignmentDetail(assignmentId: string): Promise<ReviewerAssignmentDetail>;
   submitReviewerReview(assignmentId: string, values: ReviewSubmissionValues): Promise<ReviewRecord>;
   getMyApplicationDetail(applicationId: string): Promise<ApplicantApplicationDetail>;
+  submitMyPostVisitReport(
+    applicationId: string,
+    values: PostVisitReportValues
+  ): Promise<PostVisitReport>;
 };

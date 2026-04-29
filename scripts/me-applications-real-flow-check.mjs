@@ -6,30 +6,35 @@ const require = createRequire(import.meta.url);
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const backendDir = path.resolve(scriptDir, '../backend');
+const backendRequire = createRequire(path.join(backendDir, 'package.json'));
 
 process.env.TS_NODE_PROJECT = path.join(backendDir, 'tsconfig.json');
 process.chdir(backendDir);
-process.env.DATABASE_URL ??= 'file:./dev.db';
 
-require('../backend/node_modules/ts-node/register/transpile-only');
+if (!process.env.DATABASE_URL) {
+  throw new Error('DATABASE_URL must be set before running me-applications-real-flow-check.mjs');
+}
 
-const { PrismaClient } = require('../backend/node_modules/@prisma/client');
+backendRequire('ts-node/register/transpile-only');
+
+const { PrismaClient } = backendRequire('@prisma/client');
 const {
   ensureDemoBaseline,
   DEMO_BASELINE_FIXTURE,
   cleanupDemoBaseline,
-} = require('../backend/src/lib/demoBaseline.ts');
+} = backendRequire('./src/lib/demoBaseline.ts');
 
 const prisma = new PrismaClient();
 
 const BACKEND_ORIGIN = process.env.PORTAL_INT_BACKEND_ORIGIN ?? 'http://127.0.0.1:3000';
 const FRONTEND_ORIGIN = process.env.PORTAL_INT_FRONTEND_ORIGIN ?? 'http://127.0.0.1:5173';
+const SKIP_CLEANUP = process.env.PORTAL_INT_SKIP_CLEANUP === 'true';
 
 const uniqueRunId = Date.now().toString(36);
 const applicant = {
-  email: `portal.int.${uniqueRunId}@example.com`,
-  password: 'password123',
-  fullName: `Portal Int ${uniqueRunId}`,
+  email: process.env.PORTAL_INT_USER_EMAIL ?? `portal.int.${uniqueRunId}@example.com`,
+  password: process.env.PORTAL_INT_USER_PASSWORD ?? 'password123',
+  fullName: process.env.PORTAL_INT_USER_FULL_NAME ?? `Portal Int ${uniqueRunId}`,
 };
 
 const cleanupVerifierArtifacts = async () => {
@@ -123,12 +128,16 @@ const expectField = (actual, expected, label) => {
   }
 };
 
-const verifyFrontendRoutes = async (sampleApplicationId) => {
+const verifyFrontendRoutes = async ({ conferenceApplicationId, grantApplicationId }) => {
   await readHtml(`${FRONTEND_ORIGIN}/portal`, 'frontend /portal');
   await readHtml(`${FRONTEND_ORIGIN}/me/applications`, 'frontend /me/applications');
   await readHtml(
-    `${FRONTEND_ORIGIN}/me/applications/${sampleApplicationId}`,
-    'frontend /me/applications/:id'
+    `${FRONTEND_ORIGIN}/me/applications/${conferenceApplicationId}`,
+    'frontend /me/applications/:id (conference)'
+  );
+  await readHtml(
+    `${FRONTEND_ORIGIN}/me/applications/${grantApplicationId}`,
+    'frontend /me/applications/:id (grant)'
   );
 };
 
@@ -204,6 +213,18 @@ const submitGrantApplication = async (token, grantId, linkedConferenceApplicatio
   return submitted.data.application;
 };
 
+const submitPostVisitReport = async (token, applicationId) =>
+  postJson(
+    `${BACKEND_ORIGIN}/api/v1/me/applications/${applicationId}/post-visit-report`,
+    token,
+    {
+      report_narrative: 'Attended the workshop, presented a talk, and met two collaborators.',
+      attendance_confirmed: true,
+    },
+    201,
+    'submit post-visit report'
+  );
+
 const releaseDecisionDirectly = async ({
   applicationId,
   decisionKind,
@@ -271,7 +292,10 @@ const main = async () => {
   });
 
   console.log('Verifying frontend portal / dashboard / detail routes resolve...');
-  await verifyFrontendRoutes(conferenceApp.id);
+  await verifyFrontendRoutes({
+    conferenceApplicationId: conferenceApp.id,
+    grantApplicationId: grantApp.id,
+  });
 
   console.log('Reading the applicant dashboard through the real backend...');
   const dashboard = await readJson(
@@ -404,6 +428,78 @@ const main = async () => {
   ) {
     throw new Error('Grant detail missing funding_need_summary');
   }
+  expectField(grantDetailItem.post_visit_report, null, 'grant detail post_visit_report before submit');
+  expectField(
+    grantDetailItem.post_visit_report_status,
+    null,
+    'grant detail post_visit_report_status before submit'
+  );
+
+  console.log('Submitting the post-visit report through the real backend...');
+  const postVisitPayload = await submitPostVisitReport(auth.token, grantApp.id);
+  expectField(
+    postVisitPayload.data.post_visit_report.status,
+    'submitted',
+    'post-visit report status after submit'
+  );
+  expectField(
+    postVisitPayload.data.post_visit_report.attendance_confirmed,
+    true,
+    'post-visit attendance confirmation'
+  );
+
+  console.log('Re-reading dashboard after post-visit report submission...');
+  const dashboardAfterReport = await readJson(
+    `${BACKEND_ORIGIN}/api/v1/me/applications`,
+    { headers: { Authorization: `Bearer ${auth.token}` } },
+    200,
+    'list my applications after post-visit report'
+  );
+  const dashboardGrantAfterReport = dashboardAfterReport.data.items.find(
+    (item) => item.id === grantApp.id
+  );
+  if (!dashboardGrantAfterReport) {
+    throw new Error('Dashboard lost the grant application after post-visit report submission');
+  }
+  expectField(
+    dashboardGrantAfterReport.next_action,
+    'view_result',
+    'grant next_action after post-visit report submit'
+  );
+  expectField(
+    dashboardGrantAfterReport.post_visit_report_status,
+    'submitted',
+    'grant dashboard post_visit_report_status after submit'
+  );
+
+  console.log('Re-reading grant detail after post-visit report submission...');
+  const grantDetailAfterReport = await readJson(
+    `${BACKEND_ORIGIN}/api/v1/me/applications/${grantApp.id}`,
+    { headers: { Authorization: `Bearer ${auth.token}` } },
+    200,
+    'grant application detail after post-visit report'
+  );
+  const grantDetailAfterReportItem = grantDetailAfterReport.data.application;
+  expectField(
+    grantDetailAfterReportItem.post_visit_report?.status,
+    'submitted',
+    'grant detail post_visit_report.status after submit'
+  );
+  expectField(
+    grantDetailAfterReportItem.post_visit_report?.attendance_confirmed,
+    true,
+    'grant detail post_visit_report.attendance_confirmed after submit'
+  );
+  expectField(
+    grantDetailAfterReportItem.post_visit_report_status,
+    'submitted',
+    'grant detail post_visit_report_status after submit'
+  );
+  expectField(
+    grantDetailAfterReportItem.post_visit_report?.report_narrative,
+    'Attended the workshop, presented a talk, and met two collaborators.',
+    'grant detail post_visit_report.report_narrative after submit'
+  );
 
   console.log('Verifying applicant cannot read another user\'s application detail...');
   const foreignId = '00000000-0000-0000-0000-000000000000';
@@ -426,7 +522,12 @@ const main = async () => {
           grantId: fixture.grant.id,
           grantSlug: fixture.grant.slug,
         },
-        applicant: { email: applicant.email, userId: auth.user.id },
+        applicant: {
+          email: applicant.email,
+          password: applicant.password,
+          fullName: applicant.fullName,
+          userId: auth.user.id,
+        },
         conferenceApplicationId: conferenceApp.id,
         grantApplicationId: grantApp.id,
       },
@@ -439,7 +540,9 @@ const main = async () => {
 try {
   await main();
 } finally {
-  await cleanupVerifierArtifacts();
-  await cleanupDemoBaseline(prisma);
+  if (!SKIP_CLEANUP) {
+    await cleanupVerifierArtifacts();
+    await cleanupDemoBaseline(prisma);
+  }
   await prisma.$disconnect();
 }

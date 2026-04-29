@@ -1,17 +1,20 @@
 import { useEffect, useState } from 'react';
 import { StatusBadge } from '../../components/ui/StatusBadge';
 import type { GrantApplicantVisibleState } from './grantApplicantState';
+import { getLinkedOpportunityCopy } from './linkedOpportunity';
 import type {
   GrantApplication,
   GrantApplicationValues,
   GrantFormSchema,
+  LinkedOpportunityType,
   SupportedGrantFieldKey,
 } from './types';
 
 type Props = {
   schema: GrantFormSchema;
   application: GrantApplication | null;
-  linkedConferenceApplicationId: string;
+  linkedOpportunityType: LinkedOpportunityType;
+  linkedOpportunityApplicationId: string;
   visibleState: GrantApplicantVisibleState;
   status: 'idle' | 'saving' | 'submitting' | 'submitted' | 'conflict' | 'prerequisite' | 'error';
   blocked: boolean;
@@ -21,10 +24,10 @@ type Props = {
 
 const toValues = (
   application: GrantApplication | null,
-  linkedConferenceApplicationId: string
+  linkedOpportunityApplicationId: string
 ): GrantApplicationValues => ({
-  linkedConferenceApplicationId:
-    application?.linkedConferenceApplicationId ?? linkedConferenceApplicationId,
+  linkedOpportunityApplicationId:
+    application?.linkedOpportunityApplicationId ?? linkedOpportunityApplicationId,
   statement: application?.statement ?? '',
   travelPlanSummary: application?.travelPlanSummary ?? '',
   fundingNeedSummary: application?.fundingNeedSummary ?? '',
@@ -34,20 +37,22 @@ const toValues = (
 export function GrantApplyForm({
   schema,
   application,
-  linkedConferenceApplicationId,
+  linkedOpportunityType,
+  linkedOpportunityApplicationId,
   visibleState,
   status,
   blocked,
   onSave,
   onSubmit,
 }: Props) {
+  const opportunityCopy = getLinkedOpportunityCopy(linkedOpportunityType);
   const [values, setValues] = useState<GrantApplicationValues>(() =>
-    toValues(application, linkedConferenceApplicationId)
+    toValues(application, linkedOpportunityApplicationId)
   );
 
   useEffect(() => {
-    setValues(toValues(application, linkedConferenceApplicationId));
-  }, [application, linkedConferenceApplicationId]);
+    setValues(toValues(application, linkedOpportunityApplicationId));
+  }, [application, linkedOpportunityApplicationId]);
 
   const fieldKeys = new Set<SupportedGrantFieldKey>(schema.fields.map((field) => field.key));
   const hasField = (key: SupportedGrantFieldKey) => fieldKeys.size === 0 || fieldKeys.has(key);
@@ -109,16 +114,15 @@ export function GrantApplyForm({
           <p className="conference-eyebrow">Applicant workspace</p>
           <h2>Travel grant application</h2>
           <p className="conference-muted-note">
-            Grant applications stay separate from conference applications, even when the conference
-            submission is required first.
+            {opportunityCopy.formHint}
           </p>
         </div>
         <StatusBadge tone={badgeTone}>{badgeText}</StatusBadge>
       </header>
 
       <div className="conference-publish-hint">
-        Linked conference application:{' '}
-        {linkedConferenceApplicationId ? linkedConferenceApplicationId : 'Not available yet'}
+        {opportunityCopy.linkedRecordLabel}:{' '}
+        {linkedOpportunityApplicationId ? linkedOpportunityApplicationId : 'Not available yet'}
       </div>
 
       {hasField('statement') ? (

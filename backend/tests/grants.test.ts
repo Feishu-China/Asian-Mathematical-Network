@@ -368,6 +368,26 @@ describe('Grant API', () => {
       status: 'submitted',
     });
 
+    const applicantDetailRes = await request(app)
+      .get(`/api/v1/me/applications/${applicationId}`)
+      .set('Authorization', `Bearer ${submitToken}`);
+
+    expect(applicantDetailRes.status).toBe(200);
+    expect(applicantDetailRes.body.data.application).toMatchObject({
+      id: applicationId,
+      application_type: 'grant_application',
+      grant_id: publishedGrantId,
+      grant_title: 'Asiamath 2026 Travel Grant',
+      linked_conference_id: linkedConferenceId,
+      linked_conference_application_id: submitConferenceApplicationId,
+      viewer_status: 'under_review',
+      statement: 'Updated funding request statement.',
+      travel_plan_summary: 'Updated travel plan.',
+      funding_need_summary: 'Updated funding need.',
+      submitted_at: expect.any(String),
+      released_decision: null,
+    });
+
     const storedApplication = await prisma.application.findUnique({
       where: { id: applicationId },
     });

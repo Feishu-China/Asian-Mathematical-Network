@@ -1,11 +1,25 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { register } from '../api/auth';
+import {
+  hasExplicitReturnTo,
+  readReturnTo,
+  resolvePostAuthDestination,
+  resolvePostAuthWorkspace,
+  toReturnToState,
+} from '../features/navigation/authReturn';
+import {
+  writeAuthToken,
+  writeStoredAuthUser,
+} from '../features/auth/authSession';
+import { writeStoredWorkspace } from '../features/navigation/workspaces';
 import { UserPlus, Mail, Lock, User } from 'lucide-react';
 import './Auth.css';
 
 export default function Register() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const returnTo = readReturnTo(location.state);
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -18,8 +32,17 @@ export default function Register() {
     setLoading(true);
     try {
       const data = await register({ email, password, fullName });
-      localStorage.setItem('token', data.accessToken);
-      navigate('/dashboard');
+      const availableWorkspaces = data.user.available_workspaces ?? data.user.roles;
+      writeAuthToken(data.accessToken);
+      writeStoredAuthUser(data.user);
+
+      if (!hasExplicitReturnTo(location.state)) {
+        writeStoredWorkspace(resolvePostAuthWorkspace(availableWorkspaces, 'applicant'));
+      }
+
+      navigate(
+        resolvePostAuthDestination(location.state, availableWorkspaces, 'applicant')
+      );
     } catch (err: any) {
       setError(err.response?.data?.message || 'Registration failed.');
     } finally {
@@ -78,7 +101,7 @@ export default function Register() {
         </form>
         
         <div className="auth-footer">
-          Already have an account? <Link to="/login">Sign in</Link>
+          Already have an account? <Link to="/login" state={toReturnToState(returnTo)}>Sign in</Link>
         </div>
       </div>
     </div>

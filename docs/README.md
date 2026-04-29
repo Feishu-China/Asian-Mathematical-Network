@@ -49,6 +49,10 @@ The main goal of this README is to answer four questions quickly:
 
 - `docs/planning/asiamath-feature-list-v2.2.json`
   Current execution backlog and feature-level delivery plan.
+- `docs/planning/asiamath-demo-preview-ops-d0.md`
+  Hosted demo preview runbook. Use this for Railway/Vercel preview checks, hosted reseeding, and recurring deployment pitfalls.
+- `docs/planning/asiamath-demo-seed-contract-d0.md`
+  Real demo seed contract. Use this to understand which demo accounts, opportunities, and workflow states are intentionally seeded.
 
 ### Reference
 
@@ -92,7 +96,9 @@ Read in this order:
 1. `docs/product/asiamath-demo-prd-v3.1.md`
 2. `docs/specs/asiamath-design-spec-v2.1.md`
 3. `docs/specs/asiamath-api-spec-v2.1.md`
-4. `docs/planning/asiamath-feature-list-v2.2.json`
+4. `docs/planning/asiamath-demo-seed-contract-d0.md`
+5. `docs/planning/asiamath-demo-preview-ops-d0.md`
+6. `docs/planning/asiamath-feature-list-v2.2.json`
 
 ### For full product context
 

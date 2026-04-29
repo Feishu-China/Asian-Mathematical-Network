@@ -1,0 +1,51 @@
+.application-detail__aside-stack {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.application-detail__aside {
+  gap: var(--space-3);
+}
+
+.application-detail__back-link {
+  font-weight: 600;
+}
+
+.application-detail__result-note {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.application-detail__report-form {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.application-detail__report-label {
+  display: grid;
+  gap: var(--space-2);
+  font-weight: 600;
+}
+
+.application-detail__report-textarea {
+  width: 100%;
+  min-height: 8rem;
+  resize: vertical;
+}
+
+.application-detail__report-checkbox {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-start;
+}
+
+.application-detail__report-meta {
+  margin: 0;
+}
+
+.application-detail__report-error {
+  margin: 0;
+  color: var(--color-danger-700);
+  font-weight: 600;
+}

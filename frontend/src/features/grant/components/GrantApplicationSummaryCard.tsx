@@ -1,11 +1,12 @@
 import { StatusBadge } from '../../../components/ui/StatusBadge';
 import type { GrantApplicantVisibleState } from '../grantApplicantState';
+import { getLinkedOpportunityCopy } from '../linkedOpportunity';
 import type { GrantApplication, GrantDetail } from '../types';
 
 type Props = {
   grant: GrantDetail;
   application: GrantApplication | null;
-  linkedConferenceApplicationId: string;
+  linkedOpportunityApplicationId: string;
   visibleState: GrantApplicantVisibleState;
 };
 
@@ -37,9 +38,11 @@ const toTone = (state: GrantApplicantVisibleState): 'neutral' | 'info' | 'warnin
 export function GrantApplicationSummaryCard({
   grant,
   application,
-  linkedConferenceApplicationId,
+  linkedOpportunityApplicationId,
   visibleState,
 }: Props) {
+  const copy = getLinkedOpportunityCopy(grant.linkedOpportunityType);
+
   return (
     <section className="conference-detail-card stack-sm">
       <div className="stack-sm">
@@ -53,9 +56,15 @@ export function GrantApplicationSummaryCard({
           <dd>Separate M7 grant application record</dd>
         </div>
         <div>
-          <dt>Linked conference application</dt>
-          <dd>{linkedConferenceApplicationId || 'Required before grant submission'}</dd>
+          <dt>{copy.linkedRecordLabel}</dt>
+          <dd>{linkedOpportunityApplicationId || copy.linkedRecordHint}</dd>
         </div>
+        {grant.linkedOpportunityTitle ? (
+          <div>
+            <dt>Linked opportunity</dt>
+            <dd>{grant.linkedOpportunityTitle}</dd>
+          </div>
+        ) : null}
         <div>
           <dt>Grant deadline</dt>
           <dd>{formatDate(grant.applicationDeadline)}</dd>
