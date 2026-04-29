@@ -216,6 +216,32 @@ describe('Dashboard page', () => {
     );
   });
 
+  it('still treats /dashboard as applicant root when an older auth payload omits available_workspaces', async () => {
+    localStorage.setItem('token', 'dashboard-token');
+    const legacyMeResponse = buildMeResponse({
+      id: 'user-reviewer',
+      email: 'demo.reviewer@asiamath.org',
+      status: 'active',
+      role: 'reviewer',
+      roles: ['applicant', 'reviewer'],
+      available_workspaces: ['applicant', 'reviewer'],
+      primary_role: 'reviewer',
+      createdAt: '2026-04-29T00:00:00.000Z',
+      updatedAt: '2026-04-29T00:00:00.000Z',
+    });
+    delete (legacyMeResponse.user as Partial<(typeof legacyMeResponse.user)>).available_workspaces;
+    mockedGetMe.mockResolvedValueOnce(legacyMeResponse as unknown as MeResponse);
+
+    renderWithRouter(<Dashboard />, '/dashboard', '/dashboard');
+
+    expect(await screen.findByRole('heading', { name: /dashboard/i })).toBeInTheDocument();
+    expect(screen.getByText('Role: Applicant')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /open my applications/i })).toHaveAttribute(
+      'href',
+      '/me/applications'
+    );
+  });
+
   it('renders an organizer workspace landing instead of applicant-only dashboard content', async () => {
     const listMyApplicationsSpy = vi.spyOn(dashboardProvider, 'listMyApplications');
     localStorage.setItem('token', 'dashboard-token');

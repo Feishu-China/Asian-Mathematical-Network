@@ -32,15 +32,16 @@ export default function Register() {
     setLoading(true);
     try {
       const data = await register({ email, password, fullName });
+      const availableWorkspaces = data.user.available_workspaces ?? data.user.roles;
       writeAuthToken(data.accessToken);
       writeStoredAuthUser(data.user);
 
       if (!hasExplicitReturnTo(location.state)) {
-        writeStoredWorkspace(resolvePostAuthWorkspace(data.user.available_workspaces, 'applicant'));
+        writeStoredWorkspace(resolvePostAuthWorkspace(availableWorkspaces, 'applicant'));
       }
 
       navigate(
-        resolvePostAuthDestination(location.state, data.user.available_workspaces, 'applicant')
+        resolvePostAuthDestination(location.state, availableWorkspaces, 'applicant')
       );
     } catch (err: any) {
       setError(err.response?.data?.message || 'Registration failed.');

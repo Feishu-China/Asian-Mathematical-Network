@@ -90,7 +90,9 @@ const readWorkspaceRole = (user: DashboardData['user'] | undefined): WorkspaceRo
 };
 
 const readDashboardWorkspaceRole = (user: DashboardData['user'] | undefined): WorkspaceRole => {
-  const applicantReviewerWorkspaces = getApplicantReviewerWorkspaces(user?.available_workspaces);
+  const applicantReviewerWorkspaces = getApplicantReviewerWorkspaces(
+    user?.available_workspaces ?? user?.roles
+  );
 
   if (applicantReviewerWorkspaces.length > 1) {
     return 'applicant';
@@ -364,7 +366,9 @@ export default function Dashboard() {
   const hasApplicationHistory = applications.length > 0;
   const primaryConferenceId = readPrimaryConferenceId(userData?.user);
   const workspaceEntryState = toWorkspaceEntryState(DASHBOARD_RETURN_CONTEXT);
-  const applicantReviewerWorkspaces = getApplicantReviewerWorkspaces(userData?.user?.available_workspaces);
+  const applicantReviewerWorkspaces = getApplicantReviewerWorkspaces(
+    userData?.user?.available_workspaces ?? userData?.user?.roles
+  );
   const accountMenu = buildWorkspaceAccountMenu({
     role: workspaceRole,
     primaryConferenceId,

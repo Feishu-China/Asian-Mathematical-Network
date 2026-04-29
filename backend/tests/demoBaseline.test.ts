@@ -67,14 +67,16 @@ describe('demo baseline fixture', () => {
     expect(fixture.grants.every((item) => item.status === 'published')).toBe(true);
   });
 
-  it('keeps the clean applicant empty and seeds the showcase applicant with under-review, accepted, and rejected workflow records', async () => {
+  it('keeps the clean applicant empty, seeds one reviewer applicant record, and preserves the showcase workflow set', async () => {
     const fixture = await ensureDemoBaseline(prisma);
     const cleanApplicant = fixture.demoAccounts.find((account) => account.key === 'applicant');
+    const reviewer = fixture.demoAccounts.find((account) => account.key === 'reviewer');
     const showcaseApplicant = fixture.demoAccounts.find(
       (account) => account.key === 'showcaseApplicant'
     );
 
     expect(cleanApplicant).toBeDefined();
+    expect(reviewer).toBeDefined();
     expect(showcaseApplicant).toBeDefined();
 
     const cleanApplicantApplications = await prisma.application.findMany({
@@ -82,6 +84,24 @@ describe('demo baseline fixture', () => {
     });
 
     expect(cleanApplicantApplications).toHaveLength(0);
+
+    const reviewerApplications = await prisma.application.findMany({
+      where: { applicantUserId: reviewer!.user.id },
+      include: {
+        conference: true,
+        decision: true,
+      },
+      orderBy: [{ createdAt: 'asc' }],
+    });
+
+    expect(reviewerApplications).toEqual([
+      expect.objectContaining({
+        applicationType: 'conference_application',
+        status: 'under_review',
+        conference: expect.objectContaining({ slug: 'regional-topology-symposium-2026' }),
+        decision: null,
+      }),
+    ]);
 
     const showcaseApplications = await prisma.application.findMany({
       where: { applicantUserId: showcaseApplicant!.user.id },
@@ -282,10 +302,21 @@ describe('demo baseline fixture', () => {
         expect.objectContaining({
           step: 3,
           account: 'reviewer',
-          open: '/scholars/ravi-iyer',
-          loginRequired: false,
+          open: '/dashboard',
+          loginRequired: true,
         }),
       ])
+    );
+    expect(summary.demoAccounts).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          key: 'reviewer',
+          start_here: '/dashboard',
+        }),
+      ])
+    );
+    expect(summary.walkthrough).toEqual(
+      expect.arrayContaining([expect.stringContaining('workspace switcher')])
     );
   });
 });

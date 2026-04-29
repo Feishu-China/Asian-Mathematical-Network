@@ -1,21 +1,71 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import type { MeResponse } from '../api/auth';
+import * as authApi from '../api/auth';
 import { renderWithRouter } from '../test/renderWithRouter';
 import {
   resetReviewFakeState,
   seedReviewAssignment,
 } from '../features/review/fakeReviewProvider';
+import Dashboard from './Dashboard';
 import OrganizerApplicationDetail from './OrganizerApplicationDetail';
 import OrganizerConferenceApplications from './OrganizerConferenceApplications';
 import ReviewerAssignmentDetail from './ReviewerAssignmentDetail';
 import ReviewerAssignments from './ReviewerAssignments';
 
+vi.mock('../api/auth', async () => {
+  const actual = await vi.importActual<typeof import('../api/auth')>('../api/auth');
+
+  return {
+    ...actual,
+    getMe: vi.fn(),
+  };
+});
+
+const mockedGetMe = vi.mocked(authApi.getMe);
+
+const buildLegacyReviewerMeResponse = (): MeResponse =>
+  ({
+    user: {
+      id: 'user-reviewer',
+      email: 'demo.reviewer@asiamath.org',
+      status: 'active',
+      role: 'reviewer',
+      roles: ['applicant', 'reviewer'],
+      primary_role: 'reviewer',
+      createdAt: '2026-04-29T00:00:00.000Z',
+      updatedAt: '2026-04-29T00:00:00.000Z',
+    },
+    profile: {
+      userId: 'user-reviewer',
+      slug: 'ravi-iyer',
+      fullName: 'Ravi Iyer',
+      title: null,
+      institutionId: null,
+      institutionNameRaw: null,
+      countryCode: null,
+      careerStage: null,
+      bio: null,
+      personalWebsite: null,
+      researchKeywords: [],
+      mscCodes: [],
+      orcidId: null,
+      coiDeclarationText: '',
+      isProfilePublic: false,
+      verificationStatus: 'unverified',
+      verifiedAt: null,
+      createdAt: '2026-04-29T00:00:00.000Z',
+      updatedAt: '2026-04-29T00:00:00.000Z',
+    },
+  } as unknown as MeResponse);
+
 describe('review workspaces', () => {
   beforeEach(() => {
     localStorage.clear();
     resetReviewFakeState();
+    mockedGetMe.mockReset();
   });
 
   it('renders the organizer conference application queue', async () => {
@@ -222,6 +272,44 @@ describe('review workspaces', () => {
     expect(screen.getByRole('button', { name: /workspace/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Account' })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /browse opportunities/i })).not.toBeInTheDocument();
+  });
+
+  it('switches from reviewer queue to the applicant dashboard when Applicant is selected', async () => {
+    const user = userEvent.setup();
+    localStorage.setItem('token', 'reviewer-1');
+    localStorage.setItem(
+      'asiamath.authUser',
+      JSON.stringify({
+        id: 'user-reviewer',
+        email: 'reviewer@example.com',
+        status: 'active',
+        role: 'reviewer',
+        roles: ['applicant', 'reviewer'],
+        available_workspaces: ['applicant', 'reviewer'],
+        primary_role: 'reviewer',
+        createdAt: '2026-04-29T00:00:00.000Z',
+        updatedAt: '2026-04-29T00:00:00.000Z',
+      })
+    );
+    mockedGetMe.mockResolvedValue(buildLegacyReviewerMeResponse());
+
+    render(
+      <MemoryRouter initialEntries={['/reviewer']}>
+        <Routes>
+          <Route path="/reviewer" element={<ReviewerAssignments />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await user.click(await screen.findByRole('button', { name: /workspace/i }));
+    await user.click(screen.getByRole('menuitemradio', { name: /applicant/i }));
+
+    expect(await screen.findByText('Role: Applicant')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /browse opportunities/i })).toHaveAttribute(
+      'href',
+      '/opportunities'
+    );
   });
 
   it('shows queue and portal header actions on the reviewer detail page', async () => {

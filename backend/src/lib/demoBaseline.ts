@@ -161,7 +161,7 @@ export const DEMO_BASELINE_FIXTURE = {
       verificationStatus: 'verified',
       verifiedAt: '2026-04-18T09:30:00.000Z',
       demoUse:
-        'Use on /scholars/:slug to show the polished public scholar page and explain reviewer/expert reuse.',
+        'Use on /dashboard first to show the shared applicant landing and workspace switcher, then switch into reviewer surfaces or the public scholar page as needed.',
     },
     applicant: {
       label: 'Applicant',
@@ -460,6 +460,37 @@ const DEMO_SHOWCASE_CONFERENCE_APPLICATIONS: readonly DemoConferenceApplicationF
       decidedAt: '2025-09-05T15:00:00Z',
       releasedAt: '2025-09-06T10:00:00Z',
     },
+  },
+] as const;
+
+const DEMO_REVIEWER_CONFERENCE_APPLICATIONS: readonly DemoConferenceApplicationFixture[] = [
+  {
+    conferenceSlug: 'regional-topology-symposium-2026',
+    createdAt: '2026-04-21T08:30:00Z',
+    submittedAt: '2026-04-21T09:10:00Z',
+    status: 'under_review',
+    participationType: 'participant',
+    statement:
+      'I plan to attend the topology collaboration sessions and meet regional organizers while continuing to use this account for reviewer duties.',
+    abstractTitle: null,
+    abstractText: null,
+    interestedInTravelSupport: false,
+    statusHistory: [
+      {
+        fromStatus: 'draft',
+        toStatus: 'submitted',
+        changedBy: 'reviewer',
+        reason: 'applicant_submit',
+        createdAt: '2026-04-21T09:10:00Z',
+      },
+      {
+        fromStatus: 'submitted',
+        toStatus: 'under_review',
+        changedBy: 'organizer',
+        reason: 'review_queue_opened',
+        createdAt: '2026-04-23T08:45:00Z',
+      },
+    ],
   },
 ] as const;
 
@@ -946,14 +977,79 @@ const seedShowcaseApplications = async (
   } satisfies Record<DemoAccountKey, DemoSeedAccount>;
 
   await resetDemoApplicantApplications(prisma, [
+    accountByKey.reviewer.user.id,
     accountByKey.applicant.user.id,
     accountByKey.showcaseApplicant.user.id,
   ]);
 
+  const reviewerProfileSnapshotJson = JSON.stringify(
+    buildApplicantProfileSnapshot(accountByKey.reviewer.profile)
+  );
   const showcaseProfileSnapshotJson = JSON.stringify(
     buildApplicantProfileSnapshot(accountByKey.showcaseApplicant.profile)
   );
   const acceptedConferenceApplicationsBySlug = new Map<string, { id: string }>();
+
+  for (const fixture of DEMO_REVIEWER_CONFERENCE_APPLICATIONS) {
+    const conference = getRequiredConference(conferences, fixture.conferenceSlug);
+    const decidedAt = fixture.decision ? new Date(fixture.decision.decidedAt) : null;
+    const application = await prisma.application.upsert({
+      where: {
+        conferenceId_applicantUserId_applicationType: {
+          conferenceId: conference.id,
+          applicantUserId: accountByKey.reviewer.user.id,
+          applicationType: 'conference_application',
+        },
+      },
+      update: {
+        sourceModule: 'M2',
+        grantId: null,
+        linkedConferenceId: null,
+        linkedConferenceApplicationId: null,
+        status: fixture.status,
+        participationType: fixture.participationType,
+        statement: fixture.statement,
+        abstractTitle: fixture.abstractTitle,
+        abstractText: fixture.abstractText,
+        interestedInTravelSupport: fixture.interestedInTravelSupport,
+        travelPlanSummary: null,
+        fundingNeedSummary: null,
+        extraAnswersJson: '{}',
+        applicantProfileSnapshotJson: reviewerProfileSnapshotJson,
+        submittedAt: new Date(fixture.submittedAt),
+        decidedAt,
+      },
+      create: {
+        applicationType: 'conference_application',
+        sourceModule: 'M2',
+        conferenceId: conference.id,
+        applicantUserId: accountByKey.reviewer.user.id,
+        status: fixture.status,
+        participationType: fixture.participationType,
+        statement: fixture.statement,
+        abstractTitle: fixture.abstractTitle,
+        abstractText: fixture.abstractText,
+        interestedInTravelSupport: fixture.interestedInTravelSupport,
+        travelPlanSummary: null,
+        fundingNeedSummary: null,
+        extraAnswersJson: '{}',
+        applicantProfileSnapshotJson: reviewerProfileSnapshotJson,
+        submittedAt: new Date(fixture.submittedAt),
+        decidedAt,
+        createdAt: new Date(fixture.createdAt),
+      },
+    });
+
+    await replaceApplicationStatusHistory(prisma, application.id, accountByKey, fixture.statusHistory);
+    await syncDecision(
+      prisma,
+      application.id,
+      'conference_application',
+      accountByKey,
+      fixture.decision
+    );
+    await syncPostVisitReport(prisma, application.id, undefined);
+  }
 
   for (const fixture of DEMO_SHOWCASE_CONFERENCE_APPLICATIONS) {
     const conference = getRequiredConference(conferences, fixture.conferenceSlug);
@@ -1172,6 +1268,8 @@ export const buildDemoBaselineSummary = (fixture: Awaited<ReturnType<typeof ensu
         ? '/me/applications'
         : account.key === 'applicant'
           ? '/me/profile'
+          : account.key === 'reviewer'
+            ? '/dashboard'
           : scholarPath ?? '/me/profile';
 
     return {
@@ -1265,9 +1363,10 @@ export const buildDemoBaselineSummary = (fixture: Awaited<ReturnType<typeof ensu
       {
         step: 3,
         account: 'reviewer',
-        loginRequired: false,
-        open: reviewerAccount.scholarPath,
-        focus: 'Show reviewer-source context and public expert visibility without entering a portal dashboard.',
+        loginRequired: true,
+        open: '/dashboard',
+        focus:
+          'Log in with the reviewer demo account, land on the shared applicant dashboard, and use the workspace switcher to enter reviewer surfaces.',
       },
       {
         step: 4,
@@ -1287,7 +1386,7 @@ export const buildDemoBaselineSummary = (fixture: Awaited<ReturnType<typeof ensu
     storyline: [
       'Applicant private profile editor',
       'Applicant public scholar handoff',
-      'Reviewer public scholar page',
+      'Reviewer workspace switch from applicant root',
       'Showcase applicant workflow states',
       'Organizer hidden public route',
     ],
@@ -1311,7 +1410,7 @@ export const buildDemoBaselineSummary = (fixture: Awaited<ReturnType<typeof ensu
     walkthrough: [
       '1. Log in as the applicant demo account and open /me/profile to explain the private editor surface.',
       '2. Use the public scholar handoff from /me/profile to show that the same profile record can be viewed at /scholars/:slug.',
-      '3. Open the reviewer demo scholar page to narrate public expert visibility and reviewer-source context.',
+      '3. Log in as the reviewer demo account, land on /dashboard, and use the workspace switcher to move from Applicant into Reviewer.',
       '4. Log in as the showcase applicant and open /me/applications to narrate under-review, accepted, rejected, and completed grant follow-up states.',
       '5. Log in as the organizer demo account to explain that the same profile contract also supports internal organizer context while keeping the public route hidden.',
       '6. Re-run npm run seed:demo to reset the same demo accounts, opportunity set, and application workflow baseline.',
