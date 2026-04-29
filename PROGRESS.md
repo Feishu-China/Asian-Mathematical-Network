@@ -10,6 +10,37 @@
 
 ## 📅 Handoff 历史记录
 
+### 2026-04-29 (Session 54)
+*   **Agent 角色**: Coding Agent (CI baseline)
+*   **关联 Feature**: 无新增产品 feature；本轮目标是在 `codex/demo-d0-postgres-deploy` 上补第一版最小 GitHub Actions CI，并把因页面真实文案演进而失效的过时前端测试回填到当前口径。
+*   **变更记录**:
+    *   新增 `.github/workflows/ci.yml`，作为第一版最小 CI baseline。
+    *   workflow 当前覆盖：
+        *   `npm ci`
+        *   `npm run build:shared`
+        *   `npm run build:backend`
+        *   `npm run build:frontend`
+        *   `npm run test:workspace-config`
+        *   `npm run test:run --workspace frontend`
+        *   `npm run test:backend`
+    *   CI 使用 GitHub Actions 内置的 `postgres:16` service，统一在干净的 `5432` 上提供 `TEST_DATABASE_URL`，不再依赖本机 `colima/lima` 的 `5433` override。
+    *   `frontend/src/App.test.tsx` 已更新为当前真实首页口径：根路由重定向到 `/portal` 后，校验 heading 为 `Connecting Asia's Mathematical Community`。
+    *   `frontend/src/pages/Prizes.test.tsx` 已更新为当前真实 prize archive / detail copy 与 teaser 数量，解决本地全量 frontend suite 中因文案/内容演进留下的历史假失败。
+*   **验证记录**:
+    *   `npm run build:shared` 通过
+    *   `npm run build:backend` 通过
+    *   `npm run build:frontend` 通过
+    *   `npm run test:workspace-config` 通过
+    *   `npm run test:run --workspace frontend` 通过（`40` files / `196` tests）
+    *   在本机 `5433` override 下，`TEST_DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5433/asiamath_test?schema=public npm run test:backend` 通过（`10` suites / `59` tests）
+    *   `git diff --check` 通过
+*   **结论**:
+    *   当前 baseline 已具备第一版 PR/branch 级自动校验防线；后续若将该分支提升为新的 trunk candidate，`main` 将可直接继承这套 CI。
+    *   这轮修的是测试基线和工程防线，不是新增产品能力。
+*   **下一步**:
+    *   若要继续强化 CI，优先考虑把 `test:portal:int` / `test:grant:int` 设计成手动或 nightly workflow，而不是立即塞进每个 PR。
+    *   在当前 CI baseline 跑通后，再决定是先并回 `main`，还是继续沿 demo/delivery 线补 deploy cadence。
+
 ### 2026-04-29 (Session 53)
 *   **Agent 角色**: Coding Agent (Sprint 1 closeout)
 *   **关联 Feature**: 无新增 feature；本轮目标是把 `Sprint 1: Demo Readiness` 从“实际上已完成”正式收口为文档状态上的 `completed`。

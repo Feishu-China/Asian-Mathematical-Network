@@ -23,15 +23,17 @@ describe('prize public pages', () => {
     expect(
       screen.getByRole('heading', { name: 'Asiamath Early Career Prize 2026' })
     ).toBeInTheDocument();
-    expect(screen.getByText('Prize archive')).toBeInTheDocument();
-    expect(screen.getByText(/Scholar identity, nomination context, and governance signals/i)).toBeInTheDocument();
+    expect(screen.getAllByText('Prize archive')).toHaveLength(2);
+    expect(
+      screen.getByText(/Public recognition pages should preview scholar records, nomination flow, and governance structure/i)
+    ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /view prize/i })).toHaveAttribute(
       'href',
       '/prizes/asiamath-early-career-prize-2026'
     );
     expect(
       screen.getAllByText(/open the detail view to see the governance and selection-process preview/i)
-    ).toHaveLength(2);
+    ).toHaveLength(1);
   });
 
   it('keeps the hub copy, archive cards, and detail teaser links available through the prize flow', async () => {
@@ -45,8 +47,12 @@ describe('prize public pages', () => {
       await screen.findByRole('heading', { name: 'Asiamath Early Career Prize 2026' })
     ).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /selection process preview/i })).toBeInTheDocument();
-    expect(screen.getByText('Nominations preview')).toBeInTheDocument();
-    expect(screen.getByText('Confidential review concept')).toBeInTheDocument();
+    expect(
+      screen.getByText(/Nominations, committee review, and citation release remain visible/i)
+    ).toBeInTheDocument();
+    expect(screen.getByText('Nomination record')).toBeInTheDocument();
+    expect(screen.getByText('Committee review')).toBeInTheDocument();
+    expect(screen.getByText('Released citation')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /view governance preview/i })).toHaveAttribute(
       'href',
       '/admin/governance'
@@ -72,9 +78,12 @@ describe('prize public pages', () => {
       'href',
       '/prizes'
     );
-    expect(screen.getByText(/Nomination intake, confidential review, and committee release remain part of the same platform direction/i)).toBeInTheDocument();
-    expect(screen.getByText('Nominations preview')).toBeInTheDocument();
-    expect(screen.getByText('Confidential review concept')).toBeInTheDocument();
+    expect(
+      screen.getByText(/Nominations, committee review, and citation release remain visible/i)
+    ).toBeInTheDocument();
+    expect(screen.getByText('Nomination record')).toBeInTheDocument();
+    expect(screen.getByText('Committee review')).toBeInTheDocument();
+    expect(screen.getByText('Released citation')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /view governance preview/i })).toHaveAttribute(
       'href',
       '/admin/governance'

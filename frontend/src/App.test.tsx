@@ -13,7 +13,7 @@ test('redirects the root route to the portal entry', async () => {
 
   expect(
     await screen.findByRole('heading', {
-      name: 'Portal',
+      name: /connecting asia's mathematical community/i,
     })
   ).toBeInTheDocument();
 });
