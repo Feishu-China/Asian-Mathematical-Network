@@ -12,22 +12,28 @@
   border-radius: 999px;
   background: var(--color-navy-700);
   color: #fff;
+  -webkit-text-fill-color: #fff;
   font-weight: 600;
   text-decoration: none;
 }
 
 .dashboard-shell-link:hover {
   background: var(--color-navy-800);
+  color: #fff;
+  -webkit-text-fill-color: #fff;
 }
 
 .dashboard-shell-link--secondary {
   background: rgba(255, 255, 255, 0.72);
   border: 1px solid var(--border-strong);
   color: var(--color-navy-900);
+  -webkit-text-fill-color: var(--color-navy-900);
 }
 
 .dashboard-shell-link--secondary:hover {
   background: rgba(255, 255, 255, 0.9);
+  color: var(--color-navy-900);
+  -webkit-text-fill-color: var(--color-navy-900);
 }
 
 .welcome-card {
@@ -114,12 +120,15 @@
   border-radius: 999px;
   background: var(--color-navy-700);
   color: #fff;
+  -webkit-text-fill-color: #fff;
   font-weight: 600;
   text-decoration: none;
 }
 
 .dashboard-widget__link:hover {
   background: var(--color-navy-800);
+  color: #fff;
+  -webkit-text-fill-color: #fff;
 }
 
 .loading {
