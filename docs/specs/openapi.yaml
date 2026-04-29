@@ -472,9 +472,24 @@ components:
           nullable: true
         viewer_status:
           $ref: '#/components/schemas/ViewerStatus'
+        participation_type:
+          type: string
+          nullable: true
+          description: Conference-application-only; the role the applicant requested (e.g. `participant`, `talk`).
         statement:
           type: string
           nullable: true
+        abstract_title:
+          type: string
+          nullable: true
+          description: Conference-application-only; null on grant applications.
+        abstract_text:
+          type: string
+          nullable: true
+          description: Conference-application-only; null on grant applications.
+        interested_in_travel_support:
+          type: boolean
+          description: Conference-application-only; defaults to `false` on grant applications.
         travel_plan_summary:
           type: string
           nullable: true
