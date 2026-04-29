@@ -79,6 +79,13 @@ const parsePostVisitReportInput = (body: Record<string, unknown>) => {
     throw new Error('REPORT_NARRATIVE_TOO_LONG');
   }
 
+  if (
+    body.attendance_confirmed !== undefined &&
+    typeof body.attendance_confirmed !== 'boolean'
+  ) {
+    throw new Error('INVALID_ATTENDANCE_CONFIRMED');
+  }
+
   const attendanceConfirmed =
     typeof body.attendance_confirmed === 'boolean' ? body.attendance_confirmed : true;
 
@@ -173,6 +180,10 @@ export const submitMyPostVisitReport = async (req: Request, res: Response) => {
     }
     if (message === 'REPORT_NARRATIVE_TOO_LONG') {
       res.status(422).json({ message: 'report_narrative is too long' });
+      return;
+    }
+    if (message === 'INVALID_ATTENDANCE_CONFIRMED') {
+      res.status(422).json({ message: 'attendance_confirmed must be a boolean when provided' });
       return;
     }
     res.status(400).json({ message: 'Invalid post-visit report payload' });
