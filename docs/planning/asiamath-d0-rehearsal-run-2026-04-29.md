@@ -28,7 +28,7 @@ What did not pass:
 
 - reviewer queue had no seeded assignment, so `queue -> detail -> back` could not be exercised.
 - multiple rendered CTAs/links did not navigate when clicked during browser rehearsal even though the target route existed and direct `open <href>` worked.
-- clean applicant `/me/applications` empty state did not match the checklist's expected unified `Browse opportunities` CTA.
+- clean applicant `/me/applications` empty state used section-level public browse CTAs instead of the checklist's older unified `Browse opportunities` wording.
 
 Because the role-workspace extension checks were not fully completed and navigation regressions were observed, the recommended next step is `DR-006 blocker fix`, not `DR-005`.
 
@@ -99,7 +99,7 @@ Preflight observations:
 | 4.1 released accepted grant result + report status | `Pass` | Grant result showed `Decision: Awarded` and `Status: submitted`. |
 | 4.1 applicant public return affordance | `Fail` | `Restart from portal` did not navigate on click from grant detail. |
 | 4.2 clean applicant empty state | `Pass` | No conference applications and no travel grant applications. |
-| 4.2 clean applicant `Browse opportunities` return | `Fail` | No unified `Browse opportunities` CTA was present; `Browse conferences` also did not navigate on click. |
+| 4.2 clean applicant public browse CTA | `Fail` | The page used section-level `Browse conferences` / `Browse grants` instead of a unified `Browse opportunities` CTA, and `Browse conferences` did not navigate on click in this run. |
 | 5.1 reviewer login and workspace switcher | `Pass` | Reviewer reached applicant root and switched into reviewer workspace. |
 | 5.1 reviewer queue -> detail -> back | `Fail` | Queue had no assignments, so detail/back could not be exercised. |
 | 5.1 reviewer `Back to portal` and `Account` | `Pass` | Both visible; `Back to portal` worked; `Account` menu expanded correctly. |
@@ -141,7 +141,7 @@ Preflight observations:
 ### Clean applicant
 
 - `/me/applications` was empty for both conferences and grants.
-- The page offered `Start from published conferences`, `Restart from portal`, `Browse conferences`, and `Browse grants`, but not the checklist's expected unified `Browse opportunities`.
+- The page offered `Start from published conferences`, `Restart from portal`, `Browse conferences`, and `Browse grants`; later product cleanup confirmed that section-level browse CTAs were acceptable and the older unified `Browse opportunities` wording was the stale part of the checklist.
 
 ### Reviewer
 
@@ -174,7 +174,7 @@ Preflight observations:
 |---|---|---|---|---|---|---|---|---|
 | `R1` | `P1` | `/me/applications/:id`, `/me/applications`, `/dashboard`, `/scholars` | showcase applicant, clean applicant, organizer, visitor | `1. Open the route. 2. Click the rendered CTA or card link. 3. Observe URL.` | The clicked link should navigate to its visible target. | Multiple rendered links kept the browser on the same URL after repeated click attempts. Reproduced on the then-visible `Restart from portal` affordance in grant detail, `Browse conferences` in clean applicant empty state, `Open conference workspace` in organizer dashboard, and scholar card links in `/scholars`. Direct `open <href>` worked for the same targets. | `tmp/rehearsal/2026-04-29/r1-restart-from-portal.png` | Investigate a navigation interaction regression across several routed links before re-running `DR-004`. The grant-detail shortcut itself was later confirmed to be an obsolete demo affordance rather than a current product requirement. |
 | `R2` | `P1` | `/reviewer` | reviewer | `1. Log in as reviewer. 2. Open /dashboard. 3. Switch to Reviewer. 4. Inspect queue.` | At least one seeded reviewer assignment should exist so `queue -> detail -> back` can be validated. | Reviewer queue loaded with shell controls, but the only content state was `No reviewer assignments yet.` No detail route could be exercised from the queue. | `not captured` | Decide whether `seed:demo` should include at least one reviewer assignment, or mark reviewer detail coverage out of scope for this round. |
-| `R3` | `P2` | `/me/applications` | clean applicant | `1. Log in as clean applicant. 2. Open /me/applications. 3. Inspect empty-state CTA wording.` | Checklist expected a unified `Browse opportunities` CTA from the empty state. | The page showed `Start from published conferences`, `Restart from portal`, `Browse conferences`, and `Browse grants`; no unified `Browse opportunities` CTA was present. | `not captured` | Align checklist wording and UI copy, or restore a single applicant-safe empty-state CTA. |
+| `R3` | `P2` | `/me/applications` | clean applicant | `1. Log in as clean applicant. 2. Open /me/applications. 3. Inspect empty-state CTA wording.` | Applicant-safe public browse CTAs should be self-explanatory and consistent with the current product walkthrough. | The page used multiple CTAs (`Start from published conferences`, `Restart from portal`, `Browse conferences`, `Browse grants`) instead of the checklist's older unified wording. | `not captured` | Cleanup obsolete shortcut copy and align the checklist to current section-level public browse CTA expectations. |
 
 ## Priority Summary
 

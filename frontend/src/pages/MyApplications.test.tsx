@@ -282,6 +282,7 @@ describe('MyApplications page', () => {
       'href',
       '/dashboard'
     );
+    expect(screen.queryByRole('link', { name: /restart from portal/i })).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: /open latest walkthrough record/i })).toHaveAttribute(
       'href',
       '/me/applications/review-application-1'

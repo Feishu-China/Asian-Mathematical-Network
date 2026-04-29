@@ -243,14 +243,7 @@ export default function MyApplications() {
             className="dashboard-widget"
             title={demoWalkthroughCopy.applications.title}
             intro={demoWalkthroughCopy.applications.intro}
-            shortcuts={[
-              primaryWalkthroughShortcut,
-              {
-                to: '/portal',
-                label: 'Restart from portal',
-                description: 'Return to the public entry if you need to re-run the demo from the beginning.',
-              },
-            ]}
+            shortcuts={[primaryWalkthroughShortcut]}
           />
 
           <ApplicationSection

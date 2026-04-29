@@ -127,7 +127,7 @@ npm run seed:demo
 | 角色 | 是否必需 | 用途 | 备注 |
 |---|---|---|---|
 | showcase applicant | 必需 | released result + post-visit report 主讲路径 | 当前文档已知账号：`demo.showcase.applicant@asiamath.org` |
-| clean applicant | 必需 | 零申请空态与 `Browse opportunities` | 当前文档已知账号：`demo.applicant@asiamath.org` |
+| clean applicant | 必需 | 零申请空态与 applicant-safe public browse CTA | 当前文档已知账号：`demo.applicant@asiamath.org` |
 | reviewer | 必需 | reviewer workspace entry / queue / detail | 本地操作者预先准备 |
 | organizer | 必需 | organizer workspace entry / queue / detail | 本地操作者预先准备 |
 | admin | 条件性 | `/admin/governance` 或 admin landing 预览 | 若本地没有可用 admin 账号，必须在 handoff 里明确记为 `N/A` |
@@ -178,8 +178,8 @@ npm run seed:demo
 - [ ] 以 clean applicant 登录并打开 `/me/applications`。
   期望：列表为空；空态文案与 CTA 自洽；当前账号没有脏数据残留。
 
-- [ ] 从 clean applicant 空态使用 `Browse opportunities`。
-  期望：能回到 public opportunities 流；链路不要求口头补救。
+- [ ] 从 clean applicant 空态使用保留的 public browse CTA。
+  期望：至少一条 applicant-safe CTA 可以把用户带回公开 conference / grant 浏览面；当前 UI 允许使用 section 级的 `Browse conferences` / `Browse grants`，不要求额外统一成单个 `Browse opportunities`。
 
 ## 5. Reviewer / Organizer / Admin Workspace 检查项
 
@@ -189,7 +189,7 @@ npm run seed:demo
   期望：若该账号同时拥有 applicant + reviewer workspaces，先落在共享 applicant root 也可接受，但必须能看到稳定的 workspace switcher。
 
 - [ ] 从 applicant 切到 reviewer workspace。
-  期望：reviewer root 稳定加载；页头角色语义正确；不应错误显示 applicant-only `Browse opportunities`。
+  期望：reviewer root 稳定加载；页头角色语义正确；不应错误显示 applicant-only empty-state browse CTA。
 
 - [ ] 打开 reviewer queue，再进入 detail，再使用主返回回到 queue。
   期望：`queue -> detail -> back` 走逻辑父级，而不是依赖浏览器历史碰运气。

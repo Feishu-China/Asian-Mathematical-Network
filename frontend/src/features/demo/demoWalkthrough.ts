@@ -49,7 +49,7 @@ export const demoWalkthroughCopy = {
   applications: {
     title: 'Presenter-safe walkthrough',
     intro:
-      'Use this list as the main demo control point for active records, stable next steps, and public-route restarts.',
+      'Use this list as the main demo control point for active records, stable next steps, and applicant-safe public browsing.',
   },
   detail: {
     title: 'Presenter shortcuts',
