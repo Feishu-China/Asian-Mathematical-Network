@@ -10,6 +10,38 @@
 
 ## 📅 Handoff 历史记录
 
+### 2026-04-29 (Session 50)
+*   **Agent 角色**: Coding Agent (Sprint 1 `DR-004` / `DR-005` / `DR-007` parallel artifact integration)
+*   **关联 Feature**: 无新增 feature；本轮只并行产出并整合 Sprint 1 第二批 demo-readiness artifact，不执行真实 rehearsal 或 hosted smoke。
+*   **问题现象**:
+    *   `DR-001` / `DR-002` / `DR-003` 完成后，下一阶段已经从“口径收口”进入“执行资产准备”，但还缺三类可以直接交给操作者的文档：本地 rehearsal checklist、hosted preview reseed + smoke runbook、以及 presenter-safe demo kit。
+    *   这三类产物彼此依赖同一套基线、账号、seed 与 hosted source-branch 约定；如果并行编写后不统一交叉审查，最容易发生的漂移是：本地 rehearsal 说一套模式、hosted smoke 按另一条分支判断、demo kit 再写第三套账号/密码。
+*   **变更记录**:
+    *   新增 `docs/planning/asiamath-d0-rehearsal-checklist-2026-04-29.md`，把 `DR-004` 收成一份只面向本地人工验收的 checklist，明确主路径固定为 `acceptance / real-flow`：frontend `5175` + direct API base -> backend `3001`。文档覆盖 preflight、seed、showcase applicant / clean applicant、reviewer / organizer / admin 条件性检查、public portal / scholars / opportunities 回归，以及 `P0/P1/P2` issue log 与 handoff 字段。
+    *   新增 `docs/planning/asiamath-d0-hosted-smoke-runbook-2026-04-29.md`，把 `DR-005` 收成 Railway/Vercel hosted preview 的 reseed + smoke runbook。它明确当前 hosted `d0` preview 仍按 `codex/demo-d0-postgres-deploy` 作为 source branch 判断，reseed 必须优先读取 `Postgres.DATABASE_PUBLIC_URL`，并给出 public API smoke、browser smoke、失败分流与结果记录模板。
+    *   新增 `docs/planning/asiamath-demo-kit-d0-2026-04-29.md`，把 `DR-007` 收成 presenter-safe demo kit，区分“可以按真实能力讲”的 applicant 主链与 “只能按 preview breadth 讲”的模块，给出 `3` 分钟 / `10` 分钟脚本、fallback 路径、operator notes 与“不要过度承诺”的边界说明。
+    *   作为本轮整合的一部分，`asiamath-demo-kit-d0-2026-04-29.md` 与 `asiamath-d0-rehearsal-checklist-2026-04-29.md` 已补齐当前 seed 实现共享 demo 密码 `demo123456` 的说明，并标注该值应在正式对外演示前再次复核，避免与 hosted smoke runbook 的凭证口径分叉。
+*   **最终对齐的口径**:
+    *   **本地 rehearsal**: 统一用 `acceptance / real-flow` 路径执行，不在同一轮混用 `5173/3000` 与 `5175/3001`。
+    *   **hosted preview 判断口径**: 在部署来源 cutover 前，仍以 `codex/demo-d0-postgres-deploy` 作为 hosted `d0` preview 的预期 source branch。
+    *   **demo 账号口径**:
+        *   clean applicant: `demo.applicant@asiamath.org`
+        *   showcase applicant: `demo.showcase.applicant@asiamath.org`
+        *   reviewer: `demo.reviewer@asiamath.org`
+        *   organizer: `demo.organizer@asiamath.org`
+        *   当前 seed 实现共享密码: `demo123456`
+    *   **执行边界**:
+        *   `DR-004` 文档只定义本地 rehearsal，不替代 hosted smoke
+        *   `DR-005` 文档只定义 hosted reseed + smoke，不改部署平台设置
+        *   `DR-007` 文档只定义对外讲法与 fallback，不承诺 breadth 页面已 fully live
+*   **验证记录**:
+    *   三个并行线程都各自只写入一个新文档文件，未触碰 `PROGRESS.md`、产品代码或配置。
+    *   每个线程各自执行并报告了 `git diff --check` 通过。
+    *   整合后再次执行 `git diff --check`，确认新增文档与本轮补充说明没有格式问题。
+*   **边界与说明**:
+    *   本轮没有启动真实本地 rehearsal，没有执行 Railway reseed，没有访问 hosted preview，也没有进入 `DR-006` blocker 修复。
+    *   `Hosted preview URL`、最近一次成功 reseed/smoke 的时间戳、reviewer / organizer sample queue item 仍保留为待执行时确认的信息；这属于 runbook 执行产出，不应在 planning 文档里预写死。
+
 ### 2026-04-29 (Session 49)
 *   **Agent 角色**: Coding Agent (Sprint 1 `DR-001` / `DR-002` / `DR-003` integration closeout)
 *   **关联 Feature**: 无新增 feature；本轮只整合 Sprint 1 第一批收口项，不扩展到 `DR-004` rehearsal 或 `DR-005` hosted smoke。
