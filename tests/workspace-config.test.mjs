@@ -8,6 +8,7 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'
 
 const readJson = (relativePath) =>
   JSON.parse(fs.readFileSync(path.join(repoRoot, relativePath), 'utf8'));
+const readText = (relativePath) => fs.readFileSync(path.join(repoRoot, relativePath), 'utf8');
 
 test('root package declares an npm workspace monorepo', () => {
   const packageJson = readJson('package.json');
@@ -56,4 +57,33 @@ test('runtime helper scripts bootstrap the shared workspace before execution', (
   assert.match(packageJson.scripts?.['seed:review'] ?? '', /^npm run build:shared &&/);
   assert.match(packageJson.scripts?.['test:portal:int'] ?? '', /^npm run build:shared &&/);
   assert.match(packageJson.scripts?.['test:grant:int'] ?? '', /^npm run build:shared &&/);
+});
+
+test('local Postgres defaults stay on port 5432 for both dev and test databases', () => {
+  const envExample = readText('backend/.env.example');
+
+  assert.match(
+    envExample,
+    /DATABASE_URL="postgresql:\/\/postgres:postgres@127\.0\.0\.1:5432\/asiamath_dev\?schema=public"/,
+  );
+  assert.match(
+    envExample,
+    /TEST_DATABASE_URL="postgresql:\/\/postgres:postgres@127\.0\.0\.1:5432\/asiamath_test\?schema=public"/,
+  );
+});
+
+test('repo documents the Postgres dev/test contract and the 5433 override path', () => {
+  const contractDoc = readText(
+    'docs/planning/asiamath-postgres-dev-test-contract-2026-04-29.md',
+  );
+
+  assert.match(contractDoc, /DR-003/);
+  assert.match(contractDoc, /PMB-003/);
+  assert.match(contractDoc, /DATABASE_URL/);
+  assert.match(contractDoc, /TEST_DATABASE_URL/);
+  assert.match(contractDoc, /backend\/\.env/);
+  assert.match(contractDoc, /export/i);
+  assert.match(contractDoc, /5432/);
+  assert.match(contractDoc, /5433/);
+  assert.match(contractDoc, /override/i);
 });

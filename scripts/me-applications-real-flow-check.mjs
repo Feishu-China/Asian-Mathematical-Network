@@ -257,6 +257,18 @@ const releaseDecisionDirectly = async ({
 };
 
 const main = async () => {
+  console.log('Portal integration origins:', {
+    backendOrigin: BACKEND_ORIGIN,
+    frontendOrigin: FRONTEND_ORIGIN,
+  });
+  if (!process.env.PORTAL_INT_BACKEND_ORIGIN && !process.env.PORTAL_INT_FRONTEND_ORIGIN) {
+    console.log(
+      'Portal real-flow note: default script origins follow local proxy-mode dev (3000/5173). ' +
+        'For acceptance against the stable backend, rerun with PORTAL_INT_BACKEND_ORIGIN=http://127.0.0.1:3001 ' +
+        'PORTAL_INT_FRONTEND_ORIGIN=http://127.0.0.1:5175 and start the frontend with ' +
+        'VITE_API_BASE_URL=http://127.0.0.1:3001/api/v1.'
+    );
+  }
   await cleanupVerifierArtifacts();
   console.log('Seeding deterministic demo baseline (conference + grant + organizer)...');
   const fixture = await ensureDemoBaseline(prisma);

@@ -13,6 +13,18 @@ This file is about:
 
 This file is not the demo data contract itself. For that, read `asiamath-demo-seed-contract-d0.md`.
 
+## Branch Authority
+
+The branch-role freeze for this preview is defined in:
+
+- `docs/planning/asiamath-d0-baseline-freeze-2026-04-29.md`
+
+During the current 2026-04-29 transition window:
+
+- the hosted `d0` preview should still be treated as sourced from `codex/demo-d0-postgres-deploy`
+- a merge to `main` does not by itself mean the active preview already switched to `main`
+- branch/source cutover should happen only after the freeze document's conditions are satisfied
+
 ## Stable Rules
 
 ### `railway run` is local execution, not remote execution

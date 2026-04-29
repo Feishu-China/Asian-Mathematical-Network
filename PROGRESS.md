@@ -10,6 +10,49 @@
 
 ## 📅 Handoff 历史记录
 
+### 2026-04-29 (Session 49)
+*   **Agent 角色**: Coding Agent (Sprint 1 `DR-001` / `DR-002` / `DR-003` integration closeout)
+*   **关联 Feature**: 无新增 feature；本轮只整合 Sprint 1 第一批收口项，不扩展到 `DR-004` rehearsal 或 `DR-005` hosted smoke。
+*   **问题现象**:
+    *   虽然项目已经进入 `post-MVP` 阶段，但本地开发与验收口径仍存在两层漂移：一是 frontend/backend 的 `3000/3001` 与 `5173/5175` 运行方式没有被正式收口；二是 Postgres dev/test 仍混有 `5432/5433` 与 “哪些命令会自动读取 `backend/.env`” 的隐性知识。
+    *   另外，`main` 与 `codex/demo-d0-postgres-deploy` 的角色已经在 planning 层被重新定义，但还缺一个明确的短期 freeze 文档来约束“代码主线”和“当前部署来源”在过渡期如何并存。
+*   **变更记录**:
+    *   新增 `docs/planning/asiamath-d0-baseline-freeze-2026-04-29.md`，冻结短期规则：`codex/demo-d0-postgres-deploy` 继续是当前稳定 `d0` 基线与当前部署来源；一旦候选 PR merge，`main` 立即成为代码主线，但部署分支只作为受控同步的 release pointer 短期存在，直到 hosted reseed + smoke 与 Sprint 1 exit gate 满足后再切部署来源。
+    *   新增 `docs/planning/asiamath-postgres-dev-test-contract-2026-04-29.md`，明确官方默认 dev/test 契约为 `127.0.0.1:5432`，`5433` 只作为本地 override；并明确 backend runtime、backend test、root seed/integration scripts 三类命令的 env-loading 规则不同，不能再假设 `backend/.env` 会自动覆盖所有命令。
+    *   `README.md` 与 `SMOKE_TEST_CHECKLIST.md` 现在把本地运行收口成两种显式模式：
+        *   默认本地开发：`5173 + proxy -> 3000`
+        *   real-flow / acceptance：`5175 + direct API base -> 3001`
+      这样 UI 开发与真实链路验收不再混用同一套口头约定。
+    *   `frontend/.env.example` 与 `frontend/vite.config.ts` 明确保留 proxy-mode 作为默认本地开发路径，同时把 `3001` real-flow 说明为一等公民的 acceptance 模式，而不是偷偷改默认值。
+    *   `backend/.env.example`、`backend/tests/databaseConfig.test.ts`、`tests/workspace-config.test.mjs` 现在显式锁定 Postgres 默认端口、override 规则，以及 “root-level seed/integration scripts 需要外部显式 export env” 的约束。
+    *   `scripts/me-applications-real-flow-check.mjs` 与 `scripts/grant-real-flow-check.mjs` 没有改默认 origin，但新增运行提示：若要跑稳定 backend 的 acceptance 模式，应显式覆盖 `*_BACKEND_ORIGIN=http://127.0.0.1:3001`、`*_FRONTEND_ORIGIN=http://127.0.0.1:5175`，并用 `VITE_API_BASE_URL=http://127.0.0.1:3001/api/v1` 启前端。
+    *   `docs/README.md` 已改口径：当前 planning 真理源是 post-MVP inventory/backlog/sprint/freeze 文档集，不再把旧 `feature-list-v2.2.json` 当成当前执行入口。
+*   **最终采用的口径**:
+    *   **代码主线 / 部署过渡**:
+        *   `main` 在候选 PR merge 后作为默认代码主线
+        *   `codex/demo-d0-postgres-deploy` 在 cutover 前继续作为当前 hosted `d0` preview 的部署来源
+    *   **默认本地开发口径**:
+        *   backend: `http://127.0.0.1:3000`
+        *   frontend: `http://127.0.0.1:5173`
+        *   frontend 不设 `VITE_API_BASE_URL`，通过 Vite proxy 把 `/api/v1` 转发到 `3000`
+    *   **real-flow / acceptance 口径**:
+        *   backend: `http://127.0.0.1:3001`
+        *   frontend: `http://127.0.0.1:5175`
+        *   frontend 显式设置 `VITE_API_BASE_URL="http://127.0.0.1:3001/api/v1"`
+    *   **Postgres dev/test 契约**:
+        *   官方默认：`5432`
+        *   本地 override：`5433` 仅在机器无法使用 `5432` 时采用
+        *   backend runtime 可依赖 `backend/.env`
+        *   backend test、root seed、integration scripts 需要显式 export `TEST_DATABASE_URL` / `DATABASE_URL`
+*   **验证记录**:
+    *   `git diff --check` 通过。
+    *   前端配置相关改动验证通过：`npm run build --workspace frontend`。
+    *   workspace / contract 约束验证通过：`npm run test:workspace-config`。
+    *   backend config 约束验证通过：`cd backend && ../node_modules/.bin/jest --runInBand tests/databaseConfig.test.ts`。
+*   **边界与说明**:
+    *   本轮没有修改 hosted deploy 平台设置，没有做 Railway/Vercel 切主线，也没有进入 `DR-004` 人工 rehearsal 或 `DR-005` hosted smoke。
+    *   当前仍保留一个已知技术背景：最近 portal/browser acceptance 多次在 `3001/5175/5433` 路径上得到稳定结果，因此这次把它正式定义为 acceptance 模式；但官方默认本地开发口径仍保留在 `3000/5173/5432`，避免为了一个机器上的 workaround 直接改掉全仓库默认值。
+
 ### 2026-04-29 (Session 48)
 *   **Agent 角色**: Coding Agent (post-MVP planning closeout)
 *   **关联 Feature**: 无新增 feature；本轮目标是把项目从 `feature implementation` 口径切换到 `post-MVP execution` 口径。

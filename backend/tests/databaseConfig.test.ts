@@ -19,11 +19,22 @@ describe('backend database configuration', () => {
     expect(schema).toContain('provider = "postgresql"');
   });
 
+  it('loads backend runtime database settings through dotenv in the Prisma layer', () => {
+    const prismaClientModule = readBackendFile('src', 'lib', 'prisma.ts');
+
+    expect(prismaClientModule).toContain("import 'dotenv/config';");
+    expect(prismaClientModule).toContain('new PrismaClient()');
+  });
+
   it('documents the local and test PostgreSQL environment variables', () => {
     const envExample = readBackendFile('.env.example');
 
-    expect(envExample).toContain('DATABASE_URL=');
-    expect(envExample).toContain('TEST_DATABASE_URL=');
+    expect(envExample).toContain(
+      'DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:5432/asiamath_dev?schema=public"',
+    );
+    expect(envExample).toContain(
+      'TEST_DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:5432/asiamath_test?schema=public"',
+    );
     expect(envExample).toContain('JWT_SECRET=');
   });
 
@@ -55,6 +66,7 @@ describe('backend database configuration', () => {
     expect(packageJson.scripts?.start).toContain('prisma migrate deploy');
     expect(packageJson.scripts?.start).toContain('node dist/index.js');
     expect(packageJson.scripts?.start).not.toContain('ts-node');
+    expect(packageJson.scripts?.start).not.toContain('.env');
     expect(packageJson.scripts?.dev).toContain(
       'npm --prefix .. run build --workspace @asiamath/shared',
     );
@@ -62,14 +74,17 @@ describe('backend database configuration', () => {
     expect(packageJson.scripts?.dev).toContain('../packages/shared/src');
     expect(packageJson.scripts?.dev).toContain('nodemon');
     expect(packageJson.scripts?.dev).not.toContain('file:./');
+    expect(packageJson.scripts?.dev).not.toContain('.env');
     expect(packageJson.scripts?.test).toContain(
       'npm --prefix .. run build --workspace @asiamath/shared',
     );
+    expect(packageJson.scripts?.test).toContain('DATABASE_URL="$TEST_DATABASE_URL"');
     expect(packageJson.scripts?.test).toContain('TEST_DATABASE_URL');
+    expect(packageJson.scripts?.test).not.toContain('.env');
     expect(packageJson.scripts?.test).not.toContain('file:./');
   });
 
-  it('does not fall back to SQLite in backend utility scripts', () => {
+  it('requires externally provided DATABASE_URL in root-level utility scripts', () => {
     const scriptPaths = [
       path.join(backendRoot, '..', 'scripts', 'seed-demo-baseline.mjs'),
       path.join(backendRoot, '..', 'scripts', 'grant-real-flow-check.mjs'),
@@ -80,7 +95,12 @@ describe('backend database configuration', () => {
       const contents = fs.readFileSync(scriptPath, 'utf8');
 
       expect(contents).not.toContain('file:./dev.db');
+      expect(contents).not.toContain('dotenv/config');
       expect(contents).toContain('DATABASE_URL');
+      expect(contents.indexOf('if (!process.env.DATABASE_URL)')).toBeGreaterThan(-1);
+      expect(contents.indexOf('if (!process.env.DATABASE_URL)')).toBeLessThan(
+        contents.indexOf("backendRequire('ts-node/register/transpile-only')"),
+      );
     }
   });
 });
