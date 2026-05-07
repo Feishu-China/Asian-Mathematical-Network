@@ -756,4 +756,3 @@ export const submitReview = async (req: Request, res: Response) => {
     res.status(400).json({ message: 'Invalid review payload' });
   }
 };
-
