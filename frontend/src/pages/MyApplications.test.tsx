@@ -92,6 +92,7 @@ describe('MyApplications page', () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.unstubAllEnvs();
   });
 
   it('redirects to /login when no token is present', async () => {
@@ -178,8 +179,24 @@ describe('MyApplications page', () => {
       '/conferences'
     );
     expect(
-      screen.getByRole('link', { name: /start from published conferences/i })
-    ).toHaveAttribute('href', '/conferences');
+      screen.queryByRole('link', { name: /start from published conferences/i })
+    ).not.toBeInTheDocument();
+  });
+
+  it('hides presenter walkthrough shortcuts outside demo mode', async () => {
+    vi.stubEnv('VITE_DEMO_MODE', 'false');
+    localStorage.setItem('token', 'test-token');
+    seedDashboardDemoState();
+
+    renderWithRouter(<MyApplications />, '/me/applications', '/me/applications');
+
+    expect(
+      await screen.findByRole('heading', { name: 'Review Demo Conference 2026' })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: /presenter-safe walkthrough/i })
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/demo rehearsal/i)).not.toBeInTheDocument();
   });
 
   it('navigates into conferences when the conference empty-state browse card body is clicked', async () => {
@@ -254,6 +271,7 @@ describe('MyApplications page', () => {
   });
 
   it('shows presenter-safe walkthrough shortcuts and preserves a caller return link', async () => {
+    vi.stubEnv('VITE_DEMO_MODE', 'true');
     localStorage.setItem('token', 'test-token');
     seedDashboardDemoState();
 
@@ -290,6 +308,7 @@ describe('MyApplications page', () => {
   });
 
   it('unwraps a self-referential return context back to the dashboard instead of linking to the current page', async () => {
+    vi.stubEnv('VITE_DEMO_MODE', 'true');
     localStorage.setItem('token', 'test-token');
     seedDashboardDemoState();
 
@@ -328,6 +347,7 @@ describe('MyApplications page', () => {
   });
 
   it('links the walkthrough shortcut to the first real application when records exist', async () => {
+    vi.stubEnv('VITE_DEMO_MODE', 'true');
     localStorage.setItem('token', 'test-token');
     setDashboardFakeState([submittedConferenceApp, draftGrantApp]);
 
