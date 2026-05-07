@@ -175,6 +175,13 @@ export const submitMyPostVisitReport = async (req: Request, res: Response) => {
       res.status(422).json({ message: 'report_narrative is too long' });
       return;
     }
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === 'P2002'
+    ) {
+      res.status(409).json({ message: 'A post-visit report has already been submitted' });
+      return;
+    }
     res.status(400).json({ message: 'Invalid post-visit report payload' });
   }
 };
