@@ -1,11 +1,11 @@
 import { Router } from 'express';
 import {
+  getMyApplicationDetail,
   listMyApplications,
   submitMyConferenceApplication,
   submitMyPostVisitReport,
   updateMyConferenceApplicationDraft,
 } from '../controllers/me';
-import { getMyApplicationDetail } from '../controllers/review';
 
 const router = Router();
 

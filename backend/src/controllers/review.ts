@@ -10,7 +10,6 @@ import {
 import { hasAnyUserRole } from '../lib/userRoles';
 import { prisma } from '../lib/prisma';
 import {
-  serializeApplicantApplicationDetail,
   serializeInternalDecision,
   serializeOrganizerApplicationDetail,
   serializeOrganizerApplicationListItem,
@@ -755,47 +754,5 @@ export const submitReview = async (req: Request, res: Response) => {
     }
 
     res.status(400).json({ message: 'Invalid review payload' });
-  }
-};
-
-export const getMyApplicationDetail = async (req: Request, res: Response) => {
-  try {
-    const userId = requireAuthenticatedUserId(req);
-    const applicationId = readParam(req, 'id');
-
-    const application = await prisma.application.findFirst({
-      where: {
-        id: applicationId,
-        applicantUserId: userId,
-      },
-      include: {
-        conference: true,
-        grant: {
-          include: {
-            linkedConference: true,
-          },
-        },
-        decision: true,
-        postVisitReport: true,
-      },
-    });
-
-    if (!application) {
-      res.status(404).json({ message: 'Application not found' });
-      return;
-    }
-
-    res.status(200).json({
-      data: {
-        application: serializeApplicantApplicationDetail(application),
-      },
-    });
-  } catch (error) {
-    if ((error as Error).message === 'UNAUTHORIZED') {
-      res.status(401).json({ message: 'Unauthorized' });
-      return;
-    }
-
-    res.status(500).json({ message: 'Failed to load application detail' });
   }
 };

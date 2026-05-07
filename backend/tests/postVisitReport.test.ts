@@ -297,6 +297,18 @@ describe('POST /api/v1/me/applications/:id/post-visit-report', () => {
     expect(res.body.message).toMatch(/report_narrative/i);
   });
 
+  it('returns 422 when attendance_confirmed is provided as a non-boolean', async () => {
+    const res = await request(app)
+      .post(`/api/v1/me/applications/${acceptedGrantAppId}/post-visit-report`)
+      .set('Authorization', `Bearer ${ownerToken}`)
+      .send({
+        report_narrative: 'Attended the workshop and gave a poster.',
+        attendance_confirmed: 'true',
+      });
+    expect(res.status).toBe(422);
+    expect(res.body.message).toMatch(/attendance_confirmed/i);
+  });
+
   it('creates the report on the happy path and flips dashboard next_action to view_result', async () => {
     const res = await request(app)
       .post(`/api/v1/me/applications/${acceptedGrantAppId}/post-visit-report`)

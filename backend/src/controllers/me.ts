@@ -14,6 +14,7 @@ import {
 import { serializeConferenceApplication } from '../serializers/conference';
 import { serializeGrantApplication } from '../serializers/grant';
 import { serializeMyApplicationItem } from '../serializers/applicationDashboard';
+import { serializeApplicantApplicationDetail } from '../serializers/workflow';
 
 const readApplicationId = (req: Request) =>
   Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
@@ -69,6 +70,47 @@ export const listMyApplications = async (req: Request, res: Response) => {
   }
 };
 
+export const getMyApplicationDetail = async (req: Request, res: Response) => {
+  try {
+    const userId = requireAuthenticatedUserId(req);
+    const applicationId = readApplicationId(req);
+
+    const application = await prisma.application.findFirst({
+      where: {
+        id: applicationId,
+        applicantUserId: userId,
+      },
+      include: {
+        conference: true,
+        grant: {
+          include: {
+            linkedConference: true,
+          },
+        },
+        decision: true,
+        postVisitReport: true,
+      },
+    });
+
+    if (!application) {
+      res.status(404).json({ message: 'Application not found' });
+      return;
+    }
+
+    res.status(200).json({
+      data: {
+        application: serializeApplicantApplicationDetail(application),
+      },
+    });
+  } catch (error) {
+    if ((error as Error).message === 'UNAUTHORIZED') {
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
+    }
+    res.status(500).json({ message: 'Failed to load application detail' });
+  }
+};
+
 const parsePostVisitReportInput = (body: Record<string, unknown>) => {
   const reportNarrative =
     typeof body.report_narrative === 'string' ? body.report_narrative.trim() : '';
@@ -77,6 +119,13 @@ const parsePostVisitReportInput = (body: Record<string, unknown>) => {
   }
   if (reportNarrative.length > 4000) {
     throw new Error('REPORT_NARRATIVE_TOO_LONG');
+  }
+
+  if (
+    body.attendance_confirmed !== undefined &&
+    typeof body.attendance_confirmed !== 'boolean'
+  ) {
+    throw new Error('INVALID_ATTENDANCE_CONFIRMED');
   }
 
   const attendanceConfirmed =
@@ -173,6 +222,17 @@ export const submitMyPostVisitReport = async (req: Request, res: Response) => {
     }
     if (message === 'REPORT_NARRATIVE_TOO_LONG') {
       res.status(422).json({ message: 'report_narrative is too long' });
+      return;
+    }
+    if (message === 'INVALID_ATTENDANCE_CONFIRMED') {
+      res.status(422).json({ message: 'attendance_confirmed must be a boolean when provided' });
+      return;
+    }
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === 'P2002'
+    ) {
+      res.status(409).json({ message: 'A post-visit report has already been submitted' });
       return;
     }
     res.status(400).json({ message: 'Invalid post-visit report payload' });
