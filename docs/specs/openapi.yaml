@@ -575,6 +575,7 @@ paths:
   # --- Auth Endpoints ---
   /auth/login:
     post:
+      operationId: loginUser
       summary: User Login
       security: []
       tags: [Auth]
@@ -596,6 +597,7 @@ paths:
   
   /auth/register:
     post:
+      operationId: registerUser
       summary: User Registration
       security: []
       tags: [Auth]
@@ -617,6 +619,7 @@ paths:
 
   /auth/me:
     get:
+      operationId: getCurrentUser
       summary: Get current logged-in user details
       tags: [Auth]
       responses:
@@ -635,6 +638,7 @@ paths:
   # --- Profile Endpoints ---
   /profiles/me:
     put:
+      operationId: updateMyProfile
       summary: Update my profile
       tags: [Profile]
       requestBody:
@@ -661,6 +665,7 @@ paths:
   # --- Conference Endpoints ---
   /conferences:
     get:
+      operationId: listConferences
       summary: List all published conferences
       security: []
       tags: [Conference]
@@ -677,6 +682,7 @@ paths:
   # --- Grant Endpoints ---
   /grants:
     get:
+      operationId: listGrants
       summary: List all published grants
       security: []
       tags: [Grant]
@@ -698,6 +704,7 @@ paths:
 
   /grants/{slug}:
     get:
+      operationId: getGrantBySlug
       summary: Get one published grant by slug
       security: []
       tags: [Grant]
@@ -725,6 +732,7 @@ paths:
 
   /grants/{id}/application-form:
     get:
+      operationId: getGrantApplicationForm
       summary: Get the application form schema for a published grant
       security: []
       tags: [Grant]
@@ -741,6 +749,7 @@ paths:
 
   /grants/{id}/applications/me:
     get:
+      operationId: getMyGrantApplicationByGrantId
       summary: Get my grant application for a grant
       tags: [Grant]
       parameters:
@@ -770,6 +779,7 @@ paths:
 
   /grants/{id}/applications:
     post:
+      operationId: createMyGrantApplication
       summary: Create my draft grant application
       tags: [Grant]
       parameters:
@@ -807,6 +817,7 @@ paths:
 
   /me/applications:
     get:
+      operationId: listMyApplications
       summary: List the current user's applications in the applicant-safe dashboard shape
       tags: [Applicant]
       responses:
@@ -841,6 +852,7 @@ paths:
 
   /me/applications/{id}:
     get:
+      operationId: getMyApplicationDetail
       summary: Read the applicant-safe detail view of one of my applications
       tags: [Applicant]
       parameters:
@@ -876,6 +888,7 @@ paths:
 
   /me/applications/{id}/draft:
     put:
+      operationId: updateMyApplicationDraft
       summary: Update my draft application for either conference or grant subtype
       tags: [Applicant]
       parameters:
@@ -906,6 +919,7 @@ paths:
 
   /me/applications/{id}/submit:
     post:
+      operationId: submitMyApplication
       summary: Submit my draft application for either conference or grant subtype
       tags: [Applicant]
       parameters:
@@ -929,6 +943,7 @@ paths:
 
   /me/applications/{id}/post-visit-report:
     post:
+      operationId: submitMyPostVisitReport
       summary: Submit the post-visit report for a funded travel grant
       description: |
         Only valid for grant applications whose decision has been released
