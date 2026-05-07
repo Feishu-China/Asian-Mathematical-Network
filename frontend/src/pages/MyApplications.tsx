@@ -125,9 +125,10 @@ export default function MyApplications() {
     clearAuthSession();
     navigate('/portal');
   });
+  const showDemoChrome = import.meta.env.VITE_DEMO_MODE === 'true';
   const sectionReturnState = buildChainedReturnState(MY_APPLICATIONS_RETURN_CONTEXT, returnContext);
-  const primaryWalkthroughShortcut =
-    items && items.length > 0
+  const primaryWalkthroughShortcut = showDemoChrome
+    ? items && items.length > 0
       ? {
           to: `/me/applications/${items[0].id}`,
           state: sectionReturnState,
@@ -141,7 +142,8 @@ export default function MyApplications() {
           label: 'Start from published conferences',
           description:
             'Use the stable conference list to create a real applicant record before returning here.',
-        };
+        }
+    : null;
 
   useEffect(() => {
     let active = true;
@@ -221,7 +223,7 @@ export default function MyApplications() {
           className="dashboard-widget"
           badgeLabel="Loading"
           title="Loading your applications"
-          description="Preparing the applicant record list used as the main demo control point."
+          description="Preparing your application records."
           tone="info"
         />
       ) : hasError ? (
@@ -239,12 +241,14 @@ export default function MyApplications() {
         />
       ) : (
         <div className="my-applications">
-          <DemoShortcutPanel
-            className="dashboard-widget"
-            title={demoWalkthroughCopy.applications.title}
-            intro={demoWalkthroughCopy.applications.intro}
-            shortcuts={[primaryWalkthroughShortcut]}
-          />
+          {primaryWalkthroughShortcut ? (
+            <DemoShortcutPanel
+              className="dashboard-widget"
+              title={demoWalkthroughCopy.applications.title}
+              intro={demoWalkthroughCopy.applications.intro}
+              shortcuts={[primaryWalkthroughShortcut]}
+            />
+          ) : null}
 
           <ApplicationSection
             heading="Conference applications"
